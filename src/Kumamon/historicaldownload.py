@@ -9,7 +9,7 @@ from pandas.io.data import DataReader
 from datetime import datetime
 from log import log
 
-def main(log):
+def main():
     log.info("Started...")
     db = database.finances()
     db.update_stocks_historicals( log )
