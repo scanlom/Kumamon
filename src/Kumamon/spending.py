@@ -18,7 +18,7 @@ def main():
     
     db = database.finances()
     cash = db.recon_budget()
-    fumi_cash = cash + 16432.7 # fumi cash is the amount i owe savings for normalizing when fumi got here
+    fumi_cash = cash
     body = """\
 <html>
 <head></head>

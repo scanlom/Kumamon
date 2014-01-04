@@ -57,6 +57,10 @@ def book_pay(date, salary, orso):
     db = database.finances()
     db.book_pay(date, salary, orso)
     
+def book_cash_infusion(date, amount):
+    db = database.finances()
+    db.book_cash_infusion(date, amount)
+    
 def book_fx_hkd_to_usd(date, hkd, usd, rate):
     db = database.finances()
     db.book_fx_hkd_to_usd(date, hkd, usd, rate)
@@ -86,13 +90,19 @@ def recon_budget():
     print(str(db.recon_budget()))
     
 def main():
+    '''recon_cash()
+    recon_budget()
+    book_cash_infusion('12/31/2013', -17916.54)
+    recon_budget()
+    recon_cash()'''
+    
     '''recon_budget()
-    update_bank_accounts(7651.22, 21597.64 )
-    update_credit_cards(0, 4095.70, 0)
+    update_bank_accounts(7651.22, 136081.72)
+    update_credit_cards(14459.20, 4944.54, 500)
     recon_budget()'''
     
     '''recon_cash()
-    book_pay("10/24/2013", 117745.84, 15506.25)
+    book_pay("12/24/2013", 120360.01, 15506.25)
     recon_cash()'''
     
     '''recon_cash()
@@ -126,11 +136,9 @@ def main():
     recon_cash()'''
     
     '''recon_cash()
-    book_dividend_total('2013-09-27', 'GS', 19.00)
-    update_gs(4995.84)
+    book_dividend_total('2013-12-30', 'GS', 20.90)
+    update_gs(12888.34)
     recon_cash()'''
-  
-    '''2483.77 - Savings removal each month'''
 
     '''recon_cash()
     book_fx_hkd_to_usd('12/16/2013', 93000.0, 11993.81, 7.754)

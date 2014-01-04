@@ -155,6 +155,30 @@ class finances(object):
         self.history_sell_portfolio(date, symbol, amount, quantity, price, cash_final)
         self.set_symbol_quantity(symbol, quantity_final)
         self.set_cash_portfolio(cash_final)
+            
+    def book_cash_infusion(self, date, amount):
+        # Book Savings
+        savings_cur = self.get_savings()
+        savings_final = savings_cur + amount
+        self.history_savings(date, amount, savings_final)
+        self.set_savings(savings_final)
+        log.info("Book Savings: " + str(savings_cur) + " + " + str(amount) + " = " + str(savings_final))
+        
+        # Book Cash Infusion
+        total_capital_final = self.get_total_capital_balance() + amount
+        xTC_final = self.get_latest_index_rotc() / total_capital_final
+        total_equity_final = self.get_total_equity_balance() + amount
+        xE_final = self.get_latest_index_roe() / total_equity_final
+        owe_port_final = self.get_owe_port() + amount
+        cash_final = self.get_cash_total() + amount
+        self.history_cash_infusion(date, amount, xTC_final, xE_final)
+        self.set_divisor_rotc(xTC_final)
+        self.set_divisor_roe(xE_final)
+        self.set_total_capital_balance(total_capital_final)
+        self.set_total_equity_balance(total_equity_final)
+        self.set_owe_port(owe_port_final)
+        self.set_cash_total(cash_final)
+        log.info("Cash Infusion")
              
     def book_pay(self, date, salary, orso):
         # First some validations
@@ -391,6 +415,10 @@ class finances(object):
 
     def history_cash_infusion_portfolio(self, date, amount, total_cash_final, portfolio_cash_final, x):
         self.cur.execute("insert into history values ('" + date + "', 10, 'Cash Infusion of " + str(amount) + " to Portfolio', " + str(amount) + ", " + str(total_cash_final) + ", " + str(portfolio_cash_final) + ", " + str(x) + ",0,0)")
+        self.conn.commit()
+        
+    def history_cash_infusion(self, date, amount, xTC_final, xE_final):
+        self.cur.execute("insert into history values ('" + date + "', 17, 'Cash Infusion of " + str(amount) + " to Total', " + str(amount) + ", " + str(xTC_final) + ", " + str(xE_final) + ",0,0,0)")
         self.conn.commit()
         
     def history_fx_hkd_to_usd(self, date, amount, cash, hkd, usd, rate):
