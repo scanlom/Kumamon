@@ -139,7 +139,7 @@ class finances(object):
         self.set_cash_total(cash_final)
         
         quantity_current = self.get_symbol_quantity(symbol)
-        if quantity_current > 0:
+        if quantity_current != None and quantity_current > 0:
             self.set_symbol_quantity(symbol, quantity_current - quantity)  
             
     def book_buy_portfolio(self, date, symbol, amount, quantity, price):
@@ -155,6 +155,25 @@ class finances(object):
         self.history_sell_portfolio(date, symbol, amount, quantity, price, cash_final)
         self.set_symbol_quantity(symbol, quantity_final)
         self.set_cash_portfolio(cash_final)
+
+    def tie_out(self, msg):
+        # Make sure cash is clean
+        if self.recon_cash() != 0.0:
+            raise Exception(msg + ': cash not clean')
+
+        # Verify that currently rotc, roe, and managed tie out
+        if self.compute_index_rotc() != self.get_latest_index_rotc():        
+            raise Exception(msg + ': rotc index not clean')
+        if self.compute_index_roe() != self.get_latest_index_roe():        
+            raise Exception(msg + ': roe index not clean')
+        if self.compute_index_managed() != self.get_latest_index_401k():        
+            raise Exception(msg + ': managed index not clean')
+        if self.compute_value_rotc() != self.get_total_capital_balance():        
+            raise Exception(msg + ': rotc value not clean')
+        if self.compute_value_roe() != self.get_total_equity_balance():        
+            raise Exception(msg + ': roe value not clean')
+        if self.compute_value_managed() != self.get_managed_balance():        
+            raise Exception(msg + ': managed value not clean')
             
     def book_cash_infusion(self, date, amount):
         # Book Savings
@@ -179,6 +198,66 @@ class finances(object):
         self.set_owe_port(owe_port_final)
         self.set_cash_total(cash_final)
         log.info("Cash Infusion")
+   
+    def book_equity_bonus(self, date, value, qty):
+        self.tie_out("ERROR book_equity_bonus")
+    
+        # Book bonus to paid
+        paid_cur = self.get_paid()
+        paid_final = paid_cur + value
+        self.history_paid(date, value, paid_final)
+        self.set_paid(paid_final)
+        log.info("Book bonus to paid: " + str(paid_cur) + " + " + str(value) + " = " + str(paid_final))
+
+        # Book Savings
+        savings_cur = self.get_savings()
+        savings_final = savings_cur + value
+        self.history_savings(date, value, savings_final)
+        self.set_savings(savings_final)
+        log.info("Book Savings: " + str(savings_cur) + " + " + str(value) + " = " + str(savings_final))
+
+        # CI to managed
+        total_capital_final = self.get_total_capital_balance() + value
+        xTC_final = self.get_latest_index_rotc() / total_capital_final
+        total_equity_final = self.get_total_equity_balance() + value
+        xE_final = self.get_latest_index_roe() / total_equity_final
+        managed_final = self.get_managed_balance() + value
+        x_final = self.get_latest_index_401k() / managed_final
+        self.history_cash_infusion_managed(date, value, xTC_final, xE_final, x_final)
+        self.set_divisor_rotc(xTC_final)
+        self.set_divisor_roe(xE_final)
+        self.set_divisor_401k(x_final)
+        self.set_total_capital_balance(total_capital_final)
+        self.set_total_equity_balance(total_equity_final)
+        self.set_managed_balance(managed_final)
+
+        # Increment GS
+        self.increment_gs(value, qty)
+    
+        self.tie_out("ERROR book_equity_bonus")
+   
+    def book_cash_bonus(self, date, bonus, tax):
+        self.tie_out("ERROR book_cash_bonus")
+        
+        # Book bonus to paid
+        paid_cur = self.get_paid()
+        paid_final = paid_cur + bonus
+        self.history_paid(date, bonus, paid_final)
+        self.set_paid(paid_final)
+        log.info("Book bonus to paid: " + str(paid_cur) + " + " + str(bonus) + " = " + str(paid_final))
+        
+        # Book tax to tax
+        tax_cur = self.get_tax()
+        tax_final = tax_cur + tax
+        self.history_tax(date, tax, tax_final)
+        self.set_tax(tax_final)
+        log.info("Book tax to tax: " + str(tax_cur) + " + " + str(tax) + " = " + str(tax_final))
+ 
+        # CI remainder (this will handle savings and owe port)
+        remainder = bonus - tax       
+        self.book_cash_infusion(date, remainder)
+         
+        self.tie_out("ERROR book_cash_bonus")
              
     def book_pay(self, date, salary, orso):
         # First some validations
@@ -280,25 +359,6 @@ class finances(object):
             raise Exception('ERROR book_pay: roe value not clean')
         if self.compute_value_managed() != self.get_managed_balance():        
             raise Exception('ERROR book_pay: managed value not clean')
-        
-    def tie_out(self, msg):
-        # Make sure cash is clean
-        if self.recon_cash() != 0.0:
-            raise Exception(msg + ': cash not clean')
-
-        # Verify that currently rotc, roe, and managed tie out
-        if self.compute_index_rotc() != self.get_latest_index_rotc():        
-            raise Exception(msg + ' rotc index not clean')
-        if self.compute_index_roe() != self.get_latest_index_roe():        
-            raise Exception(msg + ' roe index not clean')
-        if self.compute_index_managed() != self.get_latest_index_401k():        
-            raise Exception(msg + ' managed index not clean')
-        if self.compute_value_rotc() != self.get_total_capital_balance():        
-            raise Exception(msg + ' rotc value not clean')
-        if self.compute_value_roe() != self.get_total_equity_balance():        
-            raise Exception(msg + ' roe value not clean')
-        if self.compute_value_managed() != self.get_managed_balance():        
-            raise Exception(msg + ' managed value not clean')
         
     def history_dividend_portfolio(self, date, symbol, amount, cash):
         self.cur.execute("insert into history values ('" + date + "', 1, 'Div on " + symbol + " of " + str(amount) + "', " + str(amount) + ", " + str(cash) + ",0,0,0,'" + symbol + "')")
@@ -658,4 +718,12 @@ class finances(object):
         balance += value
         self.cur.execute("update portfolio set value=" + str(round_ccy(balance)) + " where Symbol='Dragons'")
         self.conn.commit()
+        
+    def increment_gs(self, value, qty):
+        symbol = "GS"
+        cur = self.get_symbol_quantity(symbol)
+        self.set_symbol_quantity(symbol, cur + qty)
+        cur = self.get_symbol_value(symbol)
+        self.set_symbol_value(symbol, cur + value)    
+        
         

@@ -56,6 +56,14 @@ def book_sell_managed(date, symbol, amount, quantity, price):
 def book_pay(date, salary, orso):
     db = database.finances()
     db.book_pay(date, salary, orso)
+
+def book_equity_bonus(date, value, qty):
+    db = database.finances()
+    db.book_equity_bonus(date, value, qty)
+
+def book_cash_bonus(date, bonus, tax):
+    db = database.finances()
+    db.book_cash_bonus(date, bonus, tax)
     
 def book_cash_infusion(date, amount):
     db = database.finances()
@@ -90,41 +98,35 @@ def recon_budget():
     print(str(db.recon_budget()))
     
 def main():
+    '''book_cash_bonus("01/27/2014", 72873.96, 18218.56)'''
+    '''book_equity_bonus("01/27/2014", 10893, 62)'''
+    
     '''recon_cash()
-    recon_budget()
-    book_cash_infusion('12/31/2013', -17916.54)
-    recon_budget()
+    book_cash_infusion('02/24/2014', 2919.77)
     recon_cash()'''
     
     '''recon_budget()
-    update_bank_accounts(7651.22, 136081.72)
-    update_credit_cards(14459.20, 4944.54, 500)
+    update_bank_accounts(3214.19, 184956.07)
+    update_credit_cards(4895, 953.14, 1000)
     recon_budget()'''
     
     '''recon_cash()
-    book_pay("12/24/2013", 120360.01, 15506.25)
+    book_pay('02/24/2014', 122579.16, 15941.25)
     recon_cash()'''
-    
+   
     '''recon_cash()
-    book_interest('08/30/2013','ED',0.60)
-    book_interest('09/30/2013','ED',0.58)
-    update_ed(1417.64)
+    book_sell_managed('02/14/2014','GSMCX',56694.10,1261.551,44.94)
     recon_cash()'''
-    
-    '''recon_cash()
-    book_sell_managed('12/16/2013','GSMCX',20000.00,465.875,42.93)
-    update_gs(80604.05)
-    recon_cash()'''
-    
+      
     '''recon_cash()
     book_sell_portfolio('12/16/2013','JNJ',32937.67,359,91.80)
     update_gs(54180.27)
     recon_cash()'''
     
     '''recon_cash()
-    book_buy_portfolio('12/20/2013','MCD',6704.60,70,95.73)
-    book_buy_portfolio('12/20/2013','KO',7996.00,200,39.93)
-    update_gs(12867.44)
+    book_buy_portfolio('02/18/2014','MCD',25933.50,270,96.00)
+    book_buy_portfolio('02/18/2014','WMT',14369.70,190,75.58)
+    update_gs(20448.78)
     recon_cash()'''
     
     '''recon_cash()
@@ -132,7 +134,7 @@ def main():
     recon_cash()'''
     
     '''recon_cash()
-    book_cash_infusion_portfolio('12/17/2013',26000.00)
+    book_cash_infusion_portfolio('02/13/2014',124000)
     recon_cash()'''
     
     '''recon_cash()
@@ -141,22 +143,22 @@ def main():
     recon_cash()'''
 
     '''recon_cash()
-    book_fx_hkd_to_usd('12/16/2013', 93000.0, 11993.81, 7.754)
-    update_gs(21242.60)
+    book_fx_hkd_to_usd('02/06/2014', 490000.0, 63140.26, 7.7605)
+    update_gs(77006.28)
     update_gs_hkd(0.0)
     recon_cash()'''
 
     '''recon_cash()
-    book_dividend_portfolio('12/16/2013', 'KO', 264.88)
-    book_dividend_portfolio('12/16/2013', 'MCD', 531.36)
-    update_gs(81400.29)
+    book_dividend_portfolio('03/3/2014', 'WFC', 555)
+    book_interest('02/28/2014','GS',1.09)
+    update_gs(21004.87)
     recon_cash()'''
 
     '''recon_cash()
-    update_owe_portfolio(23441.07)
-    update_gs_hkd(11984.54)
+    update_owe_portfolio(11677.29)
+    update_gs(99337.93)
     recon_cash()'''
-       
+           
     '''book_pay("07/26/2013", 117745.84, 15506.25)
     recon_cash()
     recon_budget()
@@ -169,6 +171,10 @@ def main():
     update_credit_cards(2228.60,24.14,7568)
     '''
     
+    '''db = database.finances()
+    db.set_symbol_value('Dragons', 32199.61)
+    db.set_symbol_value('GlBonds', 3052.18)'''
+            
 if __name__ == '__main__':
     try:
         main()    
