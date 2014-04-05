@@ -69,12 +69,6 @@ class finances(object):
         self.cur.execute("update balances set value=" + str(round(hsbc/7.76,2)) + "where type=3")
         self.conn.commit()
         
-    def book_dividend_portfolio(self, date, symbol, amount):
-        cash = self.get_cash_portfolio()
-        cash += amount
-        self.history_dividend_portfolio(date, symbol, amount, cash)
-        self.set_cash_portfolio(cash)
-        
     def book_dividend_total(self, date, symbol, amount):
         cash = self.get_cash_total()
         cash += amount
@@ -114,19 +108,6 @@ class finances(object):
         self.set_cash_portfolio(portfolio_cash_final)
         self.set_cash_total(total_cash_final)
         self.set_portfolio_balance(portfolio_final)
-        
-    def book_debt_infusion(self, date, amount):
-        total_capital_final = self.get_total_capital_balance() + amount
-        xTC_final = self.get_latest_index_rotc() / total_capital_final
-        debt_final = self.get_debt() + amount
-        cash_final = self.get_cash_total() + amount
-        owe_port_final = self.get_owe_port() + amount
-        self.history_debt_infusion(date, amount, cash_final, debt_final, xTC_final, owe_port_final)
-        self.set_cash_total(cash_final)
-        self.set_debt(debt_final)
-        self.set_divisor_rotc(xTC_final)
-        self.set_owe_port(owe_port_final)
-        self.set_total_capital_balance(total_capital_final)
     
     def book_sell_managed(self, date, symbol, amount, quantity, price):
         managed_final = self.get_managed_balance() - amount
@@ -715,8 +696,11 @@ class finances(object):
     
     def increment_orso(self, value):
         balance = get_scalar("select * from portfolio where Symbol='Dragons'", self.cur)
-        balance += value
+        balance += value / 2
         self.cur.execute("update portfolio set value=" + str(round_ccy(balance)) + " where Symbol='Dragons'")
+        balance = get_scalar("select * from portfolio where Symbol='GlBonds'", self.cur)
+        balance += value / 2
+        self.cur.execute("update portfolio set value=" + str(round_ccy(balance)) + " where Symbol='GlBonds'")
         self.conn.commit()
         
     def increment_gs(self, value, qty):

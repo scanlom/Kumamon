@@ -19,8 +19,8 @@ config_backup_tmp_dir   = os.path.expanduser('~/backup/')
 config_backup_zip_dirs  = [ 
                 [ os.path.expanduser('~/Mike'), 'Mike.zip' ], 
                 [ os.path.expanduser('~/bin'), 'bin.zip' ],
-                [ os.path.expanduser('~/python'), 'python.zip' ], 
-                [ os.path.expanduser('~/rails'), 'rails.zip' ],
+                #[ os.path.expanduser('~/python'), 'python.zip' ], 
+                #[ os.path.expanduser('~/rails'), 'rails.zip' ],
                 [ os.path.expanduser('/mdeia/DATA/Scanlom'), 'Scanlom.zip' ], 
             ] 
 

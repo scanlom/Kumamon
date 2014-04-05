@@ -102,16 +102,16 @@ def main():
     '''book_equity_bonus("01/27/2014", 10893, 62)'''
     
     '''recon_cash()
-    book_cash_infusion('02/24/2014', 2919.77)
+    book_cash_infusion('03/31/2014', 2870)
     recon_cash()'''
     
     '''recon_budget()
-    update_bank_accounts(3214.19, 184956.07)
-    update_credit_cards(4895, 953.14, 1000)
+    update_bank_accounts(2915.61, 237533.28)
+    update_credit_cards(4824.60, 3284.73, 500)
     recon_budget()'''
     
     '''recon_cash()
-    book_pay('02/24/2014', 122579.16, 15941.25)
+    book_pay('03/27/2014', 120743.00, 15723.75)
     recon_cash()'''
    
     '''recon_cash()
@@ -149,9 +149,9 @@ def main():
     recon_cash()'''
 
     '''recon_cash()
-    book_dividend_portfolio('03/3/2014', 'WFC', 555)
-    book_interest('02/28/2014','GS',1.09)
-    update_gs(21004.87)
+    book_dividend_portfolio('03/13/2014', 'MSFT', 322)
+    #book_interest('02/28/2014','GS',1.09)
+    update_gs(21326.87)
     recon_cash()'''
 
     '''recon_cash()
