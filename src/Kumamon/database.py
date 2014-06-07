@@ -580,7 +580,8 @@ class finances(object):
     
         for row in rows:
             price = round(last(row['symbol']),2)
-            self.cur.execute("update stocks set price=" + str(price) + "where symbol = '" + row['symbol'] + "'")
+            if price > 0:
+                self.cur.execute("update stocks set price=" + str(price) + "where symbol = '" + row['symbol'] + "'")
             
         self.conn.commit()
         
@@ -593,8 +594,12 @@ class finances(object):
             data_symbol = symbol
             if symbol == "BRKB":
                 data_symbol = "BRK-B"
+            source = "yahoo"
+            if symbol.endswith( ".T" ):
+                source = "google"
+                continue
             log.info( "Downloading %s..." % ( data_symbol ) )
-            data = DataReader( data_symbol,  "yahoo", datetime(2000,1,1)) # Get everything back to 2000
+            data = DataReader( data_symbol,  source, datetime(2000,1,1)) # Get everything back to 2000
             adjusted_close = data[ ADJUSTED_CLOSE ]
             count = len( adjusted_close )
             today = 0

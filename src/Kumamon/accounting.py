@@ -106,9 +106,13 @@ def main():
     recon_cash()'''
     
     '''recon_budget()
-    update_bank_accounts(2915.61, 237533.28)
-    update_credit_cards(4824.60, 3284.73, 500)
+    update_bank_accounts(1931.84, 122013.14)
+    update_credit_cards(0, 3068.24, 0)
     recon_budget()'''
+
+    '''recon_cash()
+    update_gs(24329.13)
+    recon_cash()'''
     
     '''recon_cash()
     book_pay('03/27/2014', 120743.00, 15723.75)
@@ -117,7 +121,7 @@ def main():
     '''recon_cash()
     book_sell_managed('02/14/2014','GSMCX',56694.10,1261.551,44.94)
     recon_cash()'''
-      
+    
     '''recon_cash()
     book_sell_portfolio('12/16/2013','JNJ',32937.67,359,91.80)
     update_gs(54180.27)
@@ -154,8 +158,10 @@ def main():
     update_gs(21326.87)
     recon_cash()'''
 
+    update_owe_portfolio(20695.18)
+
     '''recon_cash()
-    update_owe_portfolio(11677.29)
+    update_owe_portfolio(20695.18)
     update_gs(99337.93)
     recon_cash()'''
            
