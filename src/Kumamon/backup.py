@@ -26,7 +26,8 @@ def main():
     
     os.makedirs( config.config_backup_tmp_dir )
     
-    call("pg_dump finances | split -b 1m - " + config.config_backup_tmp_dir + "dbbackup", shell=True)
+    call("pg_dump finances | split -b 1m - " + config.config_backup_tmp_dir + "financesbackup", shell=True)
+    call("pg_dump wikidb | split -b 1m - " + config.config_backup_tmp_dir + "wikidbbackup", shell=True)
 
     for dir in config.config_backup_zip_dirs:
         zip = zipfile.ZipFile(config.config_backup_tmp_dir + dir[1], 'w')
