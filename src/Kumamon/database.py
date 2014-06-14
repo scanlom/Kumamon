@@ -9,6 +9,7 @@ import psycopg2     # Postgresql access
 import psycopg2.extras  # Postgresql access
 from pandas.io.data import DataReader
 from datetime import datetime
+from datetime import date
 from log import log
 import config
 
@@ -90,7 +91,18 @@ class finances(object):
                 self.cur.execute("update stocks set price=" + str(price) + "where symbol = '" + row['symbol'] + "'")
             
         self.conn.commit()
-        
+    
+    def update_stock_historical_change(self, symbol, index, field, field_date, close, 
+                                       historical_closes, historical_close_dates):
+        change = 0
+        change_date = date.today()
+        count = len( historical_closes )
+        if count > index:
+            change = round_pct( close / historical_closes[ count - ( index + 1 ) ] - 1 )
+            change_date = historical_close_dates[ count - ( index + 1 ) ]
+        self.cur.execute( "update stocks set %s = %s, %s = '%s'  where symbol = '%s'" % 
+                          ( field, str( change ), field_date, change_date.strftime( "%m-%d-%y" ), symbol  ) )
+
     def update_stocks_historicals(self, log):
         self.cur.execute("select * from stocks")
         rows = self.cur.fetchall()   
@@ -101,57 +113,26 @@ class finances(object):
             if symbol == "BRKB":
                 data_symbol = "BRK-B"
             source = "yahoo"
-            if symbol.endswith( ".T" ) or symbol == "VDMIX" or symbol== "SAN.PA":
-                source = "google"
-                continue
             log.info( "Downloading %s..." % ( data_symbol ) )
-            data = DataReader( data_symbol,  source, datetime(2000,1,1)) # Get everything back to 2000
-            adjusted_close = data[ ADJUSTED_CLOSE ]
-            count = len( adjusted_close )
-            today = 0
+            try:
+                data = DataReader( data_symbol,  source, datetime(2003,1,1)) # Get everything back to 2003
+            except Exception as err:
+                log.error( "Could not get data for %s" % ( data_symbol ) )
+                log.exception(err)
+                continue
+            historical_closes = data[ ADJUSTED_CLOSE ]
+            historical_close_dates = data.index
+            count = len( historical_closes )
+            close = 0
             if count > 0:
-                today = adjusted_close[ count - 1 ]
-                
-            # Day Change
-            change = 0
-            if count > 1:
-                change = round_pct( today / adjusted_close[ count - 2 ] - 1 )
-            self.cur.execute("update stocks set day_change=" + str(change) + "where symbol = '" + symbol + "'")
-
-            # Week Change
-            change = 0
-            if count > 5:
-                change = round_pct( today / adjusted_close[ count - 6 ] - 1 )
-            self.cur.execute("update stocks set week_change=" + str(change) + "where symbol = '" + symbol + "'")
-
-            # Month Change
-            change = 0
-            if count > 22:
-                change = round_pct( today / adjusted_close[ count - 23 ] - 1 )
-            self.cur.execute("update stocks set month_change=" + str(change) + "where symbol = '" + symbol + "'")
-
-            # Three Month Change
-            change = 0
-            if count > 66:
-                change = round_pct( today / adjusted_close[ count - 67 ] - 1 )
-            self.cur.execute("update stocks set three_month_change=" + str(change) + "where symbol = '" + symbol + "'")
-
-            # Year Change
-            change = 0
-            if count > 252:
-                change = round_pct( today / adjusted_close[ count - 253 ] - 1 )
-            self.cur.execute("update stocks set year_change=" + str(change) + "where symbol = '" + symbol + "'")
-
-            # Five Year Change
-            change = 0
-            if count > 1260:
-                change = round_pct( ( today / adjusted_close[ count - 1261 ] ) ** ( .2 ) - 1 )
-            self.cur.execute("update stocks set five_year_change=" + str(change) + "where symbol = '" + symbol + "'")
-
-            # Ten Year Change
-            change = 0
-            if count > 2520:
-                change = round_pct( ( today / adjusted_close[ count - 2521 ] ) ** ( .1 ) - 1 )
-            self.cur.execute("update stocks set ten_year_change=" + str(change) + "where symbol = '" + symbol + "'")
+                close = historical_closes[ count - 1 ]
+            
+            self.update_stock_historical_change( symbol, 1, "day_change", "day_change_date", close, historical_closes, historical_close_dates )
+            self.update_stock_historical_change( symbol, 5, "week_change", "week_change_date", close, historical_closes, historical_close_dates )    
+            self.update_stock_historical_change( symbol, 22, "month_change", "month_change_date", close, historical_closes, historical_close_dates )    
+            self.update_stock_historical_change( symbol, 66, "three_month_change", "three_month_change_date", close, historical_closes, historical_close_dates )    
+            self.update_stock_historical_change( symbol, 252, "year_change", "year_change_date", close, historical_closes, historical_close_dates )    
+            self.update_stock_historical_change( symbol, 1260, "five_year_change", "five_year_change_date", close, historical_closes, historical_close_dates )    
+            self.update_stock_historical_change( symbol, 2520, "ten_year_change", "ten_year_change_date", close, historical_closes, historical_close_dates )    
             
         self.conn.commit()
