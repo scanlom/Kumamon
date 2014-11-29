@@ -11,7 +11,7 @@ log = logging.getLogger()
 log.setLevel(logging.INFO)
 
 formatter = logging.Formatter(
-    "%(asctime)s %(threadName)-11s %(levelname)-10s %(message)s")
+    "%(asctime)s %(module)-11s %(levelname)-10s %(message)s")
 
 # Log to file - 50k max, 5 files
 filehandler = logging.handlers.RotatingFileHandler(os.path.expanduser('~/logs/Kumamon.log'), 50*1024, 5)

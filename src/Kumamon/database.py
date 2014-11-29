@@ -75,30 +75,41 @@ class finances(object):
         rows = self.cur.fetchall()   
     
         for row in rows:
-            price = round(last(row['symbol']),2)
+            symbol = row['symbol']
+            log.info( "Downloading %s..." % ( symbol ) )
+            price = round(last( symbol ),2)
             value = round(price * row['quantity'], 2)
-            self.cur.execute("update portfolio set price=" + str(price) + ", value=" + str(value) + "where symbol = '" + row['symbol'] + "'")
+            log.info( "Updating %s..." % ( symbol ) )
+            self.cur.execute("update portfolio set price=" + str(price) + ", value=" + str(value) + " where symbol = '" + row['symbol'] + "'")
             
+        log.info( "Committing transaction..." )
         self.conn.commit()
+        log.info( "Done" )
 
     def update_stocks_price(self):
         self.cur.execute("select * from stocks")
         rows = self.cur.fetchall()   
     
         for row in rows:
-            price = round(last(row['symbol']),2)
+            symbol = row['symbol']
+            log.info( "Downloading %s..." % ( symbol ) )
+            price = round(last( symbol ),2)
             if price > 0:
-                self.cur.execute("update stocks set price=" + str(price) + "where symbol = '" + row['symbol'] + "'")
-            
+                sql = "update stocks set price=" + str(price) + " where symbol = '" + symbol + "'"
+                log.info( "SQL: %s" % ( sql ) )
+                self.cur.execute( sql )
+                
+        log.info( "Committing transaction..." )
         self.conn.commit()
-    
+        log.info( "Done" )
+            
     def update_stock_historical_change(self, symbol, index, field, field_date, close, 
-                                       historical_closes, historical_close_dates):
+                                       historical_closes, historical_close_dates, years):
         change = 0
         change_date = date.today()
         count = len( historical_closes )
         if count > index:
-            change = round_pct( close / historical_closes[ count - ( index + 1 ) ] - 1 )
+            change = round_pct( ( close / historical_closes[ count - ( index + 1 ) ] ) ** ( 1 / years ) - 1 )
             change_date = historical_close_dates[ count - ( index + 1 ) ]
         self.cur.execute( "update stocks set %s = %s, %s = '%s'  where symbol = '%s'" % 
                           ( field, str( change ), field_date, change_date.strftime( "%m-%d-%y" ), symbol  ) )
@@ -127,12 +138,12 @@ class finances(object):
             if count > 0:
                 close = historical_closes[ count - 1 ]
             
-            self.update_stock_historical_change( symbol, 1, "day_change", "day_change_date", close, historical_closes, historical_close_dates )
-            self.update_stock_historical_change( symbol, 5, "week_change", "week_change_date", close, historical_closes, historical_close_dates )    
-            self.update_stock_historical_change( symbol, 22, "month_change", "month_change_date", close, historical_closes, historical_close_dates )    
-            self.update_stock_historical_change( symbol, 66, "three_month_change", "three_month_change_date", close, historical_closes, historical_close_dates )    
-            self.update_stock_historical_change( symbol, 252, "year_change", "year_change_date", close, historical_closes, historical_close_dates )    
-            self.update_stock_historical_change( symbol, 1260, "five_year_change", "five_year_change_date", close, historical_closes, historical_close_dates )    
-            self.update_stock_historical_change( symbol, 2520, "ten_year_change", "ten_year_change_date", close, historical_closes, historical_close_dates )    
+            self.update_stock_historical_change( symbol, 1, "day_change", "day_change_date", close, historical_closes, historical_close_dates, 1 )
+            self.update_stock_historical_change( symbol, 5, "week_change", "week_change_date", close, historical_closes, historical_close_dates, 1 )    
+            self.update_stock_historical_change( symbol, 22, "month_change", "month_change_date", close, historical_closes, historical_close_dates, 1 )    
+            self.update_stock_historical_change( symbol, 66, "three_month_change", "three_month_change_date", close, historical_closes, historical_close_dates, 1 )    
+            self.update_stock_historical_change( symbol, 252, "year_change", "year_change_date", close, historical_closes, historical_close_dates, 1 )    
+            self.update_stock_historical_change( symbol, 1260, "five_year_change", "five_year_change_date", close, historical_closes, historical_close_dates, 5 )    
+            self.update_stock_historical_change( symbol, 2520, "ten_year_change", "ten_year_change_date", close, historical_closes, historical_close_dates, 10 )    
             
         self.conn.commit()
