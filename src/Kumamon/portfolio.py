@@ -83,6 +83,27 @@ def main():
     index_self = total_self*divisor
     csv += ",," + str(divisor) + "," + format_ccy(index_self) + "\n\n"
 
+    # Lazy for now - copy paste to calculate play money portfolio
+    sql = "select * from constituents where portfolio_id=5 and pricing_type=1";
+    cur.execute(sql)
+    rows = cur.fetchall()   
+        
+    total_play = 5
+    for row in rows:
+            total_play += row['value']
+            csv += row['symbol'] + "," + str(row['quantity']) + "," + format_ccy(row['price']) + "," + format_ccy(row['value']) + "\n"
+
+    sql = "select * from constituents where portfolio_id=5 and symbol='CASH'";
+    cur.execute(sql)
+    rows = cur.fetchall()  
+    total_play += rows[0]['value']
+    csv += rows[0]['symbol'] + ",,," + format_ccy(rows[0]['value']) + "\n"
+    csv += "TOTAL,,," + format_ccy(total_play) + "\n"
+    
+    divisor = database.get_scalar("select * from divisors where type=5", cur)
+    index_play = total_play * divisor
+    csv += ",," + str(divisor) + "," + format_ccy(index_play) + "\n\n"
+
     sql = "select * from constituents where portfolio_id=2 and pricing_type=1";
     cur.execute(sql)
     rows = cur.fetchall()   
@@ -147,6 +168,7 @@ def main():
     cur.execute("insert into index_history values (current_date, 2, " + format_ccy_sql(index_roe) + ")")
     cur.execute("insert into index_history values (current_date, 3, " + format_ccy_sql(index_rotc) + ")")
     cur.execute("insert into index_history values (current_date, 4, " + format_ccy_sql(index_managed) + ")")
+    cur.execute("insert into index_history values (current_date, 5, " + format_ccy_sql(index_play) + ")")
     conn.commit()
     
     # Update balances with today's values
@@ -154,6 +176,7 @@ def main():
     cur.execute("update balances set value=" + format_ccy_sql(total_self) + " where type=13")
     cur.execute("update balances set value=" + format_ccy_sql(total_managed) + " where type=14")
     cur.execute("update balances set value=" + format_ccy_sql(total_rotc) + " where type=18")
+    cur.execute("update balances set value=" + format_ccy_sql(total_play) + " where type=19")
     conn.commit()
     
     # Update balances_history with today's values
@@ -192,6 +215,9 @@ def main():
     body += "<tr><td>Self</td><td>" + format_pct(index_self/get_ytd_base(1, cur)-1) + "</td>" 
     body += "<td>" + format_pct(index_self/get_qtd_base(1, cur)-1) + "</td>"
     body += "<td>" + format_pct(index_self/get_day_base(1, cur)-1) + "</td></tr>"
+    body += "<tr><td>Play</td><td>" + format_pct(index_play/get_ytd_base(5, cur)-1) + "</td>" 
+    body += "<td>" + format_pct(index_play/get_qtd_base(5, cur)-1) + "</td>"
+    body += "<td>" + format_pct(index_play/get_day_base(5, cur)-1) + "</td></tr>"
     body += "<tr><td>Managed</td><td>" + format_pct(index_managed/get_ytd_base(4, cur)-1) + "</td>" 
     body += "<td>" + format_pct(index_managed/get_qtd_base(4, cur)-1) + "</td>"
     body += "<td>" + format_pct(index_managed/get_day_base(4, cur)-1) + "</td></tr>"
