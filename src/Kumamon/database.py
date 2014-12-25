@@ -11,6 +11,7 @@ from pandas.io.data import DataReader
 from datetime import datetime
 from datetime import date
 from log import log
+from decimal import *
 import config
 
 ADJUSTED_CLOSE = "Adj Close"
@@ -19,14 +20,14 @@ def last(symbol):
     url = 'http://finance.yahoo.com/d/quotes.csv?s=%s&f=%s' % (symbol, 'l1')
     str = urlopen(url).read()
     str = str.decode()
-    return float(str.strip().strip('"'))
+    return Decimal(str.strip().strip('"'))
 
 def get_scalar_field(sql, cur, field):
     cur.execute(sql)
     rows = cur.fetchall()
-    ret = 0.0 
+    ret = Decimal(0.0) 
     if len(rows) > 0:
-        ret = rows[0][field]
+        ret = Decimal(rows[0][field])
     
     return ret 
 
@@ -71,7 +72,7 @@ class finances(object):
         return total
        
     def update_portfolio_price_value(self):
-        self.cur.execute("select * from portfolio where pricing_type=1")
+        self.cur.execute("select * from constituents where pricing_type=1")
         rows = self.cur.fetchall()   
     
         for row in rows:
@@ -80,7 +81,7 @@ class finances(object):
             price = round(last( symbol ),2)
             value = round(price * row['quantity'], 2)
             log.info( "Updating %s..." % ( symbol ) )
-            self.cur.execute("update portfolio set price=" + str(price) + ", value=" + str(value) + " where symbol = '" + row['symbol'] + "'")
+            self.cur.execute("update constituents set price=" + str(price) + ", value=" + str(value) + " where symbol = '" + row['symbol'] + "'")
             
         log.info( "Committing transaction..." )
         self.conn.commit()

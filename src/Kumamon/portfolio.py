@@ -63,7 +63,7 @@ def main():
     csv = ""
     conn = psycopg2.connect( config.config_database_connect )
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    sql = "select * from portfolio where type=1 and pricing_type=1";
+    sql = "select * from constituents where portfolio_id=1 and pricing_type=1";
     cur.execute(sql)
     rows = cur.fetchall()   
         
@@ -72,7 +72,7 @@ def main():
             total_self += row['value']
             csv += row['symbol'] + "," + str(row['quantity']) + "," + format_ccy(row['price']) + "," + format_ccy(row['value']) + "\n"
 
-    sql = "select * from portfolio where type=1 and symbol='CASH'";
+    sql = "select * from constituents where portfolio_id=1 and symbol='CASH'";
     cur.execute(sql)
     rows = cur.fetchall()  
     total_self += rows[0]['value']
@@ -83,7 +83,7 @@ def main():
     index_self = total_self*divisor
     csv += ",," + str(divisor) + "," + format_ccy(index_self) + "\n\n"
 
-    sql = "select * from portfolio where type=2 and pricing_type=1";
+    sql = "select * from constituents where portfolio_id=2 and pricing_type=1";
     cur.execute(sql)
     rows = cur.fetchall()   
         
@@ -92,7 +92,7 @@ def main():
             total_managed += row['value']
             csv += row['symbol'] + "," + str(row['quantity']) + "," + format_ccy(row['price']) + "," + format_ccy(row['value']) + "\n"
 
-    sql = "select * from portfolio where type=2 and pricing_type=2";
+    sql = "select * from constituents where portfolio_id=2 and pricing_type=2";
     cur.execute(sql)
     rows = cur.fetchall()   
     
@@ -106,12 +106,12 @@ def main():
     index_managed = total_managed*divisor
     csv += ",," + str(divisor) + "," + format_ccy(index_managed) + "\n\n"        
 
-    cash = database.get_scalar("select * from portfolio where type=3 and symbol='CASH'", cur)
+    cash = database.get_scalar("select * from constituents where portfolio_id=3 and symbol='CASH'", cur)
     total_roe = total_self + total_managed + cash
     total_rotc = total_roe  
     csv += "CASH,,," + format_ccy(cash) + "\n"
 
-    debt = database.get_scalar("select * from portfolio where type=3 and symbol='DEBT'", cur)
+    debt = database.get_scalar("select * from constituents where portfolio_id=3 and symbol='DEBT'", cur)
     total_roe -= debt 
     csv += "DEBT,,," + format_ccy(debt) + "\n"
 
@@ -163,7 +163,7 @@ def main():
     
     # Update portfolio_history with today's values
     cur.execute("delete from portfolio_history where date=current_date")
-    cur.execute("insert into portfolio_history (select current_date, symbol, value, type, pricing_type, quantity, price from portfolio)")
+    cur.execute("insert into portfolio_history (select current_date, symbol, value, portfolio_id, pricing_type, quantity, price from constituents)")
     conn.commit()
     
     # Update divisors_history with today's values
