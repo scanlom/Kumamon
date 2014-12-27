@@ -88,7 +88,7 @@ def main():
     cur.execute(sql)
     rows = cur.fetchall()   
         
-    total_play = 5
+    total_play = 0
     for row in rows:
             total_play += row['value']
             csv += row['symbol'] + "," + str(row['quantity']) + "," + format_ccy(row['price']) + "," + format_ccy(row['value']) + "\n"
