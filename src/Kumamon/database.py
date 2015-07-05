@@ -94,12 +94,17 @@ class finances(object):
         for row in rows:
             symbol = row['symbol']
             log.info( "Downloading %s..." % ( symbol ) )
-            price = round(last( symbol ),2)
+            price = 0
+            try:
+                price = round(last( symbol ),2)
+            except Exception as err:
+                log.error( "Could not get price for %s" % ( symbol ) )
+                log.exception(err)
+                continue    
             if price > 0:
                 sql = "update stocks set price=" + str(price) + " where symbol = '" + symbol + "'"
                 log.info( "SQL: %s" % ( sql ) )
                 self.cur.execute( sql )
-                
         log.info( "Committing transaction..." )
         self.conn.commit()
         log.info( "Done" )
