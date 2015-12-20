@@ -15,12 +15,14 @@ config_email_password   = config.get('Email','Password')
 config_email_fumi       = config.get('Email','Fumi')
 config_database_connect = config.get('Database','Connect')
 
-config_backup_tmp_dir   = os.path.expanduser('~/backup/')
+config_backup           = 'Backup'
+config_dropbox_dir      = os.path.expanduser('~/Dropbox/') + config_backup + '/'
+config_backup_days      = 5
+config_backup_tmp_dir   = os.path.expanduser('~/') + config_backup + '/'
 config_backup_zip_dirs  = [ 
                 [ os.path.expanduser('~/Mike'), 'Mike.zip' ], 
                 [ os.path.expanduser('~/bin'), 'bin.zip' ],
-                #[ os.path.expanduser('~/python'), 'python.zip' ], 
-                #[ os.path.expanduser('~/rails'), 'rails.zip' ],
+                [ os.path.expanduser('~/misc'), 'misc.zip' ],
                 [ os.path.expanduser('/mdeia/DATA/Scanlom'), 'Scanlom.zip' ], 
             ] 
 

@@ -21,32 +21,34 @@ def zipdir(path, zip, log):
 def main():
     log.info("Started...")
     
+    # Clean out the temporary directory
     if os.path.exists( config.config_backup_tmp_dir ):
         shutil.rmtree( config.config_backup_tmp_dir )
     
     os.makedirs( config.config_backup_tmp_dir )
     
+    # Zip up the db's (finances and wikidb)
     call("pg_dump finances | split -b 1m - " + config.config_backup_tmp_dir + "financesbackup", shell=True)
     call("pg_dump wikidb | split -b 1m - " + config.config_backup_tmp_dir + "wikidbbackup", shell=True)
 
+    # Zip up the files we want
     for dir in config.config_backup_zip_dirs:
         zip = zipfile.ZipFile(config.config_backup_tmp_dir + dir[1], 'w')
         zipdir(dir[0], zip, log)
         zip.close()
 
-    msg = MIMEMultipart()
+    # Copy the backup to Dropbox
+    for i in reversed( range( 0, config.config_backup_days ) ):
+        dest = config.config_dropbox_dir + config.config_backup + " " + str( i )
+        if i > 0:
+            src = config.config_dropbox_dir + config.config_backup + " " + str( i - 1 )
+            if os.path.exists( dest ):
+                shutil.rmtree( dest )
+            if os.path.exists( src ):
+                os.rename( src, dest )
+        else:
+            shutil.move( config.config_backup_tmp_dir, dest )
     
-    files = os.listdir(config.config_backup_tmp_dir)
-    for f in files:
-        part = MIMEBase('application', "octet-stream")
-        part.set_payload( open(config.config_backup_tmp_dir + f,"rb").read() )
-        encoders.encode_base64(part)
-        part.add_header('Content-Disposition', 'attachment; filename="{0}"'.format(os.path.basename(f)))
-        msg.attach(part)
-
-    mail.send_mail_msg('User', 'Backup', msg)
-    
-    shutil.rmtree(config.config_backup_tmp_dir)
     log.info("Completed")
 
 if __name__ == '__main__':
