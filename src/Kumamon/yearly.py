@@ -6,15 +6,19 @@ Created on Jan 1, 2014
 
 import mail, database, config
 from log import log
+import psycopg2     # Postgresql access
+import psycopg2.extras  # Postgresql access
 
 def main():
     log.info("Started yearly.py...")
-    db = database.finances()
     
-    # Zero out Paid, Tax and Savings
-    db.set_paid(0)
-    db.set_tax(0)
-    db.set_savings(0)
+    conn = psycopg2.connect( config.config_database_connect )
+    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    
+    cur.execute("update balances set value=0 where type=15")    # Paid
+    cur.execute("update balances set value=0 where type=16")    # Tax
+    cur.execute("update balances set value=0 where type=17")    # Savings
+    conn.commit()
     
     log.info("Completed")
 
