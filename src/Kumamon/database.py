@@ -77,11 +77,12 @@ class finances(object):
     
         for row in rows:
             symbol = row['symbol']
+            portfolio_id = row['portfolio_id']
             log.info( "Downloading %s..." % ( symbol ) )
             price = round(last( symbol ),2)
             value = round(price * row['quantity'], 2)
             log.info( "Updating %s..." % ( symbol ) )
-            self.cur.execute("update constituents set price=" + str(price) + ", value=" + str(value) + " where symbol = '" + row['symbol'] + "'")
+            self.cur.execute("update constituents set price=" + str(price) + ", value=" + str(value) + " where symbol = '" + symbol + "' and portfolio_id='" + str(portfolio_id) + "'")
             
         log.info( "Committing transaction..." )
         self.conn.commit()
