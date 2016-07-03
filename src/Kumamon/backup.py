@@ -39,9 +39,9 @@ def main():
 
     # Copy the backup to Dropbox
     for i in reversed( range( 0, config.config_backup_days ) ):
-        dest = config.config_dropbox_dir + config.config_backup + " " + str( i )
+        dest = config.config_dropbox_dir + config.config_backup + str( i )
         if i > 0:
-            src = config.config_dropbox_dir + config.config_backup + " " + str( i - 1 )
+            src = config.config_dropbox_dir + config.config_backup + str( i - 1 )
             if os.path.exists( dest ):
                 shutil.rmtree( dest )
             if os.path.exists( src ):
