@@ -23,10 +23,11 @@ def last(symbol):
     return Decimal(str.strip().strip('"'))
 
 def get_scalar_field(sql, cur, field):
+    log.info( "get_scalar_field: " + sql )
     cur.execute(sql)
     rows = cur.fetchall()
     ret = Decimal(0.0) 
-    if len(rows) > 0:
+    if len(rows) > 0 and rows[0][field] is not None: 
         ret = Decimal(rows[0][field])
     
     return ret 
@@ -49,6 +50,11 @@ class finances(object):
     def __del__(self):
         self.cur.close()
         self.conn.close()
+
+    def get_spending_sum(self, type_str):
+        return get_scalar_field("select sum(amount) as amount from spending where type in (" + \
+                                type_str + ") and date >= '" + date.today().strftime( "01-01-%y" ) + "'", \
+                                self.cur, "amount")
 
     def recon_budget(self):
         return round(self.get_budget_pos() - self.get_budget_neg(), 2)
