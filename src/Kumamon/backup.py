@@ -29,7 +29,7 @@ def main():
     
     # Zip up the db's (finances and wikidb)
     call("pg_dump finances | split -b 1m - " + config.config_backup_tmp_dir + "financesbackup", shell=True)
-    call("pg_dump wikidb | split -b 1m - " + config.config_backup_tmp_dir + "wikidbbackup", shell=True)
+    call("pg_dump wikidb -U wikiuser | split -b 1m - " + config.config_backup_tmp_dir + "wikidbbackup", shell=True)
 
     # Zip up the files we want
     for dir in config.config_backup_zip_dirs:
