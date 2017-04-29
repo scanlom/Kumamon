@@ -8,6 +8,7 @@ import mail, database, psycopg2, psycopg2.extras, config
 from datetime import datetime, timedelta
 from time import localtime, strftime       # Time
 from log import log
+from decimal import *
 
 def format_ccy( number ):
     return '{0:,.2f}'.format( number )
@@ -15,9 +16,10 @@ def format_ccy( number ):
 def format_budget_row( db, name, where, total, day_of_year ):
     current = db.get_spending_sum( where )
     projected = current * 365 / day_of_year
+    tracking = total - projected
     return "<tr><td>" + name + "</td><td style='text-align:right'>" + format_ccy( current ) + \
         "</td><td style='text-align:right'>" + format_ccy( projected ) + "</td><td style='text-align:right'>" + \
-        format_ccy( total ) + "</td></tr>"
+        format_ccy( total ) + "</td><td style='text-align:right'>" + format_ccy( tracking ) + "</td></tr>"
 
 def main():
     log.info("Started...")
@@ -31,11 +33,12 @@ def main():
 <head></head>
 <body>
 <p>Current budget is<br></p>
-<table border="1"><tr><th>Category</th><th>Spent</th><th>Projected</th><th>Budget</th></tr>""" + \
-    format_budget_row( db, "Budget", "0,1,2,3,4,5,8,9", 95000, day_of_year ) + \
-    format_budget_row( db, "Fumi", "11", 5000, day_of_year ) + \
-    format_budget_row( db, "Mike", "6,10", 5000, day_of_year ) + \
-    format_budget_row( db, "Special", "7,94,95,96,97,98,99", 10000, day_of_year ) + \
+<table border="1"><tr><th>Category</th><th>Spent</th><th>Projected</th><th>Budget</th><th>Tracking</th></tr>""" + \
+    format_budget_row( db, "Budget", "0,2,3,4,5,8,9", Decimal( '53247.44' ), day_of_year ) + \
+    format_budget_row( db, "Fumi", "11", Decimal( '9165.29' ), day_of_year ) + \
+    format_budget_row( db, "Mike", "6,10", Decimal( '5000.00' ), day_of_year ) + \
+    format_budget_row( db, "Special", "7,94,95,96,97,98,99", Decimal( '10000.00' ), day_of_year ) + \
+    format_budget_row( db, "Rent", "1", Decimal( '41752.56' ), day_of_year ) + \
 """</table>"""
     body += """</table><p>Summary for last thirty days<br></p><table border="1">"""
      
