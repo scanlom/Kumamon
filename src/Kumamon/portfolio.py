@@ -196,10 +196,9 @@ def main():
     
     # Determine cash made this year
     profit = total_roe - get_ytd_balance_base(cur) - database.get_scalar("select * from balances where type=17", cur)
-    
+
     # Send a summary mail
-    subject = "Portfolio Summary - Total (ROE) " + format_pct(index_roe/get_day_base(2, cur)-1)
-    subject += " Self " + format_pct(index_self/get_day_base(1, cur)-1)    
+    subject = "Profit - " + format_ccy_plain(profit) + " / " + format_pct(index_roe/get_ytd_base(2, cur)-1)
     
     body = """\
 <html>
@@ -221,7 +220,7 @@ def main():
     body += "<tr><td>Managed</td><td>" + format_pct(index_managed/get_ytd_base(4, cur)-1) + "</td>" 
     body += "<td>" + format_pct(index_managed/get_qtd_base(4, cur)-1) + "</td>"
     body += "<td>" + format_pct(index_managed/get_day_base(4, cur)-1) + "</td></tr>"
-    body += "</table>Profit: " + format_ccy_plain(profit) + "</body></html>"
+    body += "</table></body></html>"
 
     # Close the db
     cur.close()
