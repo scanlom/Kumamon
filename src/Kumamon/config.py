@@ -23,5 +23,6 @@ config_backup_zip_dirs  = [
                 [ os.path.expanduser('~/Mike'), 'Mike.zip' ], 
                 [ os.path.expanduser('~/bin'), 'bin.zip' ],
                 [ os.path.expanduser('~/misc'), 'misc.zip' ],
+                [ os.path.expanduser('~/cpp'), 'cpp.zip' ],                
             ] 
 
