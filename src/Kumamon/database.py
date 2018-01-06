@@ -12,15 +12,10 @@ from datetime import datetime
 from datetime import date
 from log import log
 from decimal import *
+from api_analytics import last
 import config
 
 ADJUSTED_CLOSE = "Adj Close"
-
-def last(symbol):
-    url = 'http://finance.yahoo.com/d/quotes.csv?s=%s&f=%s' % (symbol, 'l1')
-    str = urlopen(url).read()
-    str = str.decode()
-    return Decimal(str.strip().strip('"'))
 
 def get_scalar_field(sql, cur, field):
     log.info( "get_scalar_field: " + sql )
@@ -83,9 +78,12 @@ class finances(object):
     
         for row in rows:
             symbol = row['symbol']
+            data_symbol = symbol
+            if symbol == "BRKB":
+                data_symbol = "BRK-B"
             portfolio_id = row['portfolio_id']
             log.info( "Downloading %s..." % ( symbol ) )
-            price = round(last( symbol ),2)
+            price = round(last( data_symbol ),2)
             value = round(price * row['quantity'], 2)
             log.info( "Updating %s..." % ( symbol ) )
             self.cur.execute("update constituents set price=" + str(price) + ", value=" + str(value) + " where symbol = '" + symbol + "' and portfolio_id='" + str(portfolio_id) + "'")
@@ -100,10 +98,13 @@ class finances(object):
     
         for row in rows:
             symbol = row['symbol']
+            data_symbol = symbol
+            if symbol == "BRKB":
+                data_symbol = "BRK-B"
             log.info( "Downloading %s..." % ( symbol ) )
             price = 0
             try:
-                price = round(last( symbol ),2)
+                price = round(last( data_symbol ),2)
             except Exception as err:
                 log.error( "Could not get price for %s" % ( symbol ) )
                 log.exception(err)
