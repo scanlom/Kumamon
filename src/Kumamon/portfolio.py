@@ -6,6 +6,7 @@ Created on Jul 20, 2013
 
 import mail, database, config
 from log import log
+from decimal import *
 import psycopg2     # Postgresql access
 import psycopg2.extras  # Postgresql access
 from datetime import datetime
@@ -56,6 +57,11 @@ def get_day_base(index, cur):
     yesterday = datetime.now() - timedelta(days=1)
     date = yesterday.strftime("%m/%d/%Y")
     return database.get_scalar("select * from index_history where type=" + str(index) + " and date='" + date + "'", cur)
+
+def get_minus_years_base(index, years, cur):
+    date = datetime.now() - timedelta(days=years*365)
+    date_str = date.strftime("%m/%d/%Y")
+    return database.get_scalar("select * from index_history where type=" + str(index) + " and date= ( select max(date) from index_history where date <='" + date_str + "')", cur)
 
 def main():
     log.info("Started...")
@@ -220,7 +226,14 @@ def main():
     body += "<tr><td>Managed</td><td>" + format_pct(index_managed/get_ytd_base(4, cur)-1) + "</td>" 
     body += "<td>" + format_pct(index_managed/get_qtd_base(4, cur)-1) + "</td>"
     body += "<td>" + format_pct(index_managed/get_day_base(4, cur)-1) + "</td></tr>"
-    body += "</table></body></html>"
+    body += "</table>"
+    body += "One Unit - " + format_pct(Decimal(203508.28) / total_roe) + "<br>"
+    body += "One Million - " + format_pct(1000000 / total_roe) + "<br>"
+    cagr_five = ( ( index_roe / get_minus_years_base(2, 5, cur) ) ** Decimal(0.2) ) - 1
+    cagr_ten = ( ( index_roe / get_minus_years_base(2, 10, cur) ) ** Decimal(0.1) ) - 1
+    body += "Five Inflection - " + format_pct(cagr_five) + ", " + format_ccy_plain( total_roe * cagr_five - Decimal(203508.28) ) + "<br>"
+    body += "Ten Inflection - " + format_pct(cagr_ten) + ", " + format_ccy_plain( total_roe * cagr_ten - Decimal(203508.28) ) + "<br>"
+    body += "</body></html>"
 
     # Close the db
     cur.close()
