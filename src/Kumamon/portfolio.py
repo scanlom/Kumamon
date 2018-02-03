@@ -231,8 +231,16 @@ def main():
     body += "One Million - " + format_pct(1000000 / total_roe) + "<br>"
     cagr_five = ( ( index_roe / get_minus_years_base(2, 5, cur) ) ** Decimal(0.2) ) - 1
     cagr_ten = ( ( index_roe / get_minus_years_base(2, 10, cur) ) ** Decimal(0.1) ) - 1
-    body += "Five Inflection - " + format_pct(cagr_five) + ", " + format_ccy_plain( total_roe * cagr_five - Decimal(203508.28) ) + "<br>"
-    body += "Ten Inflection - " + format_pct(cagr_ten) + ", " + format_ccy_plain( total_roe * cagr_ten - Decimal(203508.28) ) + "<br>"
+    inflect_five = total_roe * cagr_five - Decimal(203508.28)
+    inflect_ten = total_roe * cagr_ten - Decimal(203508.28)
+    if inflect_five > 0:
+        body += "Five Inflection - " + format_pct(cagr_five) + ", <font color='green'>" + format_ccy_plain( inflect_five ) + "</font><br>"
+    else:
+        body += "Five Inflection - " + format_pct(cagr_five) + ", <font color='red'>" + format_ccy_plain( inflect_five ) + "</font><br>"
+    if inflect_ten > 0:
+        body += "Ten Inflection - " + format_pct(cagr_ten) + ", <font color='green'>" + format_ccy_plain( inflect_ten ) + "</font><br>"
+    else:
+        body += "Ten Inflection - " + format_pct(cagr_ten) + ", <font color='red'>" + format_ccy_plain( inflect_ten ) + "</font><br>"
     body += "</body></html>"
 
     # Close the db
