@@ -34,15 +34,15 @@ def main():
 <body>
 <p>Current budget is<br></p>
 <table border="1"><tr><th>Category</th><th>Spent</th><th>Projected</th><th>Budget</th><th>Tracking</th></tr>""" + \
-    format_budget_row( db, "Base", "0,2,3,4,5,8,96", Decimal( '65000' ), day_of_year ) + \
+    format_budget_row( db, "Base", "0,2,3,4,5,8,12,96", Decimal( '65000' ), day_of_year ) + \
     format_budget_row( db, "Rent", "1", Decimal( '42000' ), day_of_year ) + \
     format_budget_row( db, "Travel", "7", Decimal( '10000' ), day_of_year ) + \
     format_budget_row( db, "Helper", "9", Decimal( '12000' ), day_of_year ) + \
     format_budget_row( db, "Monchichi", "94", Decimal( '12000' ), day_of_year ) + \
     format_budget_row( db, "Fumi", "11", Decimal( '5000.00' ), day_of_year ) + \
     format_budget_row( db, "Mike", "6,10", Decimal( '5000.00' ), day_of_year ) + \
-    format_budget_row( db, "Special", "95,97,98,99", Decimal( '0.00' ), day_of_year ) + \
-    format_budget_row( db, "Total", "0,1,2,3,4,5,6,7,8,9,10,11,94,95,96,97,98,99", Decimal( '151000.00' ), day_of_year ) + \
+    format_budget_row( db, "Special", "93,95,97,98,99", Decimal( '0.00' ), day_of_year ) + \
+    format_budget_row( db, "Total", "0,1,2,3,4,5,6,7,8,9,10,11,12,93,94,95,96,97,98,99", Decimal( '151000.00' ), day_of_year ) + \
 """</table>"""
     body += """</table><p>Summary for last thirty days<br></p><table border="1">"""
      
