@@ -7,12 +7,11 @@ Created on Aug 3, 2013
 from urllib.request import urlopen
 import psycopg2     # Postgresql access
 import psycopg2.extras  # Postgresql access
-from pandas.io.data import DataReader
 from datetime import datetime
 from datetime import date
 from log import log
 from decimal import *
-from api_analytics import last
+from api_analytics import *
 import config
 
 ADJUSTED_CLOSE = "Adj Close"
@@ -101,6 +100,9 @@ class finances(object):
             data_symbol = symbol
             if symbol == "BRKB":
                 data_symbol = "BRK-B"
+            if symbol == "SAN.PA":
+                log.error( "SAN.PA not supported, must update manually" )
+                continue
             log.info( "Downloading %s..." % ( symbol ) )
             price = 0
             try:
@@ -117,16 +119,11 @@ class finances(object):
         self.conn.commit()
         log.info( "Done" )
             
-    def update_stock_historical_change(self, symbol, index, field, field_date, close, 
-                                       historical_closes, historical_close_dates, years):
-        change = 0
-        change_date = date.today()
-        count = len( historical_closes )
-        if count > index:
-            change = round_pct( ( close / historical_closes[ count - ( index + 1 ) ] ) ** ( 1 / years ) - 1 )
-            change_date = historical_close_dates[ count - ( index + 1 ) ]
-        self.cur.execute( "update stocks set %s = %s, %s = '%s'  where symbol = '%s'" % 
-                          ( field, str( change ), field_date, change_date.strftime( "%m-%d-%y" ), symbol  ) )
+    def update_stock_historical_change(self, historicals, days, column_change, column_change_date ):
+        change = historicals.change( days )
+        sql = "update stocks set %s = %s, %s = '%s' where symbol = '%s'" % ( column_change, round_pct( change[1] ), column_change_date, change[0], historicals.symbol  )    
+        self.cur.execute( sql )
+        log.info( "SQL: %s" % ( sql ) )
 
     def update_stocks_historicals(self, log):
         self.cur.execute("select * from stocks")
@@ -137,27 +134,23 @@ class finances(object):
             data_symbol = symbol
             if symbol == "BRKB":
                 data_symbol = "BRK-B"
-            source = "yahoo"
             log.info( "Downloading %s..." % ( data_symbol ) )
             try:
-                data = DataReader( data_symbol,  source, datetime(2003,1,1)) # Get everything back to 2003
+                data = historicals( data_symbol )
+                self.update_stock_historical_change(data, data.CONST_BUSINESS_DAYS_ONE, "day_change", "day_change_date")    
+                self.update_stock_historical_change(data, data.CONST_BUSINESS_DAYS_WEEK, "week_change", "week_change_date")    
+                self.update_stock_historical_change(data, data.CONST_BUSINESS_DAYS_MONTH, "month_change", "month_change_date")    
+                self.update_stock_historical_change(data, data.CONST_BUSINESS_DAYS_THREE_MONTHS, "three_month_change", "three_month_change_date")    
+                self.update_stock_historical_change(data, data.CONST_BUSINESS_DAYS_YEAR, "year_change", "year_change_date")    
+                self.update_stock_historical_change(data, data.CONST_BUSINESS_DAYS_FIVE_YEARS, "five_year_change", "five_year_change_date")    
+                self.update_stock_historical_change(data, data.CONST_BUSINESS_DAYS_TEN_YEARS, "ten_year_change", "ten_year_change_date")                
+                self.conn.commit()
+                log.info( "Updated historicals for %s" % ( data_symbol ) )
             except Exception as err:
                 log.error( "Could not get data for %s" % ( data_symbol ) )
                 log.exception(err)
                 continue
-            historical_closes = data[ ADJUSTED_CLOSE ]
-            historical_close_dates = data.index
-            count = len( historical_closes )
-            close = 0
-            if count > 0:
-                close = historical_closes[ count - 1 ]
-            
-            self.update_stock_historical_change( symbol, 1, "day_change", "day_change_date", close, historical_closes, historical_close_dates, 1 )
-            self.update_stock_historical_change( symbol, 5, "week_change", "week_change_date", close, historical_closes, historical_close_dates, 1 )    
-            self.update_stock_historical_change( symbol, 22, "month_change", "month_change_date", close, historical_closes, historical_close_dates, 1 )    
-            self.update_stock_historical_change( symbol, 66, "three_month_change", "three_month_change_date", close, historical_closes, historical_close_dates, 1 )    
-            self.update_stock_historical_change( symbol, 252, "year_change", "year_change_date", close, historical_closes, historical_close_dates, 1 )    
-            self.update_stock_historical_change( symbol, 1260, "five_year_change", "five_year_change_date", close, historical_closes, historical_close_dates, 5 )    
-            self.update_stock_historical_change( symbol, 2520, "ten_year_change", "ten_year_change_date", close, historical_closes, historical_close_dates, 10 )    
-            
-        self.conn.commit()
+
+
+    
+        

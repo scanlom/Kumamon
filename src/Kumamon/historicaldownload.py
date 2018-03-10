@@ -5,7 +5,6 @@ Created on Nov 30, 2013
 '''
 
 import mail, database
-from pandas.io.data import DataReader
 from datetime import datetime
 from log import log
 
