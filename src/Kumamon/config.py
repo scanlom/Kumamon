@@ -20,9 +20,10 @@ config_dropbox_dir      = os.path.expanduser('~/Dropbox/') + config_backup + '/'
 config_backup_days      = 5
 config_backup_tmp_dir   = os.path.expanduser('~/') + config_backup + '/'
 config_backup_zip_dirs  = [ 
-                [ os.path.expanduser('~/Mike'), 'Mike.zip' ], 
-                [ os.path.expanduser('~/bin'), 'bin.zip' ],
-                [ os.path.expanduser('~/misc'), 'misc.zip' ],
-                [ os.path.expanduser('~/cpp'), 'cpp.zip' ],                
+                [ os.path.expanduser('~/Mike'), 'Mike' ], 
+                [ os.path.expanduser('~/bin'), 'bin' ],
+                [ os.path.expanduser('~/misc'), 'misc' ],
+                [ os.path.expanduser('~/cpp'), 'cpp' ],                
+                [ os.path.expanduser('~/.vim'), '.vim' ],                
             ] 
 
