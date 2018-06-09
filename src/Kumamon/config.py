@@ -23,7 +23,7 @@ config_backup_zip_dirs  = [
                 [ os.path.expanduser('~/Mike'), 'Mike' ], 
                 [ os.path.expanduser('~/bin'), 'bin' ],
                 [ os.path.expanduser('~/misc'), 'misc' ],
-                [ os.path.expanduser('~/cpp'), 'cpp' ],                
+                [ os.path.expanduser('~/dev'), 'dev' ],                
                 [ os.path.expanduser('~/.vim'), '.vim' ],                
             ] 
 
