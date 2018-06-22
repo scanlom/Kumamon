@@ -5,6 +5,7 @@ Created on Nov 13, 2017
 '''
 
 import json
+import time
 from decimal import *
 from log import log
 from urllib.request import urlopen
@@ -14,7 +15,15 @@ def last(symbol):
     url = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=%s&apikey=2YG6SAN57NRYNPJ8' % (symbol)
     bytes = urlopen(url).read()
     data = json.loads(bytes.decode())
-    return Decimal( data['Time Series (Daily)'][ data['Meta Data']['3. Last Refreshed'][0:10] ]['5. adjusted close'] )
+    
+    try:
+        last = Decimal( data['Time Series (Daily)'][ data['Meta Data']['3. Last Refreshed'][0:10] ]['5. adjusted close'] )
+        time.sleep(1.5) # Sleep to avoid AlphaVantage throttling error
+        return last
+    except Exception as err:
+        log.error( "Unable to retrieve last for %s" % (symbol) )
+        log.info( data )
+        raise err
 
 class historicals:
     CONST_BUSINESS_DAYS_ONE             = 1
@@ -86,7 +95,7 @@ def main():
     log.info("Started...")
     
     # Test
-    print( last('BRK-B') )
+    print( last('WFC') )
     
     foo = historicals('MSFT')
     print( foo.change_one_day()[0] )
