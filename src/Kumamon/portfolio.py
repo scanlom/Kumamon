@@ -227,7 +227,7 @@ def main():
     body += "<td>" + format_pct(index_managed/get_qtd_base(4, cur)-1) + "</td>"
     body += "<td>" + format_pct(index_managed/get_day_base(4, cur)-1) + "</td></tr>"
     body += "</table>"
-    body += "One Unit - " + format_pct(Decimal(203508.28) / total_roe) + "<br>"
+    body += "One Unit (203,508.28) - " + format_pct(Decimal(203508.28) / total_roe) + "<br>"
     body += "One Million - " + format_pct(1000000 / total_roe) + "<br>"
     cagr_five = ( ( index_roe / get_minus_years_base(2, 5, cur) ) ** Decimal(0.2) ) - 1
     cagr_ten = ( ( index_roe / get_minus_years_base(2, 10, cur) ) ** Decimal(0.1) ) - 1

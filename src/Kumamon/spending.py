@@ -43,6 +43,7 @@ def main():
     format_budget_row( db, "Mike", "6,10", Decimal( '5000.00' ), day_of_year ) + \
     format_budget_row( db, "Special", "93,95,97,98,99", Decimal( '0.00' ), day_of_year ) + \
     format_budget_row( db, "Total", "0,1,2,3,4,5,6,7,8,9,10,11,12,93,94,95,96,97,98,99", Decimal( '151000.00' ), day_of_year ) + \
+    format_budget_row( db, "Recon", "select distinct type from spending", Decimal( '151000.00' ), day_of_year ) + \
 """</table>"""
     body += """</table><p>Summary for last thirty days<br></p><table border="1">"""
      
