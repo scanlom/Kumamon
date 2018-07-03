@@ -11,6 +11,8 @@ from log import log
 from urllib.request import urlopen
 from collections import OrderedDict
 
+CONST_THROTTLE_SECONDS             = 3
+
 def last(symbol):
     url = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=%s&apikey=2YG6SAN57NRYNPJ8' % (symbol)
     bytes = urlopen(url).read()
@@ -18,7 +20,7 @@ def last(symbol):
     
     try:
         last = Decimal( data['Time Series (Daily)'][ data['Meta Data']['3. Last Refreshed'][0:10] ]['5. adjusted close'] )
-        time.sleep(1.5) # Sleep to avoid AlphaVantage throttling error
+        time.sleep(CONST_THROTTLE_SECONDS) # Sleep to avoid AlphaVantage throttling error
         return last
     except Exception as err:
         log.error( "Unable to retrieve last for %s" % (symbol) )
