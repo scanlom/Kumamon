@@ -66,7 +66,6 @@ def get_minus_years_base(index, years, cur):
 def main():
     log.info("Started...")
     
-    csv = ""
     conn = psycopg2.connect( config.config_database_connect )
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     sql = "select * from constituents where portfolio_id=1 and pricing_type=1";
@@ -76,18 +75,14 @@ def main():
     total_self = 0
     for row in rows:
             total_self += row['value']
-            csv += row['symbol'] + "," + str(row['quantity']) + "," + format_ccy(row['price']) + "," + format_ccy(row['value']) + "\n"
 
     sql = "select * from constituents where portfolio_id=1 and symbol='CASH'";
     cur.execute(sql)
     rows = cur.fetchall()  
     total_self += rows[0]['value']
-    csv += rows[0]['symbol'] + ",,," + format_ccy(rows[0]['value']) + "\n"
-    csv += "TOTAL,,," + format_ccy(total_self) + "\n"
     
     divisor = database.get_scalar("select * from divisors where type=1", cur)
     index_self = total_self*divisor
-    csv += ",," + str(divisor) + "," + format_ccy(index_self) + "\n\n"
 
     # Lazy for now - copy paste to calculate play money portfolio
     sql = "select * from constituents where portfolio_id=5 and pricing_type=1";
@@ -97,18 +92,14 @@ def main():
     total_play = 0
     for row in rows:
             total_play += row['value']
-            csv += row['symbol'] + "," + str(row['quantity']) + "," + format_ccy(row['price']) + "," + format_ccy(row['value']) + "\n"
 
     sql = "select * from constituents where portfolio_id=5 and symbol='CASH'";
     cur.execute(sql)
     rows = cur.fetchall()  
     total_play += rows[0]['value']
-    csv += rows[0]['symbol'] + ",,," + format_ccy(rows[0]['value']) + "\n"
-    csv += "TOTAL,,," + format_ccy(total_play) + "\n"
     
     divisor = database.get_scalar("select * from divisors where type=5", cur)
     index_play = total_play * divisor
-    csv += ",," + str(divisor) + "," + format_ccy(index_play) + "\n\n"
 
     sql = "select * from constituents where portfolio_id=2 and pricing_type=1";
     cur.execute(sql)
@@ -117,7 +108,6 @@ def main():
     total_managed = 0
     for row in rows:
             total_managed += row['value']
-            csv += row['symbol'] + "," + str(row['quantity']) + "," + format_ccy(row['price']) + "," + format_ccy(row['value']) + "\n"
 
     sql = "select * from constituents where portfolio_id=2 and pricing_type=2";
     cur.execute(sql)
@@ -125,49 +115,23 @@ def main():
     
     for row in rows:
             total_managed += row['value']
-            csv += row['symbol'] + ",,," + format_ccy(row['value']) + "\n"
-    
-    csv += "TOTAL,,," + str(total_managed) + "\n"
     
     divisor = database.get_scalar("select * from divisors where type=4", cur)
     index_managed = total_managed*divisor
-    csv += ",," + str(divisor) + "," + format_ccy(index_managed) + "\n\n"        
 
     cash = database.get_scalar("select * from constituents where portfolio_id=3 and symbol='CASH'", cur)
     total_roe = total_self + total_managed + cash
     total_rotc = total_roe  
-    csv += "CASH,,," + format_ccy(cash) + "\n"
 
     debt = database.get_scalar("select * from constituents where portfolio_id=3 and symbol='DEBT'", cur)
     total_roe -= debt 
-    csv += "DEBT,,," + format_ccy(debt) + "\n"
 
     divisor = database.get_scalar("select * from divisors where type=2", cur)
     index_roe = total_roe*divisor
-    csv += "Total (ROE)," + format_ccy(total_roe) + "," + str(divisor) + "," + format_ccy(index_roe) + "\n"
 
     divisor = database.get_scalar("select * from divisors where type=3", cur)
     index_rotc = total_rotc*divisor
-    csv += "Total (ROTC)," + format_ccy(total_rotc) + "," + str(divisor) + "," + format_ccy(index_rotc) + "\n"
 
-    # Top the csv with the performance table
-    perf = ",YTD,QTD,Day\n"
-    perf += "Total (ROE)," + format_pct(index_roe/get_ytd_base(2, cur)-1) + "," 
-    perf +=  format_pct(index_roe/get_qtd_base(2, cur)-1) + ","
-    perf +=  format_pct(index_roe/get_day_base(2, cur)-1) + "\n"
-    perf += "Total (ROTC)," + format_pct(index_rotc/get_ytd_base(3, cur)-1) + "," 
-    perf +=  format_pct(index_rotc/get_qtd_base(3, cur)-1) + ","
-    perf +=  format_pct(index_rotc/get_day_base(3, cur)-1) + "\n"
-    perf += "Self," + format_pct(index_self/get_ytd_base(1, cur)-1) + "," 
-    perf +=  format_pct(index_self/get_qtd_base(1, cur)-1) + ","
-    perf +=  format_pct(index_self/get_day_base(1, cur)-1) + "\n"
-    perf += "Managed," + format_pct(index_managed/get_ytd_base(4, cur)-1) + "," 
-    perf +=  format_pct(index_managed/get_qtd_base(4, cur)-1) + ","
-    perf +=  format_pct(index_managed/get_day_base(4, cur)-1) + "\n\n"
-    csv = perf + csv
-
-    print(csv)
-     
     # Update index_history with today's values
     cur.execute("delete from index_history where date=current_date")
     cur.execute("insert into index_history values (current_date, 1, " + format_ccy_sql(index_self) + ")")
@@ -257,5 +221,3 @@ if __name__ == '__main__':
         log.exception(err)
         log.info("Aborted")
         mail.send_mail_html_self("FAILURE:  portfolio.py", str( err ) ) 
-        
-            
