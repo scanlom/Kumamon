@@ -11,7 +11,7 @@ from log import log
 from urllib.request import urlopen
 from collections import OrderedDict
 
-CONST_THROTTLE_SECONDS             = 3
+CONST_THROTTLE_SECONDS             = 16
 
 def last(symbol):
     url = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=%s&apikey=2YG6SAN57NRYNPJ8' % (symbol)
