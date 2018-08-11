@@ -5,6 +5,7 @@ Created on Jul 20, 2013
 '''
 
 import mail, database, config
+from api_database import database2
 from log import log
 from decimal import *
 import psycopg2     # Postgresql access
@@ -12,6 +13,8 @@ import psycopg2.extras  # Postgresql access
 from datetime import datetime
 from datetime import timedelta
 from time import localtime, strftime       # Time
+
+CONST_ONE_UNIT  = Decimal(203508.28)
 
 def format_ccy(number):
     return '"' + '{0:,.2f}'.format(number) + '"'
@@ -57,11 +60,6 @@ def get_day_base(index, cur):
     yesterday = datetime.now() - timedelta(days=1)
     date = yesterday.strftime("%m/%d/%Y")
     return database.get_scalar("select * from index_history where type=" + str(index) + " and date='" + date + "'", cur)
-
-def get_minus_years_base(index, years, cur):
-    date = datetime.now() - timedelta(days=years*365)
-    date_str = date.strftime("%m/%d/%Y")
-    return database.get_scalar("select * from index_history where type=" + str(index) + " and date= ( select max(date) from index_history where date <='" + date_str + "')", cur)
 
 def main():
     log.info("Started...")
@@ -191,12 +189,17 @@ def main():
     body += "<td>" + format_pct(index_managed/get_qtd_base(4, cur)-1) + "</td>"
     body += "<td>" + format_pct(index_managed/get_day_base(4, cur)-1) + "</td></tr>"
     body += "</table>"
-    body += "One Unit (203,508.28) - " + format_pct(Decimal(203508.28) / total_roe) + "<br>"
+    body += "One Unit (" + format_ccy_plain(CONST_ONE_UNIT) + ") - " + format_pct(CONST_ONE_UNIT / total_roe) + "<br>"
     body += "One Million - " + format_pct(1000000 / total_roe) + "<br>"
-    cagr_five = ( ( index_roe / get_minus_years_base(2, 5, cur) ) ** Decimal(0.2) ) - 1
-    cagr_ten = ( ( index_roe / get_minus_years_base(2, 10, cur) ) ** Decimal(0.1) ) - 1
-    inflect_five = total_roe * cagr_five - Decimal(203508.28)
-    inflect_ten = total_roe * cagr_ten - Decimal(203508.28)
+    
+    db2 = database2()
+    row_base_roe_5 = db2.get_index_row_minus_years(database2.CONST_INDEX_ROE, 5)
+    row_base_roe_10 = db2.get_index_row_minus_years(database2.CONST_INDEX_ROE, 10)
+    
+    cagr_five = ( ( index_roe / row_base_roe_5.value ) ** Decimal(0.2) ) - 1
+    cagr_ten = ( ( index_roe / row_base_roe_10.value ) ** Decimal(0.1) ) - 1
+    inflect_five = total_roe * cagr_five - CONST_ONE_UNIT
+    inflect_ten = total_roe * cagr_ten - CONST_ONE_UNIT
     if inflect_five > 0:
         body += "Five Inflection - " + format_pct(cagr_five) + ", <font color='green'>" + format_ccy_plain( inflect_five ) + "</font><br>"
     else:
