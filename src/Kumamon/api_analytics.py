@@ -6,7 +6,7 @@ Created on Nov 13, 2017
 
 import json
 import time
-from decimal import *
+from decimal import Decimal
 from log import log
 from urllib.request import urlopen
 from collections import OrderedDict
@@ -15,8 +15,8 @@ CONST_THROTTLE_SECONDS             = 16
 
 def last(symbol):
     url = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=%s&apikey=2YG6SAN57NRYNPJ8' % (symbol)
-    bytes = urlopen(url).read()
-    data = json.loads(bytes.decode())
+    raw_bytes = urlopen(url).read()
+    data = json.loads(raw_bytes.decode())
     
     try:
         last = Decimal( data['Time Series (Daily)'][ data['Meta Data']['3. Last Refreshed'][0:10] ]['5. adjusted close'] )
