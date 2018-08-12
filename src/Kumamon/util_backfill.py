@@ -4,12 +4,12 @@ Created on Nov 13, 2017
 @author: scanlom
 '''
 
-import psycopg2     # Postgresql access
-import psycopg2.extras  # Postgresql access
-import config
-from log import log
 from datetime import datetime
 from datetime import timedelta
+from psycopg2 import connect
+from psycopg2.extras import DictCursor
+from api_config import config_database_connect
+from api_log import log
 
 def backfill(conn, cur, table, sql_template):
     cur.execute( 'select max(date) from %s' % ( table ) )
@@ -27,8 +27,8 @@ def backfill(conn, cur, table, sql_template):
            
 def main():
     log.info("Started...")
-    conn = psycopg2.connect( config.config_database_connect )
-    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    conn = connect( config_database_connect )
+    cur = conn.cursor(cursor_factory=DictCursor)
 
     backfill(conn, cur, 'balances_history', "insert into balances_history (select '%s', type, value from balances_history where date='%s')" )
     backfill(conn, cur, 'index_history', "insert into index_history (select '%s', type, value from index_history where date='%s')" )
