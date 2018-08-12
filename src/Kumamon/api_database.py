@@ -26,6 +26,15 @@ class database2:
     CONST_INDEX_MANAGED     = 4
     CONST_INDEX_PLAY        = 5
     
+    CONST_BALANCES_TYPE_TOTAL_ROE       = 12
+    CONST_BALANCES_TYPE_TOTAL_SELF      = 13
+    CONST_BALANCES_TYPE_TOTAL_MANAGED   = 14
+    CONST_BALANCES_TYPE_PAID            = 15
+    CONST_BALANCES_TYPE_TAX             = 16
+    CONST_BALANCES_TYPE_SAVINGS         = 17
+    CONST_BALANCES_TYPE_TOTAL_ROTC      = 18
+    CONST_BALANCES_TYPE_TOTAL_PLAY      = 19
+    
     CONST_PRICING_TYPE_BY_PRICE = 1
     
     def __init__(self):
@@ -33,8 +42,9 @@ class database2:
         self.engine = create_engine(config_database2_connect)
         self.Base.prepare(self.engine, reflect=True)
         self.session = Session(self.engine)
-        self.IndexHistory = self.Base.classes.index_history
+        self.Balances = self.Base.classes.balances
         self.Constituents = self.Base.classes.constituents
+        self.IndexHistory = self.Base.classes.index_history
         self.Stocks = self.Base.classes.stocks
         
     def commit(self):
@@ -50,17 +60,17 @@ class database2:
     
     def get_stocks(self):
         return self.session.query(self.Stocks).all()
+    
+    def get_balance(self, type):
+        return self.session.query(self.Balances).filter(self.Balances.type == type).one()
 
 def main():
     log.info("Started...")
     
     # Test
     db = database2()
-    rows = db.get_constituents(database2.CONST_PRICING_TYPE_BY_PRICE)
-    print(rows[0].symbol)
-    
-    rows = db.get_stocks()
-    print(rows[0].symbol)
+    row = db.get_balance(database2.CONST_BALANCES_TYPE_TOTAL_ROE)
+    print(row.value)
     
     log.info("Completed")
 

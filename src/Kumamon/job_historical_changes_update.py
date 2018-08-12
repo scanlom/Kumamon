@@ -35,6 +35,8 @@ def main():
             log.exception(err)
             continue   
 
+    log.info( "Committing transaction..." )
+    db.commit()
     log.info("Completed")
 
 if __name__ == '__main__':
