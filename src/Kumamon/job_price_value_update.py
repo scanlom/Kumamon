@@ -4,15 +4,11 @@ Created on Aug 7, 2013
 @author: scanlom
 '''
 
+from api_analytics import get_market_data_symbol
 from api_analytics import last
 from api_database import database2
 from api_log import log
 from api_mail import send_mail_html_self
-
-def get_market_data_symbol(symbol):
-    if symbol == "BRKB":
-        return "BRK-B"
-    return symbol
 
 def populate_price_and_value(db, rows, populate_value):
     for row in rows:

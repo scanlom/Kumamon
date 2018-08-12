@@ -13,14 +13,19 @@ from api_log import log
 
 CONST_THROTTLE_SECONDS             = 16
 
+def get_market_data_symbol(symbol):
+    if symbol == "BRKB":
+        return "BRK-B"
+    return symbol
+
 def last(symbol):
+    sleep(CONST_THROTTLE_SECONDS) # Sleep to avoid AlphaVantage throttling error
     url = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=%s&apikey=2YG6SAN57NRYNPJ8' % (symbol)
     raw_bytes = urlopen(url).read()
     data = loads(raw_bytes.decode())
     
     try:
         last = Decimal( data['Time Series (Daily)'][ data['Meta Data']['3. Last Refreshed'][0:10] ]['5. adjusted close'] )
-        sleep(CONST_THROTTLE_SECONDS) # Sleep to avoid AlphaVantage throttling error
         return last
     except Exception as err:
         log.error( "Unable to retrieve last for %s" % (symbol) )
@@ -37,15 +42,17 @@ class historicals:
     CONST_BUSINESS_DAYS_TEN_YEARS       = 2520
     
     def __init__(self, symbol):
+        sleep(CONST_THROTTLE_SECONDS) # Sleep to avoid AlphaVantage throttling error
+        
         self.symbol = symbol
         
         url = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=%s&outputsize=full&apikey=2YG6SAN57NRYNPJ8' % (symbol)
-        bytes = urlopen(url).read()
-        data_full = loads(bytes.decode(), object_pairs_hook=OrderedDict)
+        raw_bytes = urlopen(url).read()
+        data_full = loads(raw_bytes.decode(), object_pairs_hook=OrderedDict)
 
         url = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=%s&apikey=2YG6SAN57NRYNPJ8' % (symbol)
-        bytes = urlopen(url).read()
-        data_compact = loads(bytes.decode(), object_pairs_hook=OrderedDict)
+        raw_bytes = urlopen(url).read()
+        data_compact = loads(raw_bytes.decode(), object_pairs_hook=OrderedDict)
 
         # For outputsize=full, TiME_SERIES_DAILY_ADJUSTED is one week delayed.  So we have to get the compact information,
         # store it, and then add the rest from full
@@ -59,6 +66,7 @@ class historicals:
                 self.data_adj_close[key] = Decimal( value['5. adjusted close'] )
                 
         self.data_adj_close = list( self.data_adj_close.items() )
+        sleep(CONST_THROTTLE_SECONDS) # Sleep to avoid AlphaVantage throttling error
 
     def change_one_day(self):
         return self.change(self.CONST_BUSINESS_DAYS_ONE )
