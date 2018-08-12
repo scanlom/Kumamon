@@ -5,11 +5,12 @@ Created on Aug 11, 2018
 '''
 from datetime import datetime
 from datetime import timedelta
+from sqlalchemy import create_engine
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
-from sqlalchemy import create_engine
 from sqlalchemy.sql import func
-from log import log
+from api_config import config_database2_connect
+from api_log import log
 
 class database2:
     CONST_DAYS_IN_YEAR      = 365
@@ -22,7 +23,7 @@ class database2:
     
     def __init__(self):
         self.Base = automap_base()
-        self.engine = create_engine('postgresql://scanlom:buck123@localhost/finances')
+        self.engine = create_engine(config_database2_connect)
         self.Base.prepare(self.engine, reflect=True)
         self.session = Session(self.engine)
         self.IndexHistory = self.Base.classes.index_history

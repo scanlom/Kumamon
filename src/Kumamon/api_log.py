@@ -4,23 +4,27 @@ Created on Dec 25, 2013
 @author: scanlom
 '''
 
-import logging, os
-import logging.handlers
+from logging import getLogger
+from logging import Formatter
+from logging import INFO 
+from logging import handlers
+from logging import StreamHandler
+from os import path
 
-log = logging.getLogger()
-log.setLevel(logging.INFO)
+log = getLogger()
+log.setLevel(INFO)
 
-formatter = logging.Formatter(
+formatter = Formatter(
     "%(asctime)s %(module)-11s %(levelname)-10s %(message)s")
 
 # Log to file - 50k max, 5 files
-filehandler = logging.handlers.RotatingFileHandler(os.path.expanduser('~/logs/Kumamon.log'), 50*1024, 5)
-filehandler.setLevel(logging.INFO)
+filehandler = handlers.RotatingFileHandler(path.expanduser('~/logs/Kumamon.log'), 50*1024, 5)
+filehandler.setLevel(INFO)
 filehandler.setFormatter(formatter)
 log.addHandler(filehandler)
 
 # Log to stdout also
-streamhandler = logging.StreamHandler()
-streamhandler.setLevel(logging.INFO)
+streamhandler = StreamHandler()
+streamhandler.setLevel(INFO)
 streamhandler.setFormatter(formatter)
 log.addHandler(streamhandler)

@@ -4,23 +4,23 @@ Created on Nov 13, 2017
 @author: scanlom
 '''
 
-import json
-import time
-from decimal import Decimal
-from log import log
-from urllib.request import urlopen
 from collections import OrderedDict
+from decimal import Decimal
+from json import loads
+from time import sleep
+from urllib.request import urlopen
+from api_log import log
 
 CONST_THROTTLE_SECONDS             = 16
 
 def last(symbol):
     url = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=%s&apikey=2YG6SAN57NRYNPJ8' % (symbol)
     raw_bytes = urlopen(url).read()
-    data = json.loads(raw_bytes.decode())
+    data = loads(raw_bytes.decode())
     
     try:
         last = Decimal( data['Time Series (Daily)'][ data['Meta Data']['3. Last Refreshed'][0:10] ]['5. adjusted close'] )
-        time.sleep(CONST_THROTTLE_SECONDS) # Sleep to avoid AlphaVantage throttling error
+        sleep(CONST_THROTTLE_SECONDS) # Sleep to avoid AlphaVantage throttling error
         return last
     except Exception as err:
         log.error( "Unable to retrieve last for %s" % (symbol) )
@@ -41,11 +41,11 @@ class historicals:
         
         url = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=%s&outputsize=full&apikey=2YG6SAN57NRYNPJ8' % (symbol)
         bytes = urlopen(url).read()
-        data_full = json.loads(bytes.decode(), object_pairs_hook=OrderedDict)
+        data_full = loads(bytes.decode(), object_pairs_hook=OrderedDict)
 
         url = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=%s&apikey=2YG6SAN57NRYNPJ8' % (symbol)
         bytes = urlopen(url).read()
-        data_compact = json.loads(bytes.decode(), object_pairs_hook=OrderedDict)
+        data_compact = loads(bytes.decode(), object_pairs_hook=OrderedDict)
 
         # For outputsize=full, TiME_SERIES_DAILY_ADJUSTED is one week delayed.  So we have to get the compact information,
         # store it, and then add the rest from full
