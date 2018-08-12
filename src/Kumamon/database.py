@@ -71,54 +71,7 @@ class finances(object):
             total += row['value']
         return total
        
-    def update_portfolio_price_value(self):
-        self.cur.execute("select * from constituents where pricing_type=1")
-        rows = self.cur.fetchall()   
-    
-        for row in rows:
-            symbol = row['symbol']
-            data_symbol = symbol
-            if symbol == "BRKB":
-                data_symbol = "BRK-B"
-            portfolio_id = row['portfolio_id']
-            log.info( "Downloading %s..." % ( symbol ) )
-            price = round(last( data_symbol ),2)
-            value = round(price * row['quantity'], 2)
-            log.info( "Updating %s..." % ( symbol ) )
-            self.cur.execute("update constituents set price=" + str(price) + ", value=" + str(value) + " where symbol = '" + symbol + "' and portfolio_id='" + str(portfolio_id) + "'")
-            
-        log.info( "Committing transaction..." )
-        self.conn.commit()
-        log.info( "Done" )
-
-    def update_stocks_price(self):
-        self.cur.execute("select * from stocks")
-        rows = self.cur.fetchall()   
-    
-        for row in rows:
-            symbol = row['symbol']
-            data_symbol = symbol
-            if symbol == "BRKB":
-                data_symbol = "BRK-B"
-            if symbol == "SAN.PA":
-                log.error( "SAN.PA not supported, must update manually" )
-                continue
-            log.info( "Downloading %s..." % ( symbol ) )
-            price = 0
-            try:
-                price = round(last( data_symbol ),2)
-            except Exception as err:
-                log.error( "Could not get price for %s" % ( symbol ) )
-                log.exception(err)
-                continue    
-            if price > 0:
-                sql = "update stocks set price=" + str(price) + " where symbol = '" + symbol + "'"
-                log.info( "SQL: %s" % ( sql ) )
-                self.cur.execute( sql )
-        log.info( "Committing transaction..." )
-        self.conn.commit()
-        log.info( "Done" )
-            
+           
     def update_stock_historical_change(self, historicals, days, column_change, column_change_date ):
         change = historicals.change( days )
         sql = "update stocks set %s = %s, %s = '%s' where symbol = '%s'" % ( column_change, round_pct( change[1] ), column_change_date, change[0], historicals.symbol  )    
