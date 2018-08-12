@@ -4,11 +4,18 @@ Created on Jul 14, 2013
 @author: scanlom
 '''
 
-import mail, database, psycopg2, psycopg2.extras, config
-from datetime import datetime, timedelta
-from time import localtime, strftime       # Time
-from log import log
-from decimal import *
+from datetime import datetime
+from datetime import timedelta
+from decimal import Decimal
+from time import localtime
+from time import strftime
+from psycopg2 import connect
+from psycopg2.extras import DictCursor
+from api_config import config_database_connect
+from api_log import log
+from api_mail import send_mail_html_self
+from database import finances
+
 
 def format_ccy( number ):
     return '{0:,.2f}'.format( number )
@@ -23,8 +30,8 @@ def format_budget_row( db, name, where, total, day_of_year ):
 
 def main():
     log.info("Started...")
-    conn = psycopg2.connect( config.config_database_connect )
-    db = database.finances()
+    conn = connect( config_database_connect )
+    db = finances()
     day_of_year = datetime.now().timetuple().tm_yday
     thirty_days_ago = datetime.now() - timedelta(days=30)
    
@@ -55,7 +62,7 @@ def main():
         s.type in (0,1,2,3,4,5,8,9)
         order by date desc"""
 
-    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    cur = conn.cursor(cursor_factory=DictCursor)
     cur.execute(sql)
     rows = cur.fetchall()    
     
@@ -65,8 +72,7 @@ def main():
     body += """</table></body></html>""";
     subject = 'Spending Report - ' + strftime("%Y-%m-%d", localtime())
      
-    mail.send_mail_html_self(subject, body)
-    #mail.send_mail_html_fumi(subject, body)
+    send_mail_html_self(subject, body)
     log.info("Completed")
 
 if __name__ == '__main__':
@@ -75,4 +81,4 @@ if __name__ == '__main__':
     except Exception as err:
         log.exception(err)
         log.info("Aborted")
-        mail.send_mail_html_self("FAILURE:  Spending.py", str( err ) ) 
+        send_mail_html_self("FAILURE:  Spending.py", str( err ) ) 

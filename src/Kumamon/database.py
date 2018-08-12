@@ -9,10 +9,10 @@ import psycopg2     # Postgresql access
 import psycopg2.extras  # Postgresql access
 from datetime import datetime
 from datetime import date
-from log import log
 from decimal import *
 from api_analytics import *
-import config
+from api_log import *
+from api_config import *
 
 ADJUSTED_CLOSE = "Adj Close"
 
@@ -38,7 +38,7 @@ def round_pct(value):
 class finances(object):
 
     def __init__(self):
-        self.conn = psycopg2.connect( config.config_database_connect )
+        self.conn = psycopg2.connect( config_database_connect )
         self.cur = self.conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
         
     def __del__(self):
