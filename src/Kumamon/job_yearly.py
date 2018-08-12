@@ -4,16 +4,17 @@ Created on Jan 1, 2014
 @author: scanlom
 '''
 
-import mail, database, config
-from log import log
-import psycopg2     # Postgresql access
-import psycopg2.extras  # Postgresql access
+from psycopg2 import connect
+from psycopg2.extras import DictCursor
+from api_config import config_database_connect
+from api_log import log
+from api_mail import send_mail_html_self
 
 def main():
-    log.info("Started yearly.py...")
+    log.info("Started job_yearly.py...")
     
-    conn = psycopg2.connect( config.config_database_connect )
-    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    conn = connect( config_database_connect )
+    cur = conn.cursor(cursor_factory=DictCursor)
     
     cur.execute("update balances set value=0 where type=15")    # Paid
     cur.execute("update balances set value=0 where type=16")    # Tax
@@ -28,4 +29,4 @@ if __name__ == '__main__':
     except Exception as err:
         log.exception(err)
         log.info("Aborted")
-        mail.send_mail_html_self("FAILURE:  portfolio.py", str( err ) ) 
+        send_mail_html_self("FAILURE:  job_yearly.py", str( err ) ) 
