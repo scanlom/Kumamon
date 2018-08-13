@@ -48,6 +48,7 @@ class database2:
         self.BalancesHistory = self.Base.classes.balances_history
         self.Constituents = self.Base.classes.constituents
         self.IndexHistory = self.Base.classes.index_history
+        self.Spending = self.Base.classes.spending
         self.Stocks = self.Base.classes.stocks
         
     def commit(self):
@@ -94,6 +95,9 @@ class database2:
         date = datetime.now().date() - timedelta(days=years*database2.CONST_DAYS_IN_YEAR)
         date = self.session.query(func.max(self.IndexHistory.date)).filter(self.IndexHistory.type == index, self.IndexHistory.date <= date).scalar()
         return self.session.query(self.IndexHistory).filter(self.IndexHistory.type == index, self.IndexHistory.date == date).one()
+    
+    def get_ytd_spending_sum(self, types):
+        return self.session.query(func.sum(self.Spending.amount)).filter(self.Spending.date >= self.get_ytd_base_date(), self.Spending.type.in_(types)).scalar()
 
 def main():
     log.info("Started...")
@@ -104,6 +108,7 @@ def main():
     print(val)
     print(db.get_ytd_base_date())
     db.session.query(db.IndexHistory).filter(db.IndexHistory.type == 2, db.IndexHistory.date == '08/14/2018').one()
+    print(db.get_ytd_spending_sum([ 0,2,3,4,5,8,12,96 ]))
     
     log.info("Completed")
 
