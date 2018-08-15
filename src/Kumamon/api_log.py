@@ -63,7 +63,8 @@ def main():
     log.info("Started...")
     
     # Test
-    log.error("Mikey")
+    for i in range(101):
+        log.error("Mikey")
     
     log.info("Completed")
 
