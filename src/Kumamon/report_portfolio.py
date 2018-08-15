@@ -77,4 +77,3 @@ if __name__ == '__main__':
     except Exception as err:
         log.exception(err)
         log.info("Aborted")
-        send_mail_html_self("FAILURE:  portfolio.py", str( err ) ) 

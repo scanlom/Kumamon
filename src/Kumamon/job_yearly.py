@@ -8,7 +8,6 @@ from psycopg2 import connect
 from psycopg2.extras import DictCursor
 from api_config import config_database_connect
 from api_log import log
-from api_mail import send_mail_html_self
 
 def main():
     log.info("Started job_yearly.py...")
@@ -29,4 +28,3 @@ if __name__ == '__main__':
     except Exception as err:
         log.exception(err)
         log.info("Aborted")
-        send_mail_html_self("FAILURE:  job_yearly.py", str( err ) ) 

@@ -8,7 +8,6 @@ from api_analytics import get_market_data_symbol
 from api_analytics import last
 from api_database import database2
 from api_log import log
-from api_mail import send_mail_html_self
 
 def populate_price_and_value(db, rows, populate_value):
     for row in rows:
@@ -45,4 +44,3 @@ if __name__ == '__main__':
     except Exception as err:
         log.exception(err)
         log.info("Aborted")
-        send_mail_html_self("FAILURE:  job_price_value_update.py", str( err ) ) 

@@ -8,7 +8,6 @@ import database
 from api_config import config_database_connect
 from api_database import database2
 from api_log import log
-from api_mail import send_mail_html_self
 from decimal import *
 import psycopg2     # Postgresql access
 import psycopg2.extras  # Postgresql access
@@ -176,4 +175,3 @@ if __name__ == '__main__':
     except Exception as err:
         log.exception(err)
         log.info("Aborted")
-        send_mail_html_self("FAILURE:  portfolio.py", str( err ) ) 

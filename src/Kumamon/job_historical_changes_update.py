@@ -8,7 +8,6 @@ from api_analytics import get_market_data_symbol
 from api_analytics import historicals
 from api_database import database2
 from api_log import log
-from api_mail import send_mail_html_self
 
 def update_stock_historical_change(row, historicals, days, column_change, column_change_date):
     change = historicals.change(days)
@@ -45,4 +44,3 @@ if __name__ == '__main__':
     except Exception as err:
         log.exception(err)
         log.info("Aborted")
-        send_mail_html_self("FAILURE:  job_historical_changes_update.py", str( err ) ) 

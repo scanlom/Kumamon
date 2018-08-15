@@ -17,7 +17,6 @@ from api_config import config_backup_tmp_dir
 from api_config import config_backup_zip_dirs
 from api_config import config_dropbox_dir
 from api_log import log
-from api_mail import send_mail_html_self
 
 def main():
     log.info("Started...")
@@ -56,4 +55,3 @@ if __name__ == '__main__':
     except Exception as err:
         log.exception(err)
         log.info("Aborted")
-        send_mail_html_self("FAILURE:  backup.py", str( err ) )

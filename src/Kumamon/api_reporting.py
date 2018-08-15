@@ -22,14 +22,17 @@ class report:
     
     def format_row(self, row, formats):
         ret = []
-        for item,format in zip(row, formats):
-            if self.CONST_FORMAT_NONE == format:
-                ret.append(str(item))
-            elif self.CONST_FORMAT_CCY == format:
-                ret.append(self.format_ccy(item))
-            elif self.CONST_FORMAT_PCT == format:
-                ret.append(self.format_pct(item))
-                
+        for item,f in zip(row, formats):
+            foo = ">"
+            if self.CONST_FORMAT_CCY == f or self.CONST_FORMAT_PCT == f:
+                foo = " style='text-align:right'" + foo
+            if self.CONST_FORMAT_NONE == f:
+                foo += str(item)
+            elif self.CONST_FORMAT_CCY == f:
+                foo += self.format_ccy(item)
+            elif self.CONST_FORMAT_PCT == f:
+                foo += self.format_pct(item)
+            ret.append(foo)    
         return ret
         
     def add_table(self, table, formats):
@@ -40,14 +43,14 @@ class report:
                 self.content += "</th><th>".join(row)
                 self.content += "</th></tr>"
             else:
-                self.content += "<tr><td>"
-                self.content += "</td><td>".join(self.format_row(row, formats))
+                self.content += "<tr><td"
+                self.content += "</td><td".join(self.format_row(row, formats))
                 self.content += "</td></tr>"
                     
         self.content += "</table>"
         
-    def add_string(self, str):
-        self.content += str + "<br>"
+    def add_string(self, foo):
+        self.content += foo + "<br>"
     
     def get_html(self):
         return "<html><head></head><body>" + self.content + "</body></html>"
