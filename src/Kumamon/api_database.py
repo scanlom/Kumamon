@@ -58,7 +58,7 @@ class database2:
         return self.session.query(self.Constituents).filter(self.Constituents.pricing_type == pricing_type).all()
     
     def get_stocks(self):
-        return self.session.query(self.Stocks).all()
+        return self.session.query(self.Stocks).filter(self.Stocks.hidden == False).all()
     
     def get_balance(self, balance):
         return self.session.query(self.Balances).filter(self.Balances.type == balance).one().value
@@ -109,6 +109,7 @@ def main():
     print(db.get_ytd_base_date())
     db.session.query(db.IndexHistory).filter(db.IndexHistory.type == 2, db.IndexHistory.date == '08/14/2018').one()
     print(db.get_ytd_spending_sum([ 0,2,3,4,5,8,12,96 ]))
+    print(db.get_stocks())
     
     log.info("Completed")
 
