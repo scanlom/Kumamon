@@ -4,7 +4,6 @@ Created on Jul 20, 2013
 @author: scanlom
 '''
 
-import database
 from api_config import config_database_connect
 from api_database import database2
 from api_log import log
