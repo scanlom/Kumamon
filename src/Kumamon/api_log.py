@@ -39,7 +39,7 @@ log.addHandler(streamhandler)
 class BufferingSMTPHandler(handlers.BufferingHandler):
     def __init__(self):
         handlers.BufferingHandler.__init__(self, CONST_SIZE_EMAIL)
-        self.subject = argv[0] + " errors"
+        self.subject = path.basename(argv[0]) + " errors"
 
     def flush(self):
         if len(self.buffer) > 0:
