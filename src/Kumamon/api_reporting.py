@@ -7,9 +7,10 @@ Created on Aug 13, 2018
 from api_log import log
 
 class report:
-    CONST_FORMAT_NONE   = 0
-    CONST_FORMAT_CCY    = 1
-    CONST_FORMAT_PCT    = 2    
+    CONST_FORMAT_NONE       = 0
+    CONST_FORMAT_CCY        = 1
+    CONST_FORMAT_CCY_COLOR  = 2
+    CONST_FORMAT_PCT        = 3 
     
     def __init__(self):
         self.content = ""
@@ -23,16 +24,25 @@ class report:
     def format_row(self, row, formats):
         ret = []
         for item,f in zip(row, formats):
-            foo = ">"
-            if self.CONST_FORMAT_CCY == f or self.CONST_FORMAT_PCT == f:
-                foo = " style='text-align:right'" + foo
+            start = ""
+            end = ""
+            foo = ""
+            if self.CONST_FORMAT_CCY == f or self.CONST_FORMAT_CCY_COLOR == f or self.CONST_FORMAT_PCT == f:
+                start = " style='text-align:right'"
+            start += ">"
+            if self.CONST_FORMAT_CCY_COLOR == f:
+                if item > 0:
+                    start += "<font color='green'>"
+                else:
+                    start += "<font color='red'>"
+                end += "</font>"
             if self.CONST_FORMAT_NONE == f:
                 foo += str(item)
-            elif self.CONST_FORMAT_CCY == f:
+            elif self.CONST_FORMAT_CCY == f or self.CONST_FORMAT_CCY_COLOR == f:
                 foo += self.format_ccy(item)
             elif self.CONST_FORMAT_PCT == f:
                 foo += self.format_pct(item)
-            ret.append(foo)    
+            ret.append(start + foo + end)    
         return ret
         
     def add_table(self, table, formats):

@@ -118,8 +118,11 @@ class database2:
         date = datetime.now().date() - timedelta(days=years*database2.CONST_DAYS_IN_YEAR)
         date = self.session.query(func.max(self.IndexHistory.date)).filter(self.IndexHistory.type == index, self.IndexHistory.date <= date).scalar()
         return self.session.query(self.IndexHistory).filter(self.IndexHistory.type == index, self.IndexHistory.date == date).one()
+
+    def get_ytd_spending_sum(self):
+        return self.session.query(func.sum(self.Spending.amount)).filter(self.Spending.date >= self.get_ytd_base_date()).scalar()
     
-    def get_ytd_spending_sum(self, types):
+    def get_ytd_spending_sum_by_types(self, types):
         return self.session.query(func.sum(self.Spending.amount)).filter(self.Spending.date >= self.get_ytd_base_date(), self.Spending.type.in_(types)).scalar()
 
 def main():
