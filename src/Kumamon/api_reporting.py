@@ -10,7 +10,8 @@ class report:
     CONST_FORMAT_NONE       = 0
     CONST_FORMAT_CCY        = 1
     CONST_FORMAT_CCY_COLOR  = 2
-    CONST_FORMAT_PCT        = 3 
+    CONST_FORMAT_PCT        = 3
+    CONST_FORMAT_PCT_COLOR  = 4 
     
     def __init__(self):
         self.content = ""
@@ -27,10 +28,10 @@ class report:
             start = ""
             end = ""
             foo = ""
-            if self.CONST_FORMAT_CCY == f or self.CONST_FORMAT_CCY_COLOR == f or self.CONST_FORMAT_PCT == f:
+            if self.CONST_FORMAT_CCY == f or self.CONST_FORMAT_CCY_COLOR == f or self.CONST_FORMAT_PCT == f or self.CONST_FORMAT_PCT_COLOR == f:
                 start = " style='text-align:right'"
             start += ">"
-            if self.CONST_FORMAT_CCY_COLOR == f:
+            if self.CONST_FORMAT_CCY_COLOR == f or self.CONST_FORMAT_PCT_COLOR == f:
                 if item > 0:
                     start += "<font color='green'>"
                 else:
@@ -40,7 +41,7 @@ class report:
                 foo += str(item)
             elif self.CONST_FORMAT_CCY == f or self.CONST_FORMAT_CCY_COLOR == f:
                 foo += self.format_ccy(item)
-            elif self.CONST_FORMAT_PCT == f:
+            elif self.CONST_FORMAT_PCT == f or self.CONST_FORMAT_PCT_COLOR == f:
                 foo += self.format_pct(item)
             ret.append(start + foo + end)    
         return ret
