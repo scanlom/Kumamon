@@ -46,7 +46,7 @@ def main():
         ]
     append_ytd_qtd_day( db, table[1], db.CONST_INDEX_ROE )
     append_ytd_qtd_day( db, table[2], db.CONST_INDEX_ROTC )
-    append_ytd_qtd_day( db, table[3], db.CONST_INDEX_PORTFOLIO )
+    append_ytd_qtd_day( db, table[3], db.CONST_INDEX_SELF )
     append_ytd_qtd_day( db, table[4], db.CONST_INDEX_PLAY )
     append_ytd_qtd_day( db, table[5], db.CONST_INDEX_MANAGED )
     rpt.add_table(table, formats)

@@ -22,11 +22,16 @@ from api_log import log
 class database2:
     CONST_DAYS_IN_YEAR      = 365
     
-    CONST_INDEX_PORTFOLIO   = 1
+    CONST_INDEX_SELF        = 1
     CONST_INDEX_ROE         = 2
     CONST_INDEX_ROTC        = 3
     CONST_INDEX_MANAGED     = 4
     CONST_INDEX_PLAY        = 5
+    
+    CONST_PORTFOLIO_SELF    = 1
+    CONST_PORTFOLIO_MANAGED = 2
+    CONST_PORTFOLIO_CASH    = 3
+    CONST_PORTFOLIO_PLAY    = 5
     
     CONST_BALANCES_TYPE_TOTAL_ROE       = 12
     CONST_BALANCES_TYPE_TOTAL_SELF      = 13
@@ -38,6 +43,10 @@ class database2:
     CONST_BALANCES_TYPE_TOTAL_PLAY      = 19
     
     CONST_PRICING_TYPE_BY_PRICE = 1
+    CONST_PRICING_TYPE_BY_VALUE = 2
+    
+    CONST_SYMBOL_CASH   = "CASH"
+    CONST_SYMBOL_DEBT   = "DEBT"
     
     def __init__(self):
         self.Base = automap_base()
@@ -47,6 +56,7 @@ class database2:
         self.Balances = self.Base.classes.balances
         self.BalancesHistory = self.Base.classes.balances_history
         self.Constituents = self.Base.classes.constituents
+        self.Divisors = self.Base.classes.divisors
         self.IndexHistory = self.Base.classes.index_history
         self.Spending = self.Base.classes.spending
         self.Stocks = self.Base.classes.stocks
@@ -56,12 +66,25 @@ class database2:
 
     def get_constituents(self, pricing_type):
         return self.session.query(self.Constituents).filter(self.Constituents.pricing_type == pricing_type).all()
+
+    def get_constituents_by_portfolio(self, portfolio):
+        return self.session.query(self.Constituents).filter(self.Constituents.portfolio_id == portfolio).all()
     
+    def get_constituents_by_portfolio_symbol(self, portfolio, symbol):
+        return self.session.query(self.Constituents).filter(self.Constituents.portfolio_id == portfolio, self.Constituents.symbol == symbol).one().value
+        
     def get_stocks(self):
         return self.session.query(self.Stocks).filter(self.Stocks.hidden == False).all()
     
     def get_balance(self, balance):
         return self.session.query(self.Balances).filter(self.Balances.type == balance).one().value
+
+    def get_divisor(self, index):
+        return self.session.query(self.Divisors).filter(self.Divisors.type == index).one().value
+    
+    def get_index(self, index):
+        day = datetime.today()
+        return self.session.query(self.IndexHistory).filter(self.IndexHistory.date == day, self.IndexHistory.type == index).one()
     
     def get_ytd_base_date(self):
         day = datetime.today()
