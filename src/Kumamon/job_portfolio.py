@@ -4,14 +4,11 @@ Created on Jul 20, 2013
 @author: scanlom
 '''
 
+from psycopg2 import connect
+from psycopg2.extras import DictCursor
 from api_config import config_database_connect
 from api_database import database2
 from api_log import log
-import psycopg2     # Postgresql access
-import psycopg2.extras  # Postgresql access
-from datetime import datetime
-from datetime import timedelta
-from time import localtime, strftime       # Time
 
 def format_ccy_sql(number):
     return str(round(number,2))
@@ -47,8 +44,8 @@ def main():
     index_roe = calculate_index(db, total_roe, db.CONST_INDEX_ROE)
     index_rotc = calculate_index(db, total_rotc, db.CONST_INDEX_ROTC)
     
-    conn = psycopg2.connect( config_database_connect )
-    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    conn = connect( config_database_connect )
+    cur = conn.cursor(cursor_factory=DictCursor)
 
     # Update index_history with today's values
     cur.execute("delete from index_history where date=current_date")
