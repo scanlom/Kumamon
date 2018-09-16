@@ -11,7 +11,9 @@ from time import sleep
 from urllib.request import urlopen
 from api_log import log
 
-CONST_THROTTLE_SECONDS             = 16
+CONST_THROTTLE_SECONDS  = 16
+CONST_RETRIES           = 5
+CONST_RETRY_SECONDS     = 61
 
 def get_market_data_symbol(symbol):
     if symbol == "BRKB":
@@ -19,18 +21,25 @@ def get_market_data_symbol(symbol):
     return symbol
 
 def last(symbol):
+    retry = 1
     sleep(CONST_THROTTLE_SECONDS) # Sleep to avoid AlphaVantage throttling error
     url = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=%s&apikey=2YG6SAN57NRYNPJ8' % (symbol)
-    raw_bytes = urlopen(url).read()
-    data = loads(raw_bytes.decode())
-    
-    try:
-        last = Decimal( data['Time Series (Daily)'][ data['Meta Data']['3. Last Refreshed'][0:10] ]['5. adjusted close'] )
-        return last
-    except Exception as err:
-        log.error( "Unable to retrieve last for %s" % (symbol) )
-        log.info( data )
-        raise err
+   
+    while retry <= CONST_RETRIES:
+        try:
+            raw_bytes = urlopen(url).read()
+            data = loads(raw_bytes.decode())
+            last = Decimal( data['Time Series (Daily)'][ data['Meta Data']['3. Last Refreshed'][0:10] ]['5. adjusted close'] )
+            return last
+        except Exception as err:
+            if retry >= CONST_RETRIES:
+                log.error( "Unable to retrieve last for %s" % (symbol) )
+                log.info( data )
+                raise err
+            else:
+                log.warning( "Unable to retrieve last for %s, retry %d" % (symbol, retry) )
+                retry += 1
+                sleep(CONST_RETRY_SECONDS) # For some reason AlphaVantage is not returning, sleep to try and allow them to recover              
 
 class historicals:
     CONST_BUSINESS_DAYS_ONE             = 1

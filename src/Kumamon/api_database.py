@@ -105,9 +105,9 @@ class database2:
         return date(day.year - 1, 10, 1)
 
     def get_day_base_date(self):
-        day = datetime.today()
-        return date(day.year, day.month, day.day - 1)
-    
+        yesterday = datetime.today() - timedelta(1)
+        return date(yesterday.year, yesterday.month, yesterday.day)
+        
     def get_balance_history(self, balance, date):
         return self.session.query(self.BalancesHistory).filter(self.BalancesHistory.type == balance, self.BalancesHistory.date == date).one().value
        
