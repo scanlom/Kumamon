@@ -51,31 +51,44 @@ class historicals:
     CONST_BUSINESS_DAYS_TEN_YEARS       = 2520
     
     def __init__(self, symbol):
-        sleep(CONST_THROTTLE_SECONDS) # Sleep to avoid AlphaVantage throttling error
         
         self.symbol = symbol
+
+        retry = 1
+        while retry <= CONST_RETRIES:
+            try:
+                sleep(CONST_THROTTLE_SECONDS) # Sleep to avoid AlphaVantage throttling error
+                url = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=%s&outputsize=full&apikey=2YG6SAN57NRYNPJ8' % (symbol)
+                raw_bytes = urlopen(url).read()
+                data_full = loads(raw_bytes.decode(), object_pairs_hook=OrderedDict)
         
-        url = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=%s&outputsize=full&apikey=2YG6SAN57NRYNPJ8' % (symbol)
-        raw_bytes = urlopen(url).read()
-        data_full = loads(raw_bytes.decode(), object_pairs_hook=OrderedDict)
-
-        url = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=%s&apikey=2YG6SAN57NRYNPJ8' % (symbol)
-        raw_bytes = urlopen(url).read()
-        data_compact = loads(raw_bytes.decode(), object_pairs_hook=OrderedDict)
-
-        # For outputsize=full, TiME_SERIES_DAILY_ADJUSTED is one week delayed.  So we have to get the compact information,
-        # store it, and then add the rest from full
+                sleep(CONST_THROTTLE_SECONDS) # Sleep to avoid AlphaVantage throttling error
+                url = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=%s&apikey=2YG6SAN57NRYNPJ8' % (symbol)
+                raw_bytes = urlopen(url).read()
+                data_compact = loads(raw_bytes.decode(), object_pairs_hook=OrderedDict)
         
-        self.data_adj_close = OrderedDict() 
-        for key, value in data_compact['Time Series (Daily)'].items():
-            self.data_adj_close[key] = Decimal( value['5. adjusted close'] )
-
-        for key, value in data_full['Time Series (Daily)'].items():
-            if not (key in self.data_adj_close):
-                self.data_adj_close[key] = Decimal( value['5. adjusted close'] )
+                # For outputsize=full, TiME_SERIES_DAILY_ADJUSTED is one week delayed.  So we have to get the compact information,
+                # store it, and then add the rest from full
                 
-        self.data_adj_close = list( self.data_adj_close.items() )
-        sleep(CONST_THROTTLE_SECONDS) # Sleep to avoid AlphaVantage throttling error
+                self.data_adj_close = OrderedDict() 
+                for key, value in data_compact['Time Series (Daily)'].items():
+                    self.data_adj_close[key] = Decimal( value['5. adjusted close'] )
+        
+                for key, value in data_full['Time Series (Daily)'].items():
+                    if not (key in self.data_adj_close):
+                        self.data_adj_close[key] = Decimal( value['5. adjusted close'] )
+                        
+                self.data_adj_close = list( self.data_adj_close.items() )
+                break
+            except Exception as err:
+                if retry >= CONST_RETRIES:
+                    log.error( "Unable to retrieve historicals for %s" % (self.symbol) )
+                    log.info( data_compact )
+                    raise err
+                else:
+                    log.warning( "Unable to retrieve historicals for %s, retry %d" % (self.symbol, retry) )
+                    retry += 1
+                    sleep(CONST_RETRY_SECONDS) # For some reason AlphaVantage is not returning, sleep to try and allow them to recover              
 
     def change_one_day(self):
         return self.change(self.CONST_BUSINESS_DAYS_ONE )
