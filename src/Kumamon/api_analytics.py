@@ -5,6 +5,8 @@ Created on Nov 13, 2017
 '''
 
 from collections import OrderedDict
+from datetime import date
+from datetime import datetime
 from decimal import Decimal
 from json import loads
 from time import sleep
@@ -70,15 +72,30 @@ class historicals:
                 # For outputsize=full, TiME_SERIES_DAILY_ADJUSTED is one week delayed.  So we have to get the compact information,
                 # store it, and then add the rest from full
                 
-                self.data_adj_close = OrderedDict() 
+                self.data_adj_close = OrderedDict()
+                self.data_close = OrderedDict() 
+                self.data_high = OrderedDict() 
+                self.data_low = OrderedDict() 
                 for key, value in data_compact['Time Series (Daily)'].items():
                     self.data_adj_close[key] = Decimal( value['5. adjusted close'] )
+                    self.data_close[key] = Decimal( value['4. close'] )
+                    self.data_high[key] = Decimal( value['2. high'] )
+                    self.data_low[key] = Decimal( value['3. low'] )
         
                 for key, value in data_full['Time Series (Daily)'].items():
                     if not (key in self.data_adj_close):
                         self.data_adj_close[key] = Decimal( value['5. adjusted close'] )
+                    if not (key in self.data_close):
+                        self.data_close[key] = Decimal( value['4. close'] )
+                    if not (key in self.data_high):
+                        self.data_high[key] = Decimal( value['2. high'] )
+                    if not (key in self.data_low):
+                        self.data_low[key] = Decimal( value['3. low'] )
                         
                 self.data_adj_close = list( self.data_adj_close.items() )
+                self.data_close = list( self.data_close.items() )
+                self.data_high = list( self.data_high.items() )
+                self.data_low = list( self.data_low.items() )
                 break
             except Exception as err:
                 if retry >= CONST_RETRIES:
@@ -122,7 +139,44 @@ class historicals:
             years = days / self.CONST_BUSINESS_DAYS_YEAR
             
         return ( self.data_adj_close[ days ][ 0 ], ( self.data_adj_close[ 0 ][ 1 ] / self.data_adj_close[ days ][ 1 ] ) ** Decimal( 1 / years ) - 1 )    
-          
+        
+    def close(self, date):
+        # Return the close on this date or the first previous day
+        for close in self.data_close:
+            close_date = datetime.strptime(close[0], '%Y-%m-%d').date()
+            if close_date <= date:
+                return close[1]
+            
+        raise LookupError()
+    
+    def year_high(self, end_date):
+        # Return the highest close for the year ending on date
+        ret = -1
+        start_date = date(end_date.year - 1, end_date.month, end_date.day)
+        for high in self.data_high:
+            high_date = datetime.strptime(high[0], '%Y-%m-%d').date()
+            if high_date <= end_date and high_date > start_date:
+                if high[1] > ret:
+                    ret = high[1]
+            if high_date <= start_date:
+                return ret
+            
+        raise LookupError()
+
+    def year_low(self, end_date):
+        # Return the highest close for the year ending on date
+        ret = -1
+        start_date = date(end_date.year - 1, end_date.month, end_date.day)
+        for low in self.data_low:
+            low_date = datetime.strptime(low[0], '%Y-%m-%d').date()
+            if low_date <= end_date and low_date > start_date:
+                if low[1] < ret or ret == -1:
+                    ret = low[1]
+            if low_date <= start_date:
+                return ret
+            
+        raise LookupError()
+              
 def main():
     log.info("Started...")
     

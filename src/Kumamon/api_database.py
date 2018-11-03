@@ -13,6 +13,7 @@ from datetime import date
 from datetime import datetime
 from datetime import timedelta
 from sqlalchemy import create_engine
+from sqlalchemy import desc
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
@@ -57,6 +58,7 @@ class database2:
         self.BalancesHistory = self.Base.classes.balances_history
         self.Constituents = self.Base.classes.constituents
         self.Divisors = self.Base.classes.divisors
+        self.Fundamentals = self.Base.classes.fundamentals
         self.IndexHistory = self.Base.classes.index_history
         self.Spending = self.Base.classes.spending
         self.Stocks = self.Base.classes.stocks
@@ -72,6 +74,9 @@ class database2:
     
     def get_constituents_by_portfolio_symbol(self, portfolio, symbol):
         return self.session.query(self.Constituents).filter(self.Constituents.portfolio_id == portfolio, self.Constituents.symbol == symbol).one().value
+        
+    def get_fundamentals(self, symbol, date):    
+        return self.session.query(self.Fundamentals).filter(self.Fundamentals.symbol == symbol, self.Fundamentals.date >= date).order_by(desc(self.Fundamentals.date)).all()
         
     def get_stocks(self):
         return self.session.query(self.Stocks).filter(self.Stocks.hidden == False).all()
