@@ -56,25 +56,6 @@ def main():
     table.append( [ "Recon", db.get_ytd_spending_sum(), recon_projected, 151000, 151000 - recon_projected ] )
     rpt.add_table(table, formats)
 
-    #format_budget_row( db, "Recon", "select distinct type from spending", Decimal( '151000.00' ), day_of_year ) + \
-    rpt.add_string("Summary for last thirty days")
-    
-    """ 
-    sql = select s.date, s.amount, s.description, st.description as type, b.description as source
-    from spending s, spending_types st, balances b
-    where date >= ' + thirty_days_ago.strftime("%m/%d/%Y") + ' and 
-        st.type = s.type and
-        b.type = s.source and
-        s.type in (0,1,2,3,4,5,8,9)
-        order by date desc
-
-    cur = conn.cursor(cursor_factory=DictCursor)
-    cur.execute(sql)
-    rows = cur.fetchall()    
-    
-    for row in rows:
-       body += "<tr><td>" + str(row['date']) + "</td><td style='text-align:right'>" + format_ccy( row['amount'] ) + "</td><td>" + row['description'] + "</td><td>" + row['type'] +"</td><td>" + row['source'] +"</td></tr>" 
-    """  
     subject = 'Spending Report - ' + strftime("%Y-%m-%d", localtime())
      
     send_mail_html_self(subject, rpt.get_html())
