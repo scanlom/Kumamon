@@ -22,6 +22,15 @@ def get_market_data_symbol(symbol):
         return "BRK-B"
     return symbol
 
+# AlphaVantage may return some garbage data, we do our best to avoid that here
+def sanity_check_historical_data(key, value):
+    adj_close = Decimal( value['5. adjusted close'] )
+    
+    if adj_close <= 0:
+        return False
+    
+    return True
+
 def last(symbol):
     retry = 1
     sleep(CONST_THROTTLE_SECONDS) # Sleep to avoid AlphaVantage throttling error
@@ -77,20 +86,22 @@ class historicals:
                 self.data_high = OrderedDict() 
                 self.data_low = OrderedDict() 
                 for key, value in data_compact['Time Series (Daily)'].items():
-                    self.data_adj_close[key] = Decimal( value['5. adjusted close'] )
-                    self.data_close[key] = Decimal( value['4. close'] )
-                    self.data_high[key] = Decimal( value['2. high'] )
-                    self.data_low[key] = Decimal( value['3. low'] )
+                    if sanity_check_historical_data(key, value):
+                        self.data_adj_close[key] = Decimal( value['5. adjusted close'] )
+                        self.data_close[key] = Decimal( value['4. close'] )
+                        self.data_high[key] = Decimal( value['2. high'] )
+                        self.data_low[key] = Decimal( value['3. low'] )
         
                 for key, value in data_full['Time Series (Daily)'].items():
-                    if not (key in self.data_adj_close):
-                        self.data_adj_close[key] = Decimal( value['5. adjusted close'] )
-                    if not (key in self.data_close):
-                        self.data_close[key] = Decimal( value['4. close'] )
-                    if not (key in self.data_high):
-                        self.data_high[key] = Decimal( value['2. high'] )
-                    if not (key in self.data_low):
-                        self.data_low[key] = Decimal( value['3. low'] )
+                    if sanity_check_historical_data(key, value):
+                        if not (key in self.data_adj_close):
+                            self.data_adj_close[key] = Decimal( value['5. adjusted close'] )
+                        if not (key in self.data_close):
+                            self.data_close[key] = Decimal( value['4. close'] )
+                        if not (key in self.data_high):
+                            self.data_high[key] = Decimal( value['2. high'] )
+                        if not (key in self.data_low):
+                            self.data_low[key] = Decimal( value['3. low'] )
                         
                 self.data_adj_close = list( self.data_adj_close.items() )
                 self.data_close = list( self.data_close.items() )
@@ -131,6 +142,7 @@ class historicals:
     def change(self, days):
         # Make sure we're not off the end of the list - if we are, use the last one
         if days >= len(self.data_adj_close):
+            log.warning( "Off the end of the historicals list for %s, %d / %d" % (self.symbol, days, len(self.data_adj_close) ) )
             days = len(self.data_adj_close) - 1
         
         # How many years are we compounding?
@@ -183,8 +195,8 @@ def main():
     # Test
     print( last('WFC') )
     
-    foo = historicals('MSFT')
-    print( foo.change_one_day()[0] )
+    foo = historicals('3030.T')
+    print( foo.change_ten_years()[0] )
     
     log.info("Completed")
 
