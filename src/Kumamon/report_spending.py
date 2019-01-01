@@ -16,19 +16,26 @@ from api_reporting import report
 
 def append_budget_row( db, table, name, types, budget ):
     day_of_year = datetime.now().timetuple().tm_yday
+    if day_of_year == 1:
+        day_of_year = 365 # Special Jan 1 handling
     spending = db.get_ytd_spending_sum_by_types( types )
     projected = spending * 365 / day_of_year
     table.append( [ name, spending, projected, budget, budget - projected ] )
-    
-def calculate_recon_prjected( table, standard_rows, base_row, fumi_row, projected_col, tracking_col ):
-    # Add back in Fumi's bonus, and assume that she spends her entire allocation
-    # Projected = (Base + 0.5 Tracking) + (Fumi + Tracking) + (Remaining) 
-    projected = table[base_row][projected_col]
+
+def calculate_fumi_projected( table, base_row, fumi_row, tracking_col ):
+    # Fumi's projected payout is 0.5 of base tracking if positive, plus what is left of her allocation if positive
+    projected = Decimal( 0.0 )
     if table[base_row][tracking_col] > 0:
         projected += table[base_row][tracking_col] * Decimal( 0.5 )
-    projected += table[fumi_row][projected_col]
     if table[fumi_row][tracking_col] > 0:
         projected += table[fumi_row][tracking_col]
+    return projected
+
+def calculate_recon_projected( table, standard_rows, base_row, fumi_row, projected_col, tracking_col ):
+    # Add back in Fumi's projected payout 
+    projected = table[base_row][projected_col]
+    projected += table[fumi_row][projected_col]
+    projected += calculate_fumi_projected( table, base_row, fumi_row, tracking_col )
     for row in standard_rows:
         projected += table[row][projected_col]
     return projected
@@ -52,8 +59,10 @@ def main():
     append_budget_row( db, table, "Mike", [6,10], 5000 )
     append_budget_row( db, table, "Special", [93,95,97,98,99], 0 )
     append_budget_row( db, table, "Total", [0,1,2,3,4,5,6,7,8,9,10,11,12,93,94,95,96,97,98,99], 151000 )
-    recon_projected = calculate_recon_prjected( table, [2,3,4,5,7,8], 1, 6, 2, 4 )
+    recon_projected = calculate_recon_projected( table, [2,3,4,5,7,8], 1, 6, 2, 4 )
     table.append( [ "Recon", db.get_ytd_spending_sum(), recon_projected, 151000, 151000 - recon_projected ] )
+    fumi_projected = calculate_fumi_projected( table, 1, 6, 4 )
+    table.append( [ "Payout", 0, fumi_projected, 0, 0 ] )
     rpt.add_table(table, formats)
 
     subject = 'Spending Report - ' + strftime("%Y-%m-%d", localtime())
