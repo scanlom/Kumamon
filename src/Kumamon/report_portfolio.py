@@ -11,7 +11,7 @@ from api_log import log
 from api_mail import send_mail_html_self
 from api_reporting import report
 
-CONST_ONE_UNIT  = Decimal(203508.28)
+CONST_ONE_UNIT  = Decimal(211569.04)
 
 def append_ytd_qtd_day( db, row, index ):
     cur = db.get_index_history(index, datetime.today().date())
