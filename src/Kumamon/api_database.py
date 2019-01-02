@@ -12,6 +12,7 @@ Notes
 from datetime import date
 from datetime import datetime
 from datetime import timedelta
+from decimal import Decimal
 from sqlalchemy import create_engine
 from sqlalchemy import desc
 from sqlalchemy.ext.automap import automap_base
@@ -125,10 +126,15 @@ class database2:
         return self.session.query(self.IndexHistory).filter(self.IndexHistory.type == index, self.IndexHistory.date == date).one()
 
     def get_ytd_spending_sum(self):
-        return self.session.query(func.sum(self.Spending.amount)).filter(self.Spending.date >= self.get_ytd_base_date()).scalar()
-    
+        ret = self.session.query(func.sum(self.Spending.amount)).filter(self.Spending.date >= self.get_ytd_base_date()).scalar()
+        if ret == None:
+            return Decimal( 0.0 )
+        return ret
     def get_ytd_spending_sum_by_types(self, types):
-        return self.session.query(func.sum(self.Spending.amount)).filter(self.Spending.date >= self.get_ytd_base_date(), self.Spending.type.in_(types)).scalar()
+        ret = self.session.query(func.sum(self.Spending.amount)).filter(self.Spending.date >= self.get_ytd_base_date(), self.Spending.type.in_(types)).scalar()
+        if ret == None:
+            return Decimal( 0.0 )
+        return ret
 
 def main():
     log.info("Started...")
