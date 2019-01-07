@@ -44,7 +44,6 @@ def main():
     log.info("Started...")
     db = database2()
     rpt = report()
-    thirty_days_ago = datetime.now() - timedelta(days=30)
     
     formats = [ rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_CCY, rpt.CONST_FORMAT_CCY, rpt.CONST_FORMAT_CCY, rpt.CONST_FORMAT_CCY_COLOR]
     table = [
