@@ -57,7 +57,7 @@ def main():
     append_budget_row( db, table, "Deux", [93], 1000 )
     append_budget_row( db, table, "Fumi", [11], 5000 )
     append_budget_row( db, table, "Mike", [6,10], 5000 )
-    append_budget_row( db, table, "Special", [93,95,97,98,99], 0 )
+    append_budget_row( db, table, "Special", [95,97,98,99], 0 )
     append_budget_row( db, table, "Total", [0,1,2,3,4,5,6,7,8,9,10,11,12,93,94,95,96,97,98,99], 158000 )
     recon_projected = calculate_recon_projected( table, [2,3,4,5,7,8], 1, 6, 2, 4 )
     table.append( [ "Recon", db.get_ytd_spending_sum(), recon_projected, 158000, 158000 - recon_projected ] )
