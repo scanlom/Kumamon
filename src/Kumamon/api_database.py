@@ -34,7 +34,11 @@ class database2:
     CONST_PORTFOLIO_MANAGED = 2
     CONST_PORTFOLIO_CASH    = 3
     CONST_PORTFOLIO_PLAY    = 5
-    
+
+    CONST_BALANCES_TYPE_OWE_PORTFOLIO   = 7
+    CONST_BALANCES_TYPE_GS              = 9
+    CONST_BALANCES_TYPE_GS_HKD          = 10
+    CONST_BALANCES_TYPE_GS_IRA          = 11
     CONST_BALANCES_TYPE_TOTAL_ROE       = 12
     CONST_BALANCES_TYPE_TOTAL_SELF      = 13
     CONST_BALANCES_TYPE_TOTAL_MANAGED   = 14
@@ -61,6 +65,7 @@ class database2:
         self.Divisors = self.Base.classes.divisors
         self.Fundamentals = self.Base.classes.fundamentals
         self.IndexHistory = self.Base.classes.index_history
+        self.PortfolioHistory = self.Base.classes.portfolio_history
         self.Spending = self.Base.classes.spending
         self.Stocks = self.Base.classes.stocks
         
@@ -119,11 +124,14 @@ class database2:
        
     def get_index_history(self, index, date):
         return self.session.query(self.IndexHistory).filter(self.IndexHistory.type == index, self.IndexHistory.date == date).one().value
-    
+
     def get_index_history_minus_years(self, index, years):
         date = datetime.now().date() - timedelta(days=years*database2.CONST_DAYS_IN_YEAR)
         date = self.session.query(func.max(self.IndexHistory.date)).filter(self.IndexHistory.type == index, self.IndexHistory.date <= date).scalar()
         return self.session.query(self.IndexHistory).filter(self.IndexHistory.type == index, self.IndexHistory.date == date).one()
+
+    def get_portfolio_history(self, portfolio, symbol, date):
+        return self.session.query(self.PortfolioHistory).filter(self.PortfolioHistory.type == portfolio, self.PortfolioHistory.symbol == symbol, self.PortfolioHistory.date == date).one().value
 
     def get_ytd_spending_sum(self):
         ret = self.session.query(func.sum(self.Spending.amount)).filter(self.Spending.date >= self.get_ytd_base_date()).scalar()
