@@ -6,6 +6,7 @@ Created on Jul 20, 2013
 
 from datetime import datetime
 from decimal import Decimal
+from math import log as math_log
 from api_database import database2
 from api_log import log
 from api_mail import send_mail_html_self
@@ -18,7 +19,18 @@ def append_ytd_qtd_day( db, row, index ):
     row.append(cur / db.get_index_history(index, db.get_ytd_base_date()) - 1)
     row.append(cur / db.get_index_history(index, db.get_qtd_base_date()) - 1)
     row.append(cur / db.get_index_history(index, db.get_day_base_date()) - 1)
-    
+
+def append_inflection_report( db, rpt, years, index_roe, total_roe ):    
+    row_base_roe = db.get_index_history_minus_years(database2.CONST_INDEX_ROE, years)
+    cagr = ( ( index_roe / row_base_roe.value ) ** Decimal( 1 / years ) ) - 1
+    inflect = total_roe * cagr - CONST_ONE_UNIT
+    font = ", <font color='green'>"
+    if inflect <= 0:
+        font = ", <font color='red'>"
+    msg = str(years) + " Inflection - " + rpt.format_pct(cagr) + font + rpt.format_ccy( inflect ) + "</font> (" + str(row_base_roe.date) + ")"
+    if inflect <= 0:
+        msg += " " + rpt.format_ccy( math_log(CONST_ONE_UNIT / (total_roe * cagr), cagr + 1) )
+    rpt.add_string(msg)
 
 def main():
     log.info("Started...")
@@ -52,21 +64,10 @@ def main():
     rpt.add_table(table, formats)
     rpt.add_string("One Unit (" + rpt.format_ccy(CONST_ONE_UNIT) + ") - " + rpt.format_pct(CONST_ONE_UNIT / total_roe))
     rpt.add_string("One Million - " + rpt.format_pct(1000000 / total_roe))
-    
-    row_base_roe_5 = db.get_index_history_minus_years(database2.CONST_INDEX_ROE, 5)
-    row_base_roe_10 = db.get_index_history_minus_years(database2.CONST_INDEX_ROE, 10)
-    cagr_five = ( ( index_roe / row_base_roe_5.value ) ** Decimal(0.2) ) - 1
-    cagr_ten = ( ( index_roe / row_base_roe_10.value ) ** Decimal(0.1) ) - 1
-    inflect_five = total_roe * cagr_five - CONST_ONE_UNIT
-    inflect_ten = total_roe * cagr_ten - CONST_ONE_UNIT
-    font = ", <font color='green'>"
-    if inflect_five <= 0:
-        font = ", <font color='red'>"
-    rpt.add_string("Five Inflection - " + rpt.format_pct(cagr_five) + font + rpt.format_ccy( inflect_five ) + "</font> (" + str(row_base_roe_5.date) + ")")
-    font = ", <font color='green'>"
-    if inflect_ten <= 0:
-        font = ", <font color='red'>"
-    rpt.add_string("Ten Inflection - " + rpt.format_pct(cagr_ten) + font + rpt.format_ccy( inflect_ten ) + "</font> (" + str(row_base_roe_10.date) + ")")
+    append_inflection_report(db, rpt, 5, index_roe, total_roe)
+    append_inflection_report(db, rpt, 10, index_roe, total_roe)
+    append_inflection_report(db, rpt, 15, index_roe, total_roe)
+    append_inflection_report(db, rpt, 19, index_roe, total_roe)
     
     send_mail_html_self(subject, rpt.get_html())
     log.info("Completed")
