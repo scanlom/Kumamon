@@ -27,7 +27,7 @@ def append_inflection_report( db, rpt, years, index_roe, total_roe ):
     font = ", <font color='green'>"
     if inflect <= 0:
         font = ", <font color='red'>"
-    msg = str(years) + " Inflection - " + rpt.format_pct(cagr) + font + rpt.format_ccy( inflect ) + "</font> (" + str(row_base_roe.date) + ")"
+    msg = str(years) + "Inf: " + rpt.format_pct(cagr) + font + rpt.format_ccy( inflect ) + "</font> (" + str(row_base_roe.date) + ")"
     if inflect <= 0:
         msg += " " + rpt.format_ccy( math_log(CONST_ONE_UNIT / (total_roe * cagr), cagr + 1) )
     rpt.add_string(msg)
