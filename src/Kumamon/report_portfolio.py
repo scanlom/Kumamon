@@ -45,7 +45,7 @@ def main():
     profit = total_roe - db.get_balance_history(db.CONST_BALANCES_TYPE_TOTAL_ROE, db.get_ytd_base_date()) - db.get_balance(db.CONST_BALANCES_TYPE_SAVINGS)
 
     # Send a summary mail
-    subject = "Profit - " + rpt.format_ccy(profit) + " / " + rpt.format_pct(index_roe/ytd_base_index_roe - 1)
+    subject = "Blue Lion - " + rpt.format_ccy(profit) + " / " + rpt.format_pct(index_roe/ytd_base_index_roe - 1)
     
     formats = [ rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_PCT, rpt.CONST_FORMAT_PCT, rpt.CONST_FORMAT_PCT ]
     table = [
@@ -67,7 +67,7 @@ def main():
     append_inflection_report(db, rpt, 5, index_roe, total_roe)
     append_inflection_report(db, rpt, 10, index_roe, total_roe)
     append_inflection_report(db, rpt, 15, index_roe, total_roe)
-    append_inflection_report(db, rpt, 19, index_roe, total_roe)
+    append_inflection_report(db, rpt, 20, index_roe, total_roe)
     
     send_mail_html_self(subject, rpt.get_html())
     log.info("Completed")
