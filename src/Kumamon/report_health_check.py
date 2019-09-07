@@ -36,7 +36,7 @@ def main():
     rpt = report()
     
     populate_max_movers( db, rpt )
-    subject = 'Health Check - ' + strftime("%Y-%m-%d", localtime())
+    subject = 'Blue Lion - Health Check'
      
     send_mail_html_self(subject, rpt.get_html())
     log.info("Completed")
