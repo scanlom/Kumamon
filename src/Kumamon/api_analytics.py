@@ -193,10 +193,10 @@ def main():
     log.info("Started...")
     
     # Test
-    print( last('WFC') )
+    print( last('OAYLX') )
     
-    foo = historicals('3030.T')
-    print( foo.change_ten_years()[0] )
+#    foo = historicals('3030.T')
+#    print( foo.change_ten_years()[0] )
     
     log.info("Completed")
 
