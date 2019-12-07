@@ -4,14 +4,17 @@ Created on Aug 13, 2018
 @author: scanlom
 '''
 
+from datetime import datetime
 from api_log import log
 
 class report:
-    CONST_FORMAT_NONE       = 0
-    CONST_FORMAT_CCY        = 1
-    CONST_FORMAT_CCY_COLOR  = 2
-    CONST_FORMAT_PCT        = 3
-    CONST_FORMAT_PCT_COLOR  = 4 
+    CONST_FORMAT_NONE           = 0
+    CONST_FORMAT_CCY            = 1
+    CONST_FORMAT_CCY_COLOR      = 2
+    CONST_FORMAT_CCY_INT_COLOR  = 3
+    CONST_FORMAT_PCT            = 4
+    CONST_FORMAT_PCT_COLOR      = 5
+    CONST_FORMAT_DATE_SHORT     = 6
     
     def __init__(self):
         self.content = ""
@@ -19,8 +22,14 @@ class report:
     def format_ccy(self, number):
         return '{0:,.2f}'.format(number)
 
+    def format_ccy_int(self, number):
+        return '{0:,.0f}'.format(number)
+
     def format_pct(self, number):
         return '%{0:,.2f}'.format(100*number)
+    
+    def format_date_short(self, date):
+        return date.strftime("%Y%m%d")
     
     def format_row(self, row, formats):
         ret = []
@@ -28,10 +37,10 @@ class report:
             start = ""
             end = ""
             foo = ""
-            if self.CONST_FORMAT_CCY == f or self.CONST_FORMAT_CCY_COLOR == f or self.CONST_FORMAT_PCT == f or self.CONST_FORMAT_PCT_COLOR == f:
+            if self.CONST_FORMAT_CCY == f or self.CONST_FORMAT_CCY_COLOR == f or self.CONST_FORMAT_CCY_INT_COLOR == f or self.CONST_FORMAT_PCT == f or self.CONST_FORMAT_PCT_COLOR == f:
                 start = " style='text-align:right'"
             start += ">"
-            if self.CONST_FORMAT_CCY_COLOR == f or self.CONST_FORMAT_PCT_COLOR == f:
+            if self.CONST_FORMAT_CCY_COLOR == f or self.CONST_FORMAT_PCT_COLOR == f or self.CONST_FORMAT_CCY_INT_COLOR == f:
                 if item > 0:
                     start += "<font color='green'>"
                 else:
@@ -41,8 +50,12 @@ class report:
                 foo += str(item)
             elif self.CONST_FORMAT_CCY == f or self.CONST_FORMAT_CCY_COLOR == f:
                 foo += self.format_ccy(item)
+            elif self.CONST_FORMAT_CCY_INT_COLOR == f:
+                foo += self.format_ccy_int(item)
             elif self.CONST_FORMAT_PCT == f or self.CONST_FORMAT_PCT_COLOR == f:
                 foo += self.format_pct(item)
+            elif self.CONST_FORMAT_DATE_SHORT == f:
+                foo += self.format_date_short(item)
             ret.append(start + foo + end)    
         return ret
         
@@ -71,7 +84,7 @@ def main():
     
     # Test
     table = [ [ "", "Mike", "Dan" ], [ 5.555555,6.66666,7.77777 ]]
-    formats = [ report.CONST_FORMAT_NONE, report.CONST_FORMAT_CCY, report.CONST_FORMAT_PCT ]
+    formats = [ report.CONST_FORMAT_NONE, report.CONST_FORMAT_CCY_INT_COLOR, report.CONST_FORMAT_PCT ]
     r = report()
     r.add_table(table, formats)
     print(r.get_html())
