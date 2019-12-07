@@ -82,9 +82,9 @@ def main():
     append_inflection_report(db, table[4], 20, index_roe, total_roe, total_finish)    
     rpt.add_table(table, formats)
 
-    rpt.add_string("Net Worth - " + rpt.format_ccy( total_roe ))
     rpt.add_string("One Unit (" + rpt.format_ccy(CONST_ONE_UNIT) + ") - " + rpt.format_pct(CONST_ONE_UNIT / total_roe))
     rpt.add_string("One Million - " + rpt.format_pct(1000000 / total_roe))
+    rpt.add_string("Net Worth - " + rpt.format_ccy( total_roe ))
     rpt.add_string("Four Percent - " + rpt.format_ccy( total_finish ))
     
     send_mail_html_self(subject, rpt.get_html())
