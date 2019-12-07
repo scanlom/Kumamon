@@ -35,6 +35,12 @@ class database2:
     CONST_PORTFOLIO_CASH    = 3
     CONST_PORTFOLIO_PLAY    = 5
 
+    CONST_BALANCES_TYPE_AMEX_CX         = 1
+    CONST_BALANCES_TYPE_CAPITAL_ONE     = 2
+    CONST_BALANCES_TYPE_HSBC            = 3
+    CONST_BALANCES_TYPE_HSBC_VISA       = 4
+    CONST_BALANCES_TYPE_VIRTUAL_BANK    = 5
+    CONST_BALANCES_TYPE_JPY             = 6
     CONST_BALANCES_TYPE_OWE_PORTFOLIO   = 7
     CONST_BALANCES_TYPE_GS              = 9
     CONST_BALANCES_TYPE_GS_HKD          = 10
@@ -138,6 +144,13 @@ class database2:
         if ret == None:
             return Decimal( 0.0 )
         return ret
+    
+    def get_ytd_spending_sum_by_date(self, date):
+        ret = self.session.query(func.sum(self.Spending.amount)).filter(self.Spending.date >= self.get_ytd_base_date(), self.Spending.date <= date).scalar()
+        if ret == None:
+            return Decimal( 0.0 )
+        return ret
+    
     def get_ytd_spending_sum_by_types(self, types):
         ret = self.session.query(func.sum(self.Spending.amount)).filter(self.Spending.date >= self.get_ytd_base_date(), self.Spending.type.in_(types)).scalar()
         if ret == None:
