@@ -5,6 +5,7 @@ Created on Jul 14, 2013
 '''
 
 from datetime import datetime
+from decimal import Decimal
 from time import localtime
 from time import strftime
 from sqlalchemy.sql import func
@@ -12,6 +13,34 @@ from api_database import database2
 from api_log import log
 from api_mail import send_mail_html_self
 from api_reporting import report
+
+CONST_DIV_GROWTH    = Decimal(0.0981)
+
+def cagr( years, eps, payout, growth, pe_terminal, price ):
+    div_bucket = Decimal(0.0)
+    for i in range (1,years+1):
+        div_bucket = div_bucket * (Decimal(1) + CONST_DIV_GROWTH)
+        div_bucket = div_bucket + (eps * payout)
+        eps = eps * (Decimal(1) + growth)
+    return ((((eps * pe_terminal) + div_bucket) / price) ** (Decimal(1.0) / years)) - Decimal(1)
+
+def populate_five_cagr( db, rpt ):
+    rows = db.session.query(db.Constituents, db.Stocks).\
+            filter(db.Constituents.stock_id == db.Stocks.id).\
+            filter(db.Constituents.portfolio_id == db.CONST_PORTFOLIO_PLAY).\
+            filter(db.Constituents.pricing_type == db.CONST_PRICING_TYPE_BY_PRICE).\
+            all()
+    formats = [ rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_PCT_COLOR ]
+    table = [ [ "Symbol", "5yr CAGR" ] ]
+    for row in rows:
+        c = cagr(5, row.stocks.eps, row.stocks.payout, row.stocks.growth, row.stocks.pe_terminal, row.stocks.price)
+        if c < Decimal(0.05):
+            table.append( [ row.stocks.symbol, c ] )
+    if len(table) > 1:
+        rpt.add_string( "5yr CAGR < 5% - Sell" )
+        rpt.add_table( table, formats )
+    else:
+        rpt.add_string( "5yr CAGR < 5% - " )
 
 def populate_reds( db, rpt ):
     rows = db.session.query(db.Constituents).\
@@ -96,6 +125,7 @@ def main():
     populate_reds(db, rpt)
     populate_cash(db, rpt)
     populate_thirty_pe( db, rpt )
+    populate_five_cagr(db, rpt)
     populate_max_movers( db, rpt )
     
     subject = 'Blue Lion - Health Check'
