@@ -72,6 +72,7 @@ class database2:
         self.Fundamentals = self.Base.classes.fundamentals
         self.IndexHistory = self.Base.classes.index_history
         self.PortfolioHistory = self.Base.classes.portfolio_history
+        self.Researches = self.Base.classes.researches
         self.Spending = self.Base.classes.spending
         self.Stocks = self.Base.classes.stocks
         
