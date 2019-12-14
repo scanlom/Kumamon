@@ -12,7 +12,7 @@ from api_mail import send_mail_html_self
 from api_reporting import report
 from api_utils import cagr
 
-def populate_ten_cagr( db, rpt ):
+def populate_five_cagr( db, rpt ):
     rows = db.session.query(db.Stocks, db.Constituents).\
             outerjoin(db.Constituents, db.Stocks.id == db.Constituents.stock_id).\
             filter(db.Constituents.stock_id == None).\
@@ -28,17 +28,17 @@ def populate_ten_cagr( db, rpt ):
     if len(table) > 1:
         table.sort(key=lambda a : a[1],reverse=True)
         table.insert(0, [ "Symbol", "5yr CAGR" ])
-        rpt.add_string( "5yr CAGR > 10%" )
+        rpt.add_string( "Watch List 5yr CAGR > 10%" )
         rpt.add_table( table, formats )
     else:
-        rpt.add_string( "5yr CAGR > 10% - None" )
+        rpt.add_string( "Watch List 5yr CAGR > 10% - None" )
 
 def main():
     log.info("Started...")
     db = database2()
     rpt = report()
     
-    populate_ten_cagr( db, rpt )
+    populate_five_cagr( db, rpt )
   
     subject = 'Blue Lion - Search'
     send_mail_html_self(subject, rpt.get_html())
