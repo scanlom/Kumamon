@@ -4,14 +4,24 @@ Created on Dec 8, 2019
 @author: scanlom
 '''
 
-from decimal import Decimal
-
-CONST_DIV_GROWTH    = Decimal(0.0981)
+from requests import get
+from api_log import log
 
 def cagr( years, eps, payout, growth, pe_terminal, price ):
-    div_bucket = Decimal(0.0)
-    for i in range (1,years+1):
-        div_bucket = div_bucket * (Decimal(1) + CONST_DIV_GROWTH)
-        div_bucket = div_bucket + (eps * payout)
-        eps = eps * (Decimal(1) + growth)
-    return ((((eps * pe_terminal) + div_bucket) / price) ** (Decimal(1.0) / years)) - Decimal(1)
+    url = 'http://localhost:8080/blue-lion/utils/cagr?years=%f&eps=%f&payout=%f&growth=%f&peterminal=%f&price=%f' % (years, eps, payout, growth, pe_terminal, price)
+    response = get(url)
+    return response.json()['cagr']
+
+def main():
+    log.info("Started...")
+    
+    # Test
+    print(cagr(5, 2.16, 0, 0.15, 15, 41.61))
+    
+    log.info("Completed")
+
+if __name__ == '__main__':
+    try:
+        main()    
+    except Exception as err:
+        log.exception(err)
