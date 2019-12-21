@@ -5,12 +5,17 @@ Created on Dec 8, 2019
 '''
 
 from decimal import Decimal
+from sqlalchemy import desc
 from sqlalchemy.sql import func
 from api_database import database2
 from api_log import log
 from api_mail import send_mail_html_self
 from api_reporting import report
 from api_utils import cagr
+from api_utils import confidence
+
+CONST_CONFIDENCE_NONE   = 'NONE'
+CONST_CONFIDENCE_HIGH   = 'HIGH'
 
 def populate_five_cagr( db, rpt ):
     rows = db.session.query(db.Stocks, db.Constituents).\
@@ -24,7 +29,15 @@ def populate_five_cagr( db, rpt ):
     for row in rows:
         c = cagr(5, row.stocks.eps, row.stocks.payout, row.stocks.growth, row.stocks.pe_terminal, row.stocks.price)
         if c > Decimal(0.10):
-            table.append( [ row.stocks.symbol, c ] )
+            rowResearch = db.session.query(db.Researches).\
+                filter(db.Researches.stock_id == row.stocks.id).\
+                order_by(desc(db.Researches.id)).first()
+            if rowResearch == None:
+                table.append( [ row.stocks.symbol, c ] )
+            else:
+                r = confidence(rowResearch.comment)
+                if r == CONST_CONFIDENCE_HIGH or r == CONST_CONFIDENCE_NONE:
+                    table.append( [ row.stocks.symbol, c ] )
     if len(table) > 1:
         table.sort(key=lambda a : a[1],reverse=True)
         table.insert(0, [ "Symbol", "5yr CAGR" ])
