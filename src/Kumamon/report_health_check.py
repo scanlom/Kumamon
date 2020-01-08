@@ -22,12 +22,14 @@ def populate_five_cagr( db, rpt ):
             filter(db.Constituents.pricing_type == db.CONST_PRICING_TYPE_BY_PRICE).\
             all()
     formats = [ rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_PCT_COLOR ]
-    table = [ [ "Symbol", "5yr CAGR" ] ]
+    table = [ ]
     for row in rows:
         c = cagr(5, row.stocks.eps, row.stocks.payout, row.stocks.growth, row.stocks.pe_terminal, row.stocks.price)
         if c < Decimal(0.05):
             table.append( [ row.stocks.symbol, c ] )
-    if len(table) > 1:
+    if len(table) > 0:
+        table.sort(key=lambda a : a[1])
+        table.insert(0, [ "Symbol", "5yr CAGR" ])
         rpt.add_string( "5yr CAGR < 5% - Sell" )
         rpt.add_table( table, formats )
     else:
@@ -39,7 +41,7 @@ def populate_reds( db, rpt ):
             filter(db.Constituents.pricing_type == db.CONST_PRICING_TYPE_BY_PRICE).\
             all()
     formats = [ rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_NONE ]
-    table = [ [ "Symbol", "Date" ] ]
+    table = [ ]
     today = datetime.now().date()
     for row in rows:
         date = db.session.query(func.max(db.Researches.date)).\
@@ -48,7 +50,9 @@ def populate_reds( db, rpt ):
         months = (today.year - date.year) * 12 + today.month - date.month
         if months >= 3:    
             table.append( [ row.symbol, date ] )
-    if len(table) > 1:
+    if len(table) > 0:
+        table.sort(key=lambda a : a[1])
+        table.insert(0, [ "Symbol", "Date" ])
         rpt.add_string( "Reds - Action" )
         rpt.add_table( table, formats )
     else:
@@ -76,11 +80,13 @@ def populate_thirty_pe( db, rpt ):
             filter(db.Constituents.portfolio_id == db.CONST_PORTFOLIO_PLAY).\
             all()
     formats = [ rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_CCY ]
-    table = [ [ "Symbol", "PE" ] ]
+    table = [ ]
     for row in rows:
         if row.stocks.price / row.stocks.eps > 30:
             table.append( [ row.stocks.symbol, row.stocks.price / row.stocks.eps ] )
-    if len(table) > 1:
+    if len(table) > 0:
+        table.sort(key=lambda a : a[1],reverse=True)
+        table.insert(0, [ "Symbol", "PE" ])
         rpt.add_string( "Thirty PE - Sell" )
         rpt.add_table( table, formats )                 
     else:
