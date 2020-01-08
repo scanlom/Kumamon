@@ -14,7 +14,7 @@ from api_log import log
 from api_mail import send_mail_html_self
 from api_reporting import report
 
-CONST_ONE_UNIT          = Decimal(211569.04)
+CONST_ONE_UNIT          = Decimal(237251)
 CONST_SYNTH_INSURANCE   = Decimal(15000)
 CONST_TAX_RATE          = Decimal(0.1823)
 
@@ -53,18 +53,18 @@ def main():
     table = [
         [ "Category", "Spent", "Projected", "Budget", "Tracking" ],
         ]
-    append_budget_row( db, table, "Base", [0,2,3,4,5,8,12,96], 65000 )
-    append_budget_row( db, table, "Rent", [1], 48000 )
+    append_budget_row( db, table, "Base", [0,2,3,4,5,8,12,96], 75000 )
+    append_budget_row( db, table, "Rent", [1], 54000 )
     append_budget_row( db, table, "Travel", [7], 10000 )
     append_budget_row( db, table, "Helper", [9], 12000 )
     append_budget_row( db, table, "Monchichi", [94], 12000 )
-    append_budget_row( db, table, "Deux", [93], 1000 )
+    append_budget_row( db, table, "Deux", [93], 6000 )
     append_budget_row( db, table, "Fumi", [11], 5000 )
     append_budget_row( db, table, "Mike", [6,10], 5000 )
     append_budget_row( db, table, "Special", [95,97,98,99], 0 )
-    append_budget_row( db, table, "Total", [0,1,2,3,4,5,6,7,8,9,10,11,12,93,94,95,96,97,98,99], 158000 )
+    append_budget_row( db, table, "Total", [0,1,2,3,4,5,6,7,8,9,10,11,12,93,94,95,96,97,98,99], 179000 )
     recon_projected = calculate_recon_projected( table, [2,3,4,5,6,8,9], 1, 7, 2, 4 )
-    table.append( [ "Recon", db.get_ytd_spending_sum(), recon_projected, 158000, 158000 - recon_projected ] )
+    table.append( [ "Recon", db.get_ytd_spending_sum(), recon_projected, 179000, 179000 - recon_projected ] )
     fumi_projected = calculate_fumi_projected( table, 1, 7, 4 )
     table.append( [ "Payout", 0, fumi_projected, 0, 0 ] )
     rpt.add_table(table, formats)
