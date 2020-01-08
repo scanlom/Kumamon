@@ -12,7 +12,7 @@ from api_log import log
 from api_mail import send_mail_html_self
 from api_reporting import report
 
-CONST_ONE_UNIT      = Decimal(233582)
+CONST_ONE_UNIT      = Decimal(237251)
 CONST_FINISH_PCT    = Decimal(0.04)
 CONST_TEN_MILLION   = Decimal(10000000)
 
