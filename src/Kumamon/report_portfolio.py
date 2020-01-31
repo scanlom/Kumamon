@@ -4,6 +4,7 @@ Created on Jul 20, 2013
 @author: scanlom
 '''
 
+from datetime import date
 from datetime import datetime
 from decimal import Decimal
 from math import log as math_log
@@ -15,6 +16,7 @@ from api_reporting import report
 CONST_ONE_UNIT      = Decimal(237251)
 CONST_FINISH_PCT    = Decimal(0.04)
 CONST_TEN_MILLION   = Decimal(10000000)
+CONST_FINISH_DATE   = date(2035,4,17)
 
 def append_ytd_qtd_day( db, row, index ):
     cur = db.get_index_history(index, datetime.today().date())
@@ -45,6 +47,7 @@ def main():
     total_finish = CONST_ONE_UNIT / CONST_FINISH_PCT 
     index_roe = db.get_index_history(db.CONST_INDEX_ROE, datetime.today().date())
     ytd_base_index_roe = db.get_index_history(db.CONST_INDEX_ROE, db.get_ytd_base_date())
+    retirement_years = CONST_FINISH_DATE - datetime.today().date()
     
     # Determine cash made this year
     profit = total_roe - db.get_balance_history(db.CONST_BALANCES_TYPE_TOTAL_ROE, db.get_ytd_base_date()) - db.get_balance(db.CONST_BALANCES_TYPE_SAVINGS)
@@ -86,6 +89,7 @@ def main():
     rpt.add_string("One Million - " + rpt.format_pct(1000000 / total_roe))
     rpt.add_string("Net Worth - " + rpt.format_ccy( total_roe ))
     rpt.add_string("Four Percent - " + rpt.format_ccy( total_finish ))
+    rpt.add_string("Retirement (Years) - " + rpt.format_ccy( retirement_years.days / 365.25 ))
     
     send_mail_html_self(subject, rpt.get_html())
     log.info("Completed")
