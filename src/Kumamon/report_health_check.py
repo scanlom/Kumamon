@@ -48,7 +48,7 @@ def populate_reds( db, rpt ):
             filter(db.Researches.stock_id == row.stock_id).\
             scalar()
         months = (today.year - date.year) * 12 + today.month - date.month
-        if months >= 3:    
+        if months > 3 or (months == 3 and today.day > date.day):    
             table.append( [ row.symbol, date ] )
     if len(table) > 0:
         table.sort(key=lambda a : a[1])
@@ -118,11 +118,11 @@ def main():
     log.info("Started...")
     db = database2()
     rpt = report()
-    
-    populate_reds(db, rpt)
-    populate_cash(db, rpt)
+
+    populate_cash(db, rpt)    
     populate_thirty_pe( db, rpt )
     populate_five_cagr(db, rpt)
+    populate_reds(db, rpt)
     populate_max_movers( db, rpt )
     
     subject = 'Blue Lion - Health Check'
