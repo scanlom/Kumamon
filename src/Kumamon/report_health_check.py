@@ -14,6 +14,7 @@ from api_log import log
 from api_mail import send_mail_html_self
 from api_reporting import report
 from api_utils import cagr
+from pip._internal import self_outdated_check
 
 def populate_five_cagr( db, rpt ):
     rows = db.session.query(db.Constituents, db.Stocks).\
@@ -59,20 +60,46 @@ def populate_reds( db, rpt ):
         rpt.add_string( "Reds - OK" )
 
 def populate_cash( db, rpt ):
-    cash = db.session.query(func.sum(db.Constituents.value)).\
-            filter(db.Constituents.symbol == db.CONST_SYMBOL_CASH).\
-            filter(db.Constituents.portfolio_id != db.CONST_PORTFOLIO_PLAY).\
-            scalar()
-    debt = db.session.query(func.sum(db.Constituents.value)).\
-            filter(db.Constituents.symbol == db.CONST_SYMBOL_DEBT).\
-            filter(db.Constituents.portfolio_id != db.CONST_PORTFOLIO_PLAY).\
-            scalar()
-    recon = cash - debt
-    if recon > 0:
-        rpt.add_string( "Cash - Buy - " + rpt.format_ccy(recon) )
-    else:
-        rpt.add_string( "Cash - OK - " + rpt.format_ccy(recon) )
+    cash = db.get_constituents_by_portfolio_symbol( db.CONST_PORTFOLIO_CASH, db.CONST_SYMBOL_CASH )
+    debt = db.get_constituents_by_portfolio_symbol( db.CONST_PORTFOLIO_CASH, db.CONST_SYMBOL_DEBT  )
+    cash_managed = db.get_constituents_by_portfolio_symbol( db.CONST_PORTFOLIO_MANAGED, db.CONST_SYMBOL_CASH )
+    cash_play = db.get_constituents_by_portfolio_symbol( db.CONST_PORTFOLIO_PLAY, db.CONST_SYMBOL_CASH )
+    total = db.get_balance( db.CONST_BALANCES_TYPE_TOTAL_ROE )
+    play = db.get_balance( db.CONST_BALANCES_TYPE_TOTAL_PLAY )
+    managed = db.get_balance( db.CONST_BALANCES_TYPE_TOTAL_MANAGED )
 
+    formats = [ rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_CCY_COLOR, rpt.CONST_FORMAT_PCT_COLOR ]
+    table = [ 
+        [ "Cash", "Value", "%" ],
+        [ "Cash", cash - debt, (cash - debt) / total ],
+        [ "Cash (Play)", cash_play, cash_play / play ],
+        [ "Cash (Managed)", cash_managed, cash_managed / managed ]
+        ]
+    rpt.add_string( "Cash - Red Is Good" )
+    rpt.add_table( table, formats )
+        
+def populate_allocations( db, rpt ):
+    total = db.get_balance( db.CONST_BALANCES_TYPE_TOTAL_ROE )
+    portfolio = db.get_balance( db.CONST_BALANCES_TYPE_TOTAL_SELF )
+    play = db.get_balance( db.CONST_BALANCES_TYPE_TOTAL_PLAY )
+    managed = db.get_balance( db.CONST_BALANCES_TYPE_TOTAL_MANAGED )
+    portfolio_target = Decimal(0.65)
+    play_target = Decimal(0.65)
+    managed_target = Decimal(0.35)
+    portfolio_off = portfolio / total - portfolio_target
+    play_off = play / portfolio - play_target
+    managed_off = managed / total - managed_target
+    
+    formats = [ rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_CCY_COLOR, rpt.CONST_FORMAT_PCT_COLOR, rpt.CONST_FORMAT_PCT ]
+    table = [ 
+        [ "Allocation", "Value", "%", "Target" ],
+        [ "Self", portfolio_off * total, portfolio_off, portfolio_target ],
+        [ "Play", play_off * portfolio, play_off, play_target ],
+        [ "Managed", managed_off * total, managed_off, managed_target ]
+        ]
+    rpt.add_string( "Allocations - Green Is Good" )
+    rpt.add_table( table, formats )
+    
 def populate_thirty_pe( db, rpt ):
     rows = db.session.query(db.Stocks, db.Constituents).\
             filter(db.Constituents.stock_id == db.Stocks.id).\
@@ -119,10 +146,17 @@ def main():
     db = database2()
     rpt = report()
 
-    populate_cash(db, rpt)    
+    rpt.add_heading("Trade")
+    populate_cash(db, rpt)
+    rpt.add_string("")        
+    populate_allocations(db, rpt)
+    rpt.add_heading("Upgrade")
     populate_thirty_pe( db, rpt )
+    rpt.add_string("")        
     populate_five_cagr(db, rpt)
+    rpt.add_heading("Research")
     populate_reds(db, rpt)
+    rpt.add_string("")        
     populate_max_movers( db, rpt )
     
     subject = 'Blue Lion - Health Check'

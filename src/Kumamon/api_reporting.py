@@ -75,6 +75,9 @@ class report:
         
     def add_string(self, foo):
         self.content += foo + "<br>"
+
+    def add_heading(self, foo):
+        self.content += "<h3>" + foo + "</h3>"
     
     def get_html(self):
         return "<html><head></head><body>" + self.content + "</body></html>"
