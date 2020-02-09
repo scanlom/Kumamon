@@ -12,8 +12,8 @@ from api_log import log
            
 def main():
     log.info("Started...")
-    symbol = "1373.HK"
-    from_date = date(2013,1,1)
+    symbol = "BKNG"
+    from_date = date(2011,1,1)
     db = database2()
     rows = db.get_fundamentals(symbol, from_date)
     h = historicals( get_market_data_symbol( symbol ) )
