@@ -27,6 +27,7 @@ def populate_five_cagr( db, rpt ):
     formats = [ rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_PCT_COLOR ]
     table = [ ]
     for row in rows:
+        log.info("Requesting cagr for " + row.stocks.symbol)
         c = cagr(5, row.stocks.eps, row.stocks.payout, row.stocks.growth, row.stocks.pe_terminal, row.stocks.price)
         if c > Decimal(0.10):
             rowResearch = db.session.query(db.Researches).\
