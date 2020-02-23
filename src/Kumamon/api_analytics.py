@@ -110,7 +110,9 @@ class historicals:
                 break
             except Exception as err:
                 if retry >= CONST_RETRIES:
-                    log.error( "Unable to retrieve historicals for %s" % (self.symbol) )
+                    # Note, there are many circumstances where we don't have historical data, so raise as a warning rather
+                    # than error
+                    log.warning( "Unable to retrieve historicals for %s" % (self.symbol) )
                     log.info( data_compact )
                     raise err
                 else:
@@ -193,10 +195,10 @@ def main():
     log.info("Started...")
     
     # Test
-    #print( last('OAYLX') )
+    print( last('MSFT') )
     
-    foo = historicals('BAS.F')
-    print( foo.change_ten_years()[0] )
+    # foo = historicals('BAS.F')
+    # print( foo.change_ten_years()[0] )
     
     log.info("Completed")
 
