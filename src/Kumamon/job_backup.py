@@ -27,8 +27,9 @@ def main():
     
     makedirs( config_backup_tmp_dir )
     
-    # Copy the db's (finances and wikidb)
+    # Copy the db's (finances, fujippi, and wikidb)
     call("pg_dump finances | split -b 1m - " + config_backup_tmp_dir + "financesbackup", shell=True)
+    call("pg_dump fujippi | split -b 1m - " + config_backup_tmp_dir + "fujippibackup", shell=True)
     call("pg_dump wikidb -U wikiuser | split -b 1m - " + config_backup_tmp_dir + "wikidbbackup", shell=True)
 
     # Copy the directories we want
