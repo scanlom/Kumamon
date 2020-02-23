@@ -9,7 +9,8 @@ from api_log import log
 
 def confidence( research ):
     # MSTODO - Desperately need to move this to post
-    url = 'http://localhost:8080/blue-lion/utils/confidence?research=%s' % ("".join(research.split()).replace('%',''))
+    url = 'http://localhost:8080/blue-lion/utils/confidence?research=%s' % ("".join(research.split()).replace('%','').replace('.','').replace('/','').
+                                                                            replace(";","").replace("&",""))
     response = get(url)
     return response.json()['confidence']
 
