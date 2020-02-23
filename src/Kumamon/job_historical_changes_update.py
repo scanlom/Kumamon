@@ -30,8 +30,9 @@ def main():
             update_stock_historical_change(row, h, h.CONST_BUSINESS_DAYS_FIVE_YEARS, "five_year_change", "five_year_change_date")    
             update_stock_historical_change(row, h, h.CONST_BUSINESS_DAYS_TEN_YEARS, "ten_year_change", "ten_year_change_date")                
         except Exception as err:
-            log.error( "Could not get data for %s" % ( row.symbol ) )
-            log.exception(err)
+            # Log exceptions as warnings, there often won't be historical data for international names
+            log.warning( "Could not get data for %s" % ( row.symbol ) )
+            # log.exception(err)
             continue   
 
     log.info( "Committing transaction..." )
