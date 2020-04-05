@@ -75,7 +75,7 @@ def populate_cash( db, rpt ):
         [ "Cash (Play)", cash_play, cash_play / play ],
         [ "Cash (Managed)", cash_managed, cash_managed / managed ]
         ]
-    rpt.add_string( "Cash - Red Is Good" )
+    rpt.add_string( "Cash - Aim for Zero, small Red" )
     rpt.add_table( table, formats )
         
 def populate_allocations( db, rpt ):
@@ -97,7 +97,7 @@ def populate_allocations( db, rpt ):
         [ "Play", play_off * portfolio, play_off, play_target ],
         [ "Managed", managed_off * total, managed_off, managed_target ]
         ]
-    rpt.add_string( "Allocations - Green Is Good" )
+    rpt.add_string( "Allocations - Aim for Zero, small Green" )
     rpt.add_table( table, formats )
     
 def populate_thirty_pe( db, rpt ):
