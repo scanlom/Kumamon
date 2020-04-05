@@ -27,10 +27,12 @@ def append_ytd_qtd_day( db, row, index ):
 def append_inflection_report( db, row, years, index_roe, total_roe, total_finish ):
     row_base_roe = db.get_index_history_minus_years(database2.CONST_INDEX_ROE, years)
     cagr = ( ( index_roe / row_base_roe.value ) ** Decimal( 1 / years ) ) - 1
-    inflect = total_roe * cagr - CONST_ONE_UNIT
-    inflect_years = math_log(CONST_ONE_UNIT / (total_roe * cagr), cagr + 1)
-    four_pct_years = math_log( total_finish / total_roe, cagr + 1 )
-    ten_m_years = math_log( CONST_TEN_MILLION / total_roe, cagr + 1 )
+    inflect = inflect_years = four_pct_years = ten_m_years = float("NaN")
+    if cagr > 0:
+        inflect = total_roe * cagr
+        inflect_years = math_log(CONST_ONE_UNIT / (total_roe * cagr), cagr + 1)
+        four_pct_years = math_log( total_finish / total_roe, cagr + 1 )
+        ten_m_years = math_log( CONST_TEN_MILLION / total_roe, cagr + 1 )
     row.append( cagr )
     row.append( inflect )
     row.append( inflect_years * -1 )
