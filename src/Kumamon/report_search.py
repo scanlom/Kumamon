@@ -14,34 +14,40 @@ from api_reporting import report
 from api_utils import cagr
 from api_utils import confidence
 
-CONST_CONFIDENCE_NONE   = 'NONE'
-CONST_CONFIDENCE_HIGH   = 'HIGH'
+CONST_CONFIDENCE_NONE           = 'NONE'
+CONST_CONFIDENCE_HIGH           = 'HIGH'
+CONST_CONFIDENCE_MEDIUM         = 'MEDIUM'
+CONST_CONFIDENCE_LOW            = 'LOW'
+CONST_CONFIDENCE_CONSTITUENT    = 'CONSTITUENT'
 
 def populate_five_cagr( db, rpt ):
-    rows = db.session.query(db.Stocks, db.Constituents).\
-            outerjoin(db.Constituents, db.Stocks.id == db.Constituents.stock_id).\
-            filter(db.Constituents.stock_id == None).\
+    rows = db.session.query(db.Stocks).\
             filter(db.Stocks.hidden == False).\
             filter(db.Stocks.pe_terminal > 0).\
             all()
-    formats = [ rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_PCT_COLOR ]
+    formats = [ rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_PCT_COLOR, rpt.CONST_FORMAT_CONFIDENCE ]
     table = [ ]
     for row in rows:
-        log.info("Requesting cagr for " + row.stocks.symbol)
-        c = cagr(5, row.stocks.eps, row.stocks.payout, row.stocks.growth, row.stocks.pe_terminal, row.stocks.price)
+        log.info("Requesting cagr for " + row.symbol)
+        c = cagr(5, row.eps, row.payout, row.growth, row.pe_terminal, row.price)
         if c > Decimal(0.10):
             rowResearch = db.session.query(db.Researches).\
-                filter(db.Researches.stock_id == row.stocks.id).\
+                filter(db.Researches.stock_id == row.id).\
                 order_by(desc(db.Researches.id)).first()
             if rowResearch == None:
-                table.append( [ row.stocks.symbol, c ] )
+                table.append( [ row.symbol, c, CONST_CONFIDENCE_NONE ] )
             else:
                 r = confidence(rowResearch.comment)
-                if r == CONST_CONFIDENCE_HIGH or r == CONST_CONFIDENCE_NONE:
-                    table.append( [ row.stocks.symbol, c ] )
+                # If it's a constituent, don't worry about the confidence
+                rowConstituent = db.session.query(db.Constituents).\
+                    filter(db.Constituents.stock_id == row.id).first()
+                if rowConstituent != None:
+                    r = CONST_CONFIDENCE_CONSTITUENT
+                if r != CONST_CONFIDENCE_LOW:
+                    table.append( [ row.symbol, c, r ] )
     if len(table) > 1:
         table.sort(key=lambda a : a[1],reverse=True)
-        table.insert(0, [ "Symbol", "5yr CAGR" ])
+        table.insert(0, [ "Symbol", "5yr CAGR", "Confidence" ])
         rpt.add_string( "Watch List 5yr CAGR > 10%" )
         rpt.add_table( table, formats )
     else:

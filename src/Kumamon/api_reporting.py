@@ -7,6 +7,12 @@ Created on Aug 13, 2018
 from datetime import datetime
 from api_log import log
 
+CONST_CONFIDENCE_NONE           = 'NONE'
+CONST_CONFIDENCE_HIGH           = 'HIGH'
+CONST_CONFIDENCE_MEDIUM         = 'MEDIUM'
+CONST_CONFIDENCE_LOW            = 'LOW'
+CONST_CONFIDENCE_CONSTITUENT    = 'CONSTITUENT'
+
 class report:
     CONST_FORMAT_NONE           = 0
     CONST_FORMAT_CCY            = 1
@@ -15,6 +21,7 @@ class report:
     CONST_FORMAT_PCT            = 4
     CONST_FORMAT_PCT_COLOR      = 5
     CONST_FORMAT_DATE_SHORT     = 6
+    CONST_FORMAT_CONFIDENCE     = 7
     
     def __init__(self):
         self.content = ""
@@ -39,6 +46,8 @@ class report:
             foo = ""
             if self.CONST_FORMAT_CCY == f or self.CONST_FORMAT_CCY_COLOR == f or self.CONST_FORMAT_CCY_INT_COLOR == f or self.CONST_FORMAT_PCT == f or self.CONST_FORMAT_PCT_COLOR == f:
                 start = " style='text-align:right'"
+            if self.CONST_FORMAT_CONFIDENCE == f and item == CONST_CONFIDENCE_CONSTITUENT:
+                start = " bgcolor='blue'"
             start += ">"
             if self.CONST_FORMAT_CCY_COLOR == f or self.CONST_FORMAT_PCT_COLOR == f or self.CONST_FORMAT_CCY_INT_COLOR == f:
                 if item > 0:
@@ -56,6 +65,17 @@ class report:
                 foo += self.format_pct(item)
             elif self.CONST_FORMAT_DATE_SHORT == f:
                 foo += self.format_date_short(item)
+            elif self.CONST_FORMAT_CONFIDENCE == f:
+                foo += str(item)
+                if item == CONST_CONFIDENCE_HIGH:
+                    start += "<font color='green'>"
+                    end += "</font>"
+                elif item == CONST_CONFIDENCE_MEDIUM:
+                    start += "<font color='orange'>"
+                    end += "</font>"
+                elif item == CONST_CONFIDENCE_CONSTITUENT:
+                    start += "<font color='white'>"
+                    end += "</font>"
             ret.append(start + foo + end)    
         return ret
         
