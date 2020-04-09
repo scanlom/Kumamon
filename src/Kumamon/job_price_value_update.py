@@ -5,7 +5,7 @@ Created on Aug 7, 2013
 '''
 
 from api_analytics import get_market_data_symbol
-from api_analytics import last
+from api_blue_lion import last
 from api_database import database2
 from api_log import log
 

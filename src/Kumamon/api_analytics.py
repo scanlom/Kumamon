@@ -13,7 +13,7 @@ from time import sleep
 from urllib.request import urlopen
 from api_log import log
 
-CONST_THROTTLE_SECONDS  = 16
+CONST_THROTTLE_SECONDS  = 2
 CONST_RETRIES           = 5
 CONST_RETRY_SECONDS     = 61
 
@@ -34,13 +34,13 @@ def sanity_check_historical_data(key, value):
 def last(symbol):
     retry = 1
     sleep(CONST_THROTTLE_SECONDS) # Sleep to avoid AlphaVantage throttling error
-    url = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=%s&apikey=2YG6SAN57NRYNPJ8' % (symbol)
+    url = 'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=%s&apikey=2YG6SAN57NRYNPJ8' % (symbol)
    
     while retry <= CONST_RETRIES:
         try:
             raw_bytes = urlopen(url).read()
             data = loads(raw_bytes.decode())
-            last = Decimal( data['Time Series (Daily)'][ data['Meta Data']['3. Last Refreshed'][0:10] ]['5. adjusted close'] )
+            last = Decimal( data['Global Quote']['05. price'] )
             return last
         except Exception as err:
             if retry >= CONST_RETRIES:
