@@ -13,7 +13,7 @@ from time import sleep
 from urllib.request import urlopen
 from api_log import log
 
-CONST_THROTTLE_SECONDS  = 2
+CONST_THROTTLE_SECONDS  = 16
 CONST_RETRIES           = 5
 CONST_RETRY_SECONDS     = 61
 
