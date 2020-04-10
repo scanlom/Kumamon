@@ -4,7 +4,6 @@ Created on Aug 7, 2013
 @author: scanlom
 '''
 
-from api_analytics import get_market_data_symbol
 from api_blue_lion import last
 from api_database import database2
 from api_log import log
@@ -13,7 +12,7 @@ def populate_price_and_value(db, rows, populate_value):
     for row in rows:
         log.info( "Downloading %s..." % ( row.symbol ) )
         try:
-            row.price = last( get_market_data_symbol( row.symbol ) )
+            row.price = last( row.symbol )
             if populate_value:
                 row.value = row.price * row.quantity
             log.info( "Updated %s..." % ( row.symbol ) )
