@@ -4,6 +4,7 @@ Created on Dec 8, 2019
 @author: scanlom
 '''
 
+from decimal import Decimal
 from requests import get, post, put
 from api_log import log
 
@@ -22,7 +23,7 @@ def cagr( years, eps, payout, growth, pe_terminal, price ):
 def last( symbol ):
     url = 'http://localhost:8081/blue-lion/read/market-data?symbol=%s' % (symbol)
     response = get(url)
-    return response.json()['last']
+    return Decimal(response.json()['last'])
 
 def ref_data():
     url = 'http://localhost:8081/blue-lion/read/ref-data'
@@ -45,13 +46,19 @@ def put_market_data( id, ref_data_id, last ):
     url = 'http://localhost:8083/blue-lion/write/market-data/%d' % (id)
     r = put(url, json={'id':id, 'refDataId':ref_data_id, 'last':float(last)} )
     r.raise_for_status()
+
+def post_simfin_income( data ):
+    url = 'http://localhost:8083/blue-lion/write/simfin-income'
+    r = post(url, json=data )
+    r.raise_for_status()
+
     
 def main():
     log.info("Started...")
     
     # Test
     # print(cagr(5, 2.16, 0, 0.15, 15, 41.61))
-    print( last( 'BRKB' ) )
+    post_simfin_income()
     
     log.info("Completed")
 
