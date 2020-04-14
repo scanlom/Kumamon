@@ -42,6 +42,7 @@ class database2:
     CONST_BALANCES_TYPE_VIRTUAL_BANK    = 5
     CONST_BALANCES_TYPE_JPY             = 6
     CONST_BALANCES_TYPE_OWE_PORTFOLIO   = 7
+    CONST_BALANCES_TYPE_ED              = 8
     CONST_BALANCES_TYPE_GS              = 9
     CONST_BALANCES_TYPE_GS_HKD          = 10
     CONST_BALANCES_TYPE_GS_IRA          = 11
