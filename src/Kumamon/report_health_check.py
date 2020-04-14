@@ -13,7 +13,7 @@ from api_database import database2
 from api_log import log
 from api_mail import send_mail_html_self
 from api_reporting import report
-from api_utils import cagr
+from api_blue_lion import cagr
 from pip._internal import self_outdated_check
 
 def populate_five_cagr( db, rpt ):
