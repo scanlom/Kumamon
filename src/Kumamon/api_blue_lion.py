@@ -52,6 +52,15 @@ def post_simfin_income( data ):
     r = post(url, json=data )
     r.raise_for_status()
 
+def post_simfin_balance( data ):
+    url = 'http://localhost:8083/blue-lion/write/simfin-balance'
+    r = post(url, json=data )
+    r.raise_for_status()
+
+def post_simfin_cashflow( data ):
+    url = 'http://localhost:8083/blue-lion/write/simfin-cashflow'
+    r = post(url, json=data )
+    r.raise_for_status()
     
 def main():
     log.info("Started...")
