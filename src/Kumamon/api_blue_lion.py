@@ -5,7 +5,7 @@ Created on Dec 8, 2019
 '''
 
 from decimal import Decimal
-from requests import get, post, put
+from requests import get, post, put, delete
 from api_log import log
 
 def confidence( research ):
@@ -45,6 +45,16 @@ def post_market_data( ref_data_id, last ):
 def put_market_data( id, ref_data_id, last ):
     url = 'http://localhost:8083/blue-lion/write/market-data/%d' % (id)
     r = put(url, json={'id':id, 'refDataId':ref_data_id, 'last':float(last)} )
+    r.raise_for_status()
+
+def delete_market_data_historical( symbol ):
+    url = 'http://localhost:8083/blue-lion/write/market-data-historical?symbol=%s' % (symbol)
+    r = delete(url)
+    r.raise_for_status()
+
+def post_market_data_historical( date, ref_data_id, close, adj_close ):
+    url = 'http://localhost:8083/blue-lion/write/market-data-historical'
+    r = post(url, json={'date':date, 'refDataId':ref_data_id, 'close':float(close), 'adjClose':float(adj_close)} )
     r.raise_for_status()
 
 def post_simfin_income( data ):

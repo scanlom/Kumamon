@@ -22,11 +22,12 @@ def get_market_data_symbol(symbol):
         return "BRK-B"
     return symbol
 
-# AlphaVantage may return some garbage data, we do our best to avoid that here
+# AlphaVantage may return some garbage data, we do our best to avoid that here (example 3030.T)
 def sanity_check_historical_data(key, value):
     adj_close = Decimal( value['5. adjusted close'] )
     
-    if adj_close <= 0:
+    # Adjusted close clearly can't be negative, and on the high side, numeric(14,4), that is, ten digits, is a decent bound
+    if adj_close <= 0 or adj_close >= 10000000000:
         return False
     
     return True
