@@ -57,19 +57,52 @@ def post_market_data_historical( date, ref_data_id, close, adj_close ):
     r = post(url, json={'date':date, 'refDataId':ref_data_id, 'close':float(close), 'adjClose':float(adj_close)} )
     r.raise_for_status()
 
+def simfin_income_by_ticker( ticker ):
+    url = 'http://localhost:8081/blue-lion/read/simfin-income?ticker=%s' % (ticker)
+    r = get(url)
+    r.raise_for_status()
+    return r.json()
+
 def post_simfin_income( data ):
     url = 'http://localhost:8083/blue-lion/write/simfin-income'
     r = post(url, json=data )
     r.raise_for_status()
+
+def delete_simfin_income_by_id( id ):
+    url = 'http://localhost:8083/blue-lion/write/simfin-income/%d' % (id)
+    r = delete(url)
+    r.raise_for_status()
+
+def simfin_balance_by_ticker( ticker ):
+    url = 'http://localhost:8081/blue-lion/read/simfin-balance?ticker=%s' % (ticker)
+    r = get(url)
+    r.raise_for_status()
+    return r.json()
 
 def post_simfin_balance( data ):
     url = 'http://localhost:8083/blue-lion/write/simfin-balance'
     r = post(url, json=data )
     r.raise_for_status()
 
+def delete_simfin_balance_by_id( id ):
+    url = 'http://localhost:8083/blue-lion/write/simfin-balance/%d' % (id)
+    r = delete(url)
+    r.raise_for_status()
+
+def simfin_cashflow_by_ticker( ticker ):
+    url = 'http://localhost:8081/blue-lion/read/simfin-cashflow?ticker=%s' % (ticker)
+    r = get(url)
+    r.raise_for_status()
+    return r.json()
+
 def post_simfin_cashflow( data ):
     url = 'http://localhost:8083/blue-lion/write/simfin-cashflow'
     r = post(url, json=data )
+    r.raise_for_status()
+
+def delete_simfin_cashflow_by_id( id ):
+    url = 'http://localhost:8083/blue-lion/write/simfin-cashflow/%d' % (id)
+    r = delete(url)
     r.raise_for_status()
     
 def main():
@@ -77,7 +110,7 @@ def main():
     
     # Test
     # print(cagr(5, 2.16, 0, 0.15, 15, 41.61))
-    post_simfin_income()
+    post_simfin_income({'date':'2019-12-13', 'ticker':'Mikey'})
     
     log.info("Completed")
 
