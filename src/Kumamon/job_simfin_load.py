@@ -13,6 +13,8 @@ from simfin import set_data_dir
 from api_blue_lion import simfin_income_by_ticker, post_simfin_income, simfin_balance_by_ticker, post_simfin_balance, simfin_cashflow_by_ticker, post_simfin_cashflow
 from api_blue_lion import delete_simfin_income_by_id, delete_simfin_balance_by_id, delete_simfin_cashflow_by_id
 from api_log import log
+from api_mail import send_mail_html_self
+from api_reporting import report
 
 def frame_to_json( df ):
     df = df.rename({
@@ -142,7 +144,9 @@ def simfin_load(msg, func_simfin, func_get_by_ticker, func_delete_by_id, func_po
         func_post(j)
         num_inserted += 1
         
-    log.info("Inserted %d records, collisions simfin: %d, override %d, manual %d" % (num_inserted, num_collisions_simfin, num_collisions_override, num_collisions_manual))
+    ret = "%s: Inserted %d records, collisions simfin: %d, override %d, manual %d" % (msg, num_inserted, num_collisions_simfin, num_collisions_override, num_collisions_manual)
+    log.info(ret)
+    return ret
 
 def main():
     log.info("Started...")
@@ -160,9 +164,13 @@ def main():
     # The dir will be created if it does not already exist.
     set_data_dir('~/simfin_data/')
     
-    simfin_load("income", load_income, simfin_income_by_ticker, delete_simfin_income_by_id, post_simfin_income)
-    simfin_load("balance", load_balance, simfin_balance_by_ticker, delete_simfin_balance_by_id, post_simfin_balance)
-    simfin_load("cashflow", load_cashflow, simfin_cashflow_by_ticker, delete_simfin_cashflow_by_id, post_simfin_cashflow)
+    rpt = report()
+    rpt.add_string( simfin_load("income", load_income, simfin_income_by_ticker, delete_simfin_income_by_id, post_simfin_income) )
+    rpt.add_string( simfin_load("balance", load_balance, simfin_balance_by_ticker, delete_simfin_balance_by_id, post_simfin_balance) )
+    rpt.add_string( simfin_load("cashflow", load_cashflow, simfin_cashflow_by_ticker, delete_simfin_cashflow_by_id, post_simfin_cashflow) )
+
+    subject = 'Blue Lion - Simfin Load'
+    send_mail_html_self(subject, rpt.get_html())
     log.info("Completed")
 
 if __name__ == '__main__':
