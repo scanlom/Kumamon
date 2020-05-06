@@ -83,18 +83,18 @@ def populate_allocations( db, rpt ):
     portfolio = db.get_balance( db.CONST_BALANCES_TYPE_TOTAL_SELF )
     play = db.get_balance( db.CONST_BALANCES_TYPE_TOTAL_PLAY )
     managed = db.get_balance( db.CONST_BALANCES_TYPE_TOTAL_MANAGED )
-    portfolio_target = Decimal(0.65)
-    play_target = Decimal(0.65)
+    oak_target = Decimal(0.65) * Decimal(0.35)
+    play_target = Decimal(0.65) * Decimal(0.65)
     managed_target = Decimal(0.35)
-    portfolio_off = portfolio / total - portfolio_target
-    play_off = play / portfolio - play_target
+    oak_off = ( portfolio - play ) / total - oak_target
+    play_off = play / total - play_target
     managed_off = managed / total - managed_target
     
     formats = [ rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_CCY_COLOR, rpt.CONST_FORMAT_PCT_COLOR, rpt.CONST_FORMAT_PCT ]
     table = [ 
         [ "Allocation", "Value", "%", "Target" ],
-        [ "Self", portfolio_off * total, portfolio_off, portfolio_target ],
-        [ "Play", play_off * portfolio, play_off, play_target ],
+        [ "Oak", oak_off * total, oak_off, oak_target ],
+        [ "Play", play_off * total, play_off, play_target ],
         [ "Managed", managed_off * total, managed_off, managed_target ]
         ]
     rpt.add_string( "Allocations - Aim for Zero, small Green" )
