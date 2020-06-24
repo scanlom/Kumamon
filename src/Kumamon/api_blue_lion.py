@@ -29,6 +29,28 @@ def ref_data():
     url = 'http://localhost:8081/blue-lion/read/ref-data'
     response = get(url)
     return response.json()
+
+def ref_data_focus():
+    url = 'http://localhost:8081/blue-lion/read/ref-data/focus'
+    response = get(url)
+    return response.json()
+
+def ref_data_by_symbol( symbol ):
+    url = 'http://localhost:8081/blue-lion/read/ref-data?symbol=%s' % (symbol)
+    response = get(url)
+    if response.status_code == 200:
+        return response.json()
+    return None
+
+def post_ref_data( symbol, description, sector, industry ):
+    url = 'http://localhost:8083/blue-lion/write/ref-data'
+    r = post(url, json={'symbol':symbol, 'symbolAlphaVantage':symbol, 'description':description, 'sector':sector, 'industry':industry, 'active':True, 'focus': False} )
+    r.raise_for_status()
+
+def put_ref_data( id, symbol, symbolAlphaVantage, description, sector, industry, active, focus ):
+    url = 'http://localhost:8083/blue-lion/write/ref-data/%d' % (id)
+    r = put(url, json={'id':id, 'symbol':symbol, 'symbolAlphaVantage':symbolAlphaVantage, 'description':description, 'sector':sector, 'industry':industry, 'active':active, 'focus':focus} )
+    r.raise_for_status()
     
 def market_data_by_symbol( symbol ):
     url = 'http://localhost:8081/blue-lion/read/market-data?symbol=%s' % (symbol)
@@ -47,15 +69,28 @@ def put_market_data( id, ref_data_id, last ):
     r = put(url, json={'id':id, 'refDataId':ref_data_id, 'last':float(last)} )
     r.raise_for_status()
 
-def delete_market_data_historical( symbol ):
-    url = 'http://localhost:8083/blue-lion/write/market-data-historical?symbol=%s' % (symbol)
-    r = delete(url)
-    r.raise_for_status()
+def mdh_by_ref_data_id_date( ref_data_id, date ):
+    url = 'http://localhost:8081/blue-lion/read/market-data-historical?refDataId=%d&date=%s' % (ref_data_id, date)
+    r = get(url)
+    if r.status_code == 200:
+        return r.json()
+    return None
 
 def post_market_data_historical( date, ref_data_id, close, adj_close ):
     url = 'http://localhost:8083/blue-lion/write/market-data-historical'
     r = post(url, json={'date':date, 'refDataId':ref_data_id, 'close':float(close), 'adjClose':float(adj_close)} )
     r.raise_for_status()
+
+def put_market_data_historical( id, date, ref_data_id, close, adj_close ):
+    url = 'http://localhost:8083/blue-lion/write/market-data-historical/%d' % (id)
+    r = put(url, json={'id':id, 'date':date, 'refDataId':ref_data_id, 'close':float(close), 'adjClose':float(adj_close)} )
+    r.raise_for_status()
+
+def headline_by_ticker( ticker ):
+    url = 'http://localhost:8081/blue-lion/read/headline?ticker=%s' % (ticker)
+    r = get(url)
+    r.raise_for_status()
+    return r.json()
 
 def simfin_income_by_ticker( ticker ):
     url = 'http://localhost:8081/blue-lion/read/simfin-income?ticker=%s' % (ticker)
@@ -109,8 +144,8 @@ def main():
     log.info("Started...")
     
     # Test
-    # print(cagr(5, 2.16, 0, 0.15, 15, 41.61))
-    post_simfin_income({'date':'2019-12-13', 'ticker':'Mikey'})
+    print(cagr(5, 5.10, 0.40, 0.10, 18, 183.43))
+    # post_simfin_income({'date':'2019-12-13', 'ticker':'Mikey'})
     
     log.info("Completed")
 

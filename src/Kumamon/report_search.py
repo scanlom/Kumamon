@@ -11,7 +11,7 @@ from api_database import database2
 from api_log import log
 from api_mail import send_mail_html_self
 from api_reporting import report
-from api_blue_lion import cagr, confidence
+from api_blue_lion import cagr, confidence, headline_by_ticker, ref_data
 
 CONST_CONFIDENCE_NONE           = 'NONE'
 CONST_CONFIDENCE_HIGH           = 'HIGH'
@@ -20,6 +20,7 @@ CONST_CONFIDENCE_LOW            = 'LOW'
 CONST_CONFIDENCE_CONSTITUENT    = 'CONSTITUENT'
 
 def populate_five_cagr( db, rpt ):
+    log.info("populate_five_cagr called...")
     rows = db.session.query(db.Stocks).\
             filter(db.Stocks.hidden == False).\
             filter(db.Stocks.pe_terminal > 0).\
@@ -52,12 +53,29 @@ def populate_five_cagr( db, rpt ):
     else:
         rpt.add_string( "Watch List 5yr CAGR > 10% - None" )
 
+def populate_magic( rpt ):
+    log.info("populate_magic called...")
+    rpt.add_string( "Screen Magic Top Ten" )
+    headlines = []
+    instruments = ref_data()
+    for i in instruments:
+        log.info("Requesting headline for " + i['symbol'])
+        headlines.append(headline_by_ticker( i['symbol'] ))
+    sorted_headlines = sorted(headlines, reverse = True, key = lambda i: i['magic'])
+    formats = [ rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_CCY_COLOR ]
+    table = [ ]
+    table.append( [ "Ticker", "Description", "Magic" ] )
+    for x in range(10):
+        table.append( [sorted_headlines[x]['ticker'], sorted_headlines[x]['description'], sorted_headlines[x]['magic']] )
+    rpt.add_table( table, formats )
+
 def main():
     log.info("Started...")
     db = database2()
     rpt = report()
     
     populate_five_cagr( db, rpt )
+    populate_magic( rpt )
   
     subject = 'Blue Lion - Search'
     send_mail_html_self(subject, rpt.get_html())

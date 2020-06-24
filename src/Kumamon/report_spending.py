@@ -14,9 +14,10 @@ from api_log import log
 from api_mail import send_mail_html_self
 from api_reporting import report
 
-CONST_ONE_UNIT          = Decimal(237251)
-CONST_SYNTH_INSURANCE   = Decimal(15000)
+CONST_BUDGET            = Decimal(179000)
+CONST_FIXED             = Decimal(15000)
 CONST_TAX_RATE          = Decimal(0.1823)
+CONST_ONE_UNIT          = Decimal(237251)
 
 def append_budget_row( db, table, name, types, budget ):
     day_of_year = datetime.now().timetuple().tm_yday
@@ -62,14 +63,24 @@ def main():
     append_budget_row( db, table, "Fumi", [11], 5000 )
     append_budget_row( db, table, "Mike", [6,10], 5000 )
     append_budget_row( db, table, "Special", [95,97,98,99], 0 )
-    append_budget_row( db, table, "Total", [0,1,2,3,4,5,6,7,8,9,10,11,12,93,94,95,96,97,98,99], 179000 )
+    append_budget_row( db, table, "Total", [0,1,2,3,4,5,6,7,8,9,10,11,12,93,94,95,96,97,98,99], CONST_BUDGET )
     recon_projected = calculate_recon_projected( table, [2,3,4,5,6,8,9], 1, 7, 2, 4 )
-    table.append( [ "Recon", db.get_ytd_spending_sum(), recon_projected, 179000, 179000 - recon_projected ] )
+    table.append( [ "Recon", db.get_ytd_spending_sum(), recon_projected, CONST_BUDGET, CONST_BUDGET - recon_projected ] )
     fumi_projected = calculate_fumi_projected( table, 1, 7, 4 )
     table.append( [ "Payout", 0, fumi_projected, 0, 0 ] )
     rpt.add_table(table, formats)
-
-    plan_projected = (recon_projected + CONST_SYNTH_INSURANCE) / (1 - CONST_TAX_RATE)
+    
+    plan_projected = (recon_projected + CONST_FIXED) / (1 - CONST_TAX_RATE)
+    rpt.add_string( "BLRP " + rpt.format_ccy(plan_projected) + "=" +
+                    rpt.format_ccy(recon_projected) + "+" +
+                    rpt.format_ccy(CONST_FIXED) +
+                    "/(1-" + rpt.format_ccy(CONST_TAX_RATE) + ")"
+                    )
+    rpt.add_string( "BLRB " + rpt.format_ccy(CONST_ONE_UNIT) + "=" +
+                    rpt.format_ccy(CONST_BUDGET) + "+" +
+                    rpt.format_ccy(CONST_FIXED) +
+                    "/(1-" + rpt.format_ccy(CONST_TAX_RATE) + ")"     
+                    )
     subject = 'Blue Tree - ' + rpt.format_ccy(plan_projected) + ' / ' + rpt.format_ccy(CONST_ONE_UNIT)
      
     send_mail_html_self(subject, rpt.get_html())
