@@ -71,15 +71,15 @@ def main():
     rpt.add_table(table, formats)
     
     plan_projected = (recon_projected + CONST_FIXED) / (1 - CONST_TAX_RATE)
-    rpt.add_string( "BLRP " + rpt.format_ccy(plan_projected) + "=" +
+    rpt.add_string( "BLRP " + rpt.format_ccy(plan_projected) + "=(" +
                     rpt.format_ccy(recon_projected) + "+" +
                     rpt.format_ccy(CONST_FIXED) +
-                    "/(1-" + rpt.format_ccy(CONST_TAX_RATE) + ")"
+                    ")/(1-" + rpt.format_ccy(CONST_TAX_RATE) + ")"
                     )
-    rpt.add_string( "BLRB " + rpt.format_ccy(CONST_ONE_UNIT) + "=" +
+    rpt.add_string( "BLRB " + rpt.format_ccy(CONST_ONE_UNIT) + "=(" +
                     rpt.format_ccy(CONST_BUDGET) + "+" +
                     rpt.format_ccy(CONST_FIXED) +
-                    "/(1-" + rpt.format_ccy(CONST_TAX_RATE) + ")"     
+                    ")/(1-" + rpt.format_ccy(CONST_TAX_RATE) + ")"     
                     )
     subject = 'Blue Tree - ' + rpt.format_ccy(plan_projected) + ' / ' + rpt.format_ccy(CONST_ONE_UNIT)
      

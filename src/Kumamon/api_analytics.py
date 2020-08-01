@@ -45,7 +45,7 @@ def last(symbol):
             return last
         except Exception as err:
             if retry >= CONST_RETRIES:
-                log.error( "Unable to retrieve last for %s" % (symbol) )
+                log.warning( "Unable to retrieve last for %s" % (symbol) )
                 log.info( data )
                 raise err
             else:

@@ -11,7 +11,12 @@ def main():
     log.info("Started loading market data...")
     instruments = ref_data_focus()
     for i in instruments:
-        l = last( i['symbolAlphaVantage'] )
+        try:
+            l = last( i['symbolAlphaVantage'] )
+        except Exception as err:
+            # If we can't retrieve market data for one symbol, just continue on to the others. We'll catch that in the tech health checks, as market data update time will be stale
+            log.warning( "Unable to retrieve last for %s" % (i['symbol']) )
+            continue
         md = market_data_by_symbol( i['symbol'] )
         if md == None:
             log.info("POST market_data: %s, %f" % (i['symbol'], l))
