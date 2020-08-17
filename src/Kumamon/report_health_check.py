@@ -61,43 +61,48 @@ def populate_reds( db, rpt ):
 
 def populate_cash( db, rpt ):
     cash = db.get_constituents_by_portfolio_symbol( db.CONST_PORTFOLIO_CASH, db.CONST_SYMBOL_CASH )
-    debt = db.get_constituents_by_portfolio_symbol( db.CONST_PORTFOLIO_CASH, db.CONST_SYMBOL_DEBT  )
+    debt = -1*db.get_constituents_by_portfolio_symbol( db.CONST_PORTFOLIO_CASH, db.CONST_SYMBOL_DEBT  )
     cash_managed = db.get_constituents_by_portfolio_symbol( db.CONST_PORTFOLIO_MANAGED, db.CONST_SYMBOL_CASH )
     cash_play = db.get_constituents_by_portfolio_symbol( db.CONST_PORTFOLIO_PLAY, db.CONST_SYMBOL_CASH )
-    total = db.get_balance( db.CONST_BALANCES_TYPE_TOTAL_ROE )
+    total_roe = db.get_balance( db.CONST_BALANCES_TYPE_TOTAL_ROE )
     play = db.get_balance( db.CONST_BALANCES_TYPE_TOTAL_PLAY )
     managed = db.get_balance( db.CONST_BALANCES_TYPE_TOTAL_MANAGED )
 
     formats = [ rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_CCY_COLOR, rpt.CONST_FORMAT_PCT_COLOR ]
     table = [ 
         [ "Cash", "Value", "%" ],
-        [ "Cash", cash - debt, (cash - debt) / total ],
+        [ "Debt", debt, debt / total_roe ],
+        [ "Cash", cash, cash / total_roe ],
         [ "Cash (Play)", cash_play, cash_play / play ],
-        [ "Cash (Managed)", cash_managed, cash_managed / managed ]
+        [ "Cash (Managed)", cash_managed, cash_managed / managed ],
         ]
-    rpt.add_string( "Cash - Aim for Zero, small Red" )
+    rpt.add_string( "Cash - Aim for 2.5% Red, Zero, Zero, Zero" )
     rpt.add_table( table, formats )
         
 def populate_allocations( db, rpt ):
-    total = db.get_balance( db.CONST_BALANCES_TYPE_TOTAL_ROE )
+    total = db.get_balance( db.CONST_BALANCES_TYPE_TOTAL_ROTC )
     portfolio = db.get_balance( db.CONST_BALANCES_TYPE_TOTAL_SELF )
     play = db.get_balance( db.CONST_BALANCES_TYPE_TOTAL_PLAY )
     managed = db.get_balance( db.CONST_BALANCES_TYPE_TOTAL_MANAGED )
-    oak_target = Decimal(0.65) * Decimal(0.35)
-    play_target = Decimal(0.65) * Decimal(0.65)
-    managed_target = Decimal(0.35)
+    cash = db.get_constituents_by_portfolio_symbol( db.CONST_PORTFOLIO_CASH, db.CONST_SYMBOL_CASH )
+    oak_target = Decimal(0.30) * Decimal(0.67)
+    play_target = Decimal(0.70) * Decimal(0.67)
+    managed_target = Decimal(0.33)
+    cash_target = Decimal(0.00)
     oak_off = ( portfolio - play ) / total - oak_target
     play_off = play / total - play_target
     managed_off = managed / total - managed_target
+    cash_off = cash / total - cash_target
     
     formats = [ rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_CCY_COLOR, rpt.CONST_FORMAT_PCT_COLOR, rpt.CONST_FORMAT_PCT ]
     table = [ 
         [ "Allocation", "Value", "%", "Target" ],
         [ "Oak", oak_off * total, oak_off, oak_target ],
         [ "Play", play_off * total, play_off, play_target ],
-        [ "Managed", managed_off * total, managed_off, managed_target ]
+        [ "Managed", managed_off * total, managed_off, managed_target ],
+        [ "Cash", cash_off * total, cash_off, cash_target ],
         ]
-    rpt.add_string( "Allocations - Aim for Zero, small Green" )
+    rpt.add_string( "Allocations - Aim for Zero" )
     rpt.add_table( table, formats )
     
 def populate_thirty_pe( db, rpt ):
