@@ -5,11 +5,12 @@ Created on Aug 7, 2013
 '''
 from api_analytics import last
 from api_log import log
-from api_blue_lion import ref_data_focus, market_data_by_symbol, post_market_data, put_market_data
+from api_blue_lion import ref_data_focus, ref_data, market_data_by_symbol, post_market_data, put_market_data
 
 def main():
     log.info("Started loading market data...")
     instruments = ref_data_focus()
+    #instruments += ref_data()
     for i in instruments:
         try:
             l = last( i['symbolAlphaVantage'] )
