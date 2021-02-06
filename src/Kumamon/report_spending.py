@@ -17,7 +17,7 @@ from api_reporting import report
 CONST_BUDGET            = Decimal(179000)
 CONST_FIXED             = Decimal(15000)
 CONST_TAX_RATE          = Decimal(0.1823)
-CONST_ONE_UNIT          = Decimal(237251)
+CONST_ONE_UNIT          = Decimal(261710)
 
 def append_budget_row( db, table, name, types, budget ):
     day_of_year = datetime.now().timetuple().tm_yday
@@ -55,11 +55,11 @@ def main():
         [ "Category", "Spent", "Projected", "Budget", "Tracking" ],
         ]
     append_budget_row( db, table, "Base", [0,2,3,4,5,8,12,96], 75000 )
-    append_budget_row( db, table, "Rent", [1], 54000 )
+    append_budget_row( db, table, "Rent", [1], 73000 )
     append_budget_row( db, table, "Travel", [7], 10000 )
     append_budget_row( db, table, "Helper", [9], 12000 )
     append_budget_row( db, table, "Monchichi", [94], 12000 )
-    append_budget_row( db, table, "Deux", [93], 6000 )
+    append_budget_row( db, table, "Deux", [93], 12000 )
     append_budget_row( db, table, "Fumi", [11], 5000 )
     append_budget_row( db, table, "Mike", [6,10], 5000 )
     append_budget_row( db, table, "Special", [95,97,98,99], 0 )

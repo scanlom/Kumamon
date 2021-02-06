@@ -61,11 +61,16 @@ class database2:
     CONST_SYMBOL_CASH   = "CASH"
     CONST_SYMBOL_DEBT   = "DEBT"
     
+    CONST_ACTION_TYPE_BOUGHT_PORTFOLIO      = 11
+    CONST_ACTION_TYPE_SOLD_PORTFOLIO        = 16
+    CONST_ACTION_TYPE_DIVIDEND_PORTFOLIO    = 1
+    
     def __init__(self):
         self.Base = automap_base()
         self.engine = create_engine(config_database2_connect)
         self.Base.prepare(self.engine, reflect=True)
         self.session = Session(self.engine)
+        self.Actions = self.Base.classes.actions
         self.Balances = self.Base.classes.balances
         self.BalancesHistory = self.Base.classes.balances_history
         self.Constituents = self.Base.classes.constituents
@@ -140,6 +145,12 @@ class database2:
 
     def get_portfolio_history(self, portfolio, symbol, date):
         return self.session.query(self.PortfolioHistory).filter(self.PortfolioHistory.type == portfolio, self.PortfolioHistory.symbol == symbol, self.PortfolioHistory.date == date).one().value
+
+    def get_portfolio_history_by_date(self, portfolio, date):
+        return self.session.query(self.PortfolioHistory).filter(self.PortfolioHistory.type == portfolio, self.PortfolioHistory.date == date).all()
+    
+    def get_actions_by_date_range_type(self, start, end, type):
+        return self.session.query(self.Actions).filter(self.Actions.date >= start, self.Actions.date <= end, self.Actions.actions_type_id == type).all()
 
     def get_ytd_spending_sum(self):
         ret = self.session.query(func.sum(self.Spending.amount)).filter(self.Spending.date >= self.get_ytd_base_date()).scalar()

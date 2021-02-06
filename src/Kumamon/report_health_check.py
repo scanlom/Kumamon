@@ -6,15 +6,12 @@ Created on Jul 14, 2013
 
 from datetime import datetime
 from decimal import Decimal
-from time import localtime
-from time import strftime
 from sqlalchemy.sql import func
 from api_database import database2
 from api_log import log
 from api_mail import send_mail_html_self
 from api_reporting import report
 from api_blue_lion import cagr
-from pip._internal import self_outdated_check
 
 def populate_five_cagr( db, rpt ):
     rows = db.session.query(db.Constituents, db.Stocks).\
@@ -64,17 +61,17 @@ def populate_cash( db, rpt ):
     debt = -1*db.get_constituents_by_portfolio_symbol( db.CONST_PORTFOLIO_CASH, db.CONST_SYMBOL_DEBT  )
     cash_managed = db.get_constituents_by_portfolio_symbol( db.CONST_PORTFOLIO_MANAGED, db.CONST_SYMBOL_CASH )
     cash_play = db.get_constituents_by_portfolio_symbol( db.CONST_PORTFOLIO_PLAY, db.CONST_SYMBOL_CASH )
-    total_roe = db.get_balance( db.CONST_BALANCES_TYPE_TOTAL_ROE )
-    play = db.get_balance( db.CONST_BALANCES_TYPE_TOTAL_PLAY )
-    managed = db.get_balance( db.CONST_BALANCES_TYPE_TOTAL_MANAGED )
+    total_rotc = db.get_balance( db.CONST_BALANCES_TYPE_TOTAL_ROTC )
+    margin = debt + cash + cash_managed + cash_play
 
-    formats = [ rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_CCY_COLOR, rpt.CONST_FORMAT_PCT_COLOR ]
+    formats = [ rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_CCY_COLOR, rpt.CONST_FORMAT_PCT_COLOR, rpt.CONST_FORMAT_NONE ]
     table = [ 
         [ "Cash", "Value", "%" ],
-        [ "Debt", debt, debt / total_roe ],
-        [ "Cash", cash, cash / total_roe ],
-        [ "Cash (Play)", cash_play, cash_play / play ],
-        [ "Cash (Managed)", cash_managed, cash_managed / managed ],
+        [ "Margin", margin, margin / total_rotc ],
+        [ "Debt", debt, debt / total_rotc ],
+        [ "Cash", cash, cash / total_rotc ],
+        [ "Cash (Play)", cash_play, cash_play / total_rotc ],
+        [ "Cash (Managed)", cash_managed, cash_managed / total_rotc ],
         ]
     rpt.add_string( "Cash - Aim for 2.5% Red, Zero, Zero, Zero" )
     rpt.add_table( table, formats )
