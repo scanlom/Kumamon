@@ -82,9 +82,9 @@ def populate_allocations( db, rpt ):
     play = db.get_balance( db.CONST_BALANCES_TYPE_TOTAL_PLAY )
     managed = db.get_balance( db.CONST_BALANCES_TYPE_TOTAL_MANAGED )
     cash = db.get_constituents_by_portfolio_symbol( db.CONST_PORTFOLIO_CASH, db.CONST_SYMBOL_CASH )
-    oak_target = Decimal(0.30) * Decimal(0.67)
-    play_target = Decimal(0.70) * Decimal(0.67)
-    managed_target = Decimal(0.33)
+    oak_target = Decimal(0.20)
+    play_target = Decimal(0.50)
+    managed_target = Decimal(0.30)
     cash_target = Decimal(0.00)
     oak_off = ( portfolio - play ) / total - oak_target
     play_off = play / total - play_target

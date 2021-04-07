@@ -170,6 +170,11 @@ class database2:
             return Decimal( 0.0 )
         return ret
 
+    def get_ytd_spendings_by_types(self, types, minimum):
+        return self.session.query(self.Spending).filter(self.Spending.date >= self.get_ytd_base_date(), 
+                                                        self.Spending.type.in_(types),
+                                                        self.Spending.amount >= minimum).order_by(desc(self.Spending.date)).all()
+
 def main():
     log.info("Started...")
     

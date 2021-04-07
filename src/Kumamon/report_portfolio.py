@@ -8,17 +8,11 @@ from datetime import date
 from datetime import datetime
 from decimal import Decimal
 from math import log as math_log
+from api_constants import CONST
 from api_database import database2
 from api_log import log
 from api_mail import send_mail_html_self
 from api_reporting import report
-
-CONST_ONE_UNIT                  = Decimal(261709.67)
-CONST_FINISH_PCT                = Decimal(0.04)
-CONST_FIVE_MILLION              = Decimal(5000000)
-CONST_SAVINGS                   = Decimal(85000) 
-CONST_DEFINITE_RETIREMENT_DATE  = date(2035,4,17)   # Definite retirement at 58
-CONST_HOPED_RETIREMENT_DATE     = date(2024,3,1)    # Hoped retirement when five years at JPMC
 
 def append_ytd_qtd_day( db, row, index ):
     cur = db.get_index_history(index, datetime.today().date())
@@ -32,9 +26,9 @@ def append_inflection_report( db, row, years, index_roe, total_roe, total_finish
     inflect = inflect_years = four_pct_years = five_m_years = float("NaN")
     if cagr > 0:
         inflect = total_roe * cagr
-        inflect_years = math_log(CONST_ONE_UNIT / (total_roe * cagr), cagr + 1)
+        inflect_years = math_log(CONST.BUDGET_GROSS / (total_roe * cagr), cagr + 1)
         four_pct_years = math_log( total_finish / total_roe, cagr + 1 )
-        five_m_years = math_log( CONST_FIVE_MILLION / total_roe, cagr + 1 )
+        five_m_years = math_log( CONST.FIVE_MILLION / total_roe, cagr + 1 )
     row.append( cagr )
     row.append( inflect )
     row.append( inflect_years * -1 )
@@ -75,7 +69,7 @@ def populate_summary(db, rpt, index_roe, total_roe, total_finish, retirement_yea
     append_inflection_report(db, table[4], 20, index_roe, total_roe, total_finish)    
     rpt.add_table(table, formats)
 
-    rpt.add_string("One Unit (" + rpt.format_ccy(CONST_ONE_UNIT) + ") - " + rpt.format_pct(CONST_ONE_UNIT / total_roe))
+    rpt.add_string("One Unit (" + rpt.format_ccy(CONST.BUDGET_GROSS) + ") - " + rpt.format_pct(CONST.BUDGET_GROSS / total_roe))
     rpt.add_string("One Million - " + rpt.format_pct(1000000 / total_roe))
     rpt.add_string("Net Worth - " + rpt.format_ccy( total_roe ))
     rpt.add_string("Four Percent - " + rpt.format_ccy( total_finish ))
@@ -112,7 +106,7 @@ def populate_summary_super_inflection(db, rpt, index_roe, total_roe, retirement_
         
         war_chest = total_roe
         for x in range(0, int(retirement_years.days / 365.25)):
-            war_chest += war_chest * cagr + CONST_SAVINGS
+            war_chest += war_chest * cagr + CONST.BUDGET_SAVINGS
             
         # Increment until we find a beat
         increment = Decimal(0.0001)
@@ -122,7 +116,7 @@ def populate_summary_super_inflection(db, rpt, index_roe, total_roe, retirement_
             cagr_blr += increment
             war_chest_blr = total_roe
             for x in range(0, int(retirement_years.days / 365.25)):
-                war_chest_blr += war_chest_blr * cagr_blr - CONST_ONE_UNIT
+                war_chest_blr += war_chest_blr * cagr_blr - CONST.BUDGET_GROSS
             if war_chest_blr*cagr_blr > war_chest*cagr:
                 break
         
@@ -135,11 +129,11 @@ def main():
     db = database2()
     rpt = report()
     total_roe = db.get_balance(db.CONST_BALANCES_TYPE_TOTAL_ROE)
-    total_finish = CONST_ONE_UNIT / CONST_FINISH_PCT 
+    total_finish = CONST.BUDGET_GROSS / CONST.PLAN_FINISH_PCT 
     index_roe = db.get_index_history(db.CONST_INDEX_ROE, datetime.today().date())
     ytd_base_index_roe = db.get_index_history(db.CONST_INDEX_ROE, db.get_ytd_base_date())
-    definite_retirement_years = CONST_DEFINITE_RETIREMENT_DATE - datetime.today().date()
-    hoped_retirement_years = CONST_HOPED_RETIREMENT_DATE - datetime.today().date()
+    definite_retirement_years = CONST.PLAN_RETIRE_DATE_LATE - datetime.today().date()
+    hoped_retirement_years = CONST.PLAN_RETIRE_DATE_EARLY - datetime.today().date()
     
     # Determine cash made this year
     profit = total_roe - db.get_balance_history(db.CONST_BALANCES_TYPE_TOTAL_ROE, db.get_ytd_base_date()) - db.get_balance(db.CONST_BALANCES_TYPE_SAVINGS)
