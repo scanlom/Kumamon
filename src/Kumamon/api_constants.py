@@ -24,8 +24,16 @@ class CONST:
     BUDGET_FIXED      = Decimal(10000)      # 2021/04/02 - AIA Plans
     BUDGET_TAX_RATE   = Decimal(0.1823)     # 2021/04/02 - Cap Gains plus Obamacare
     BUDGET_GROSS      = Decimal(round((BUDGET_SPENDING+BUDGET_FIXED)/(1-BUDGET_TAX_RATE),0))
-    BUDGET_SAVINGS    = Decimal(94000)      # 2021/04/08 - (PATC 373k + ORSO 25k) * 75% - Spending 204k)
+    
+    PLAN_PATC         = Decimal(373000)
+    PLAN_ORSO         = Decimal(25000)
+    PLAN_TAX_RATE     = Decimal(0.25)
+    PLAN_SAVINGS      = Decimal(round((PLAN_PATC+PLAN_ORSO)*(1-PLAN_TAX_RATE)-BUDGET_SPENDING,0)) # 2021/04/08 - (PATC 373k + ORSO 25k) * 75% - Spending 204k)
 
     PLAN_FINISH_PCT                 = Decimal(0.04)
     PLAN_RETIRE_DATE_LATE           = date(2035,4,17)   # Definite retirement at 58
     PLAN_RETIRE_DATE_EARLY          = date(2024,3,1)    # Hoped retirement five years at JPMC
+    
+    INCEPT_INDEX   = Decimal(72444.29)
+    INCEPT_DATE    = date(2021,4,19)
+    

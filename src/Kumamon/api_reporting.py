@@ -22,6 +22,7 @@ class report:
     CONST_FORMAT_PCT_COLOR      = 5
     CONST_FORMAT_DATE_SHORT     = 6
     CONST_FORMAT_CONFIDENCE     = 7
+    CONST_FORMAT_YEARS          = 8
     
     def __init__(self):
         self.content = ""
@@ -31,6 +32,9 @@ class report:
 
     def format_ccy_int(self, number):
         return '{0:,.0f}'.format(number)
+    
+    def format_ccy_k(self, number):
+        return '{0:,.0f}k'.format(number/1000)
 
     def format_pct(self, number):
         return '%{0:,.2f}'.format(100*number)
@@ -44,12 +48,14 @@ class report:
             start = ""
             end = ""
             foo = ""
-            if self.CONST_FORMAT_CCY == f or self.CONST_FORMAT_CCY_COLOR == f or self.CONST_FORMAT_CCY_INT_COLOR == f or self.CONST_FORMAT_PCT == f or self.CONST_FORMAT_PCT_COLOR == f:
+            if self.CONST_FORMAT_YEARS == f and item > 0:
+                start = " style='text-align:center'"
+            elif self.CONST_FORMAT_CCY == f or self.CONST_FORMAT_CCY_COLOR == f or self.CONST_FORMAT_CCY_INT_COLOR == f or self.CONST_FORMAT_PCT == f or self.CONST_FORMAT_PCT_COLOR == f or self.CONST_FORMAT_YEARS == f:
                 start = " style='text-align:right'"
             if self.CONST_FORMAT_CONFIDENCE == f and item == CONST_CONFIDENCE_CONSTITUENT:
                 start = " bgcolor='blue'"
             start += ">"
-            if self.CONST_FORMAT_CCY_COLOR == f or self.CONST_FORMAT_PCT_COLOR == f or self.CONST_FORMAT_CCY_INT_COLOR == f:
+            if self.CONST_FORMAT_CCY_COLOR == f or self.CONST_FORMAT_PCT_COLOR == f or self.CONST_FORMAT_CCY_INT_COLOR == f or self.CONST_FORMAT_YEARS == f:
                 if item > 0:
                     start += "<font color='green'>"
                 else:
@@ -76,6 +82,11 @@ class report:
                 elif item == CONST_CONFIDENCE_CONSTITUENT:
                     start += "<font color='white'>"
                     end += "</font>"
+            elif self.CONST_FORMAT_YEARS == f:
+                if item > 0:
+                    foo += "---"
+                else:
+                    foo += self.format_ccy(item)
             ret.append(start + foo + end)    
         return ret
         

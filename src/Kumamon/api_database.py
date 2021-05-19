@@ -110,6 +110,9 @@ class database2:
         day = datetime.today()
         return self.session.query(self.IndexHistory).filter(self.IndexHistory.date == day, self.IndexHistory.type == index).one()
     
+    def get_index_max(self, index):
+        return self.session.query(func.max(self.IndexHistory.value)).filter(self.IndexHistory.type == index).scalar()
+    
     def get_ytd_base_date(self):
         day = datetime.today()
         if day.month == 1 and day.day == 1:
