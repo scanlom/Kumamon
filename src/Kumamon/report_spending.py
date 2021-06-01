@@ -15,12 +15,24 @@ from api_log import log
 from api_mail import send_mail_html_self
 from api_reporting import report
 
-def append_budget_row( db, table, name, types, budget ):
+CONST_PROJECT_TYPE_PROJECT         = 0
+CONST_PROJECT_TYPE_FIXED           = 1
+
+def table_col_sum(table, start, col):
+    sum = 0
+    for i in range(start, len(table)-1):
+        sum += table[i][col]
+    return sum
+
+def append_budget_row( db, table, name, types, budget, project_type ):
     day_of_year = datetime.now().timetuple().tm_yday
     if day_of_year == 1:
         day_of_year = 365 # Special Jan 1 handling
     spending = db.get_ytd_spending_sum_by_types( types )
-    projected = spending * 365 / day_of_year
+    if project_type is CONST_PROJECT_TYPE_PROJECT:
+        projected = spending * 365 / day_of_year
+    elif project_type is CONST_PROJECT_TYPE_FIXED:
+        projected = budget if spending < budget else spending
     table.append( [ name, spending, projected, budget, budget - projected ] )
 
 def calculate_fumi_projected( table, base_row, fumi_row, tracking_col ):
@@ -32,15 +44,6 @@ def calculate_fumi_projected( table, base_row, fumi_row, tracking_col ):
         projected += table[fumi_row][tracking_col]
     return projected
 
-def calculate_recon_projected( table, standard_rows, base_row, fumi_row, projected_col, tracking_col ):
-    # Add back in Fumi's projected payout 
-    projected = table[base_row][projected_col]
-    projected += table[fumi_row][projected_col]
-    projected += calculate_fumi_projected( table, base_row, fumi_row, tracking_col )
-    for row in standard_rows:
-        projected += table[row][projected_col]
-    return projected
-
 def main():
     log.info("Started...")
     db = database2()
@@ -50,33 +53,40 @@ def main():
     table = [
         [ "Category", "Spent", "Projected", "Budget", "Tracking" ],
         ]
-    append_budget_row( db, table, "Base", [0,2,3,4,5,8,12,96], CONST.BUDGET_BASE )
-    append_budget_row( db, table, "Rent", [1], CONST.BUDGET_RENT )
-    append_budget_row( db, table, "Travel", [7], CONST.BUDGET_TRAVEL )
-    append_budget_row( db, table, "Helper", [9], CONST.BUDGET_HELPER )
-    append_budget_row( db, table, "Monchichi", [94], CONST.BUDGET_MONCHICHI )
-    append_budget_row( db, table, "Deux", [93], CONST.BUDGET_DEUX )
-    append_budget_row( db, table, "Fumi", [11], CONST.BUDGET_FUMI )
-    append_budget_row( db, table, "Mike", [6,10], CONST.BUDGET_MIKE )
-    append_budget_row( db, table, "Special", [95,97,98,99], CONST.BUDGET_SPECIAL )
-    append_budget_row( db, table, "Total", [0,1,2,3,4,5,6,7,8,9,10,11,12,93,94,95,96,97,98,99], CONST.BUDGET_SPENDING )
-    recon_projected = calculate_recon_projected( table, [2,3,4,5,6,8,9], 1, 7, 2, 4 )
-    table.append( [ "Recon", db.get_ytd_spending_sum(), recon_projected, CONST.BUDGET_SPENDING, CONST.BUDGET_SPENDING - recon_projected ] )
+    append_budget_row( db, table, "Base", [0,2,3,4,5,8,12,96], CONST.BUDGET_BASE, CONST_PROJECT_TYPE_PROJECT )
+    append_budget_row( db, table, "Rent", [1], CONST.BUDGET_RENT, CONST_PROJECT_TYPE_FIXED )
+    append_budget_row( db, table, "Travel", [7], CONST.BUDGET_TRAVEL, CONST_PROJECT_TYPE_PROJECT )
+    append_budget_row( db, table, "Helper", [9], CONST.BUDGET_HELPER, CONST_PROJECT_TYPE_PROJECT )
+    append_budget_row( db, table, "Monchichi", [94], CONST.BUDGET_MONCHICHI, CONST_PROJECT_TYPE_PROJECT )
+    append_budget_row( db, table, "Deux", [93], CONST.BUDGET_DEUX, CONST_PROJECT_TYPE_PROJECT )
+    append_budget_row( db, table, "Fumi", [11], CONST.BUDGET_FUMI, CONST_PROJECT_TYPE_PROJECT )
+    append_budget_row( db, table, "Mike", [6,10], CONST.BUDGET_MIKE, CONST_PROJECT_TYPE_PROJECT )
+    append_budget_row( db, table, "Medical", [13], CONST.BUDGET_MEDICAL, CONST_PROJECT_TYPE_FIXED )
+    append_budget_row( db, table, "Special", [95,97,98,99], CONST.BUDGET_SPECIAL, CONST_PROJECT_TYPE_FIXED )
+    
+    # Append a sub total row. Use the totals from above so we can take advantage of the project types
+    table.append( [ "SubTotal", table_col_sum(table, 1, 1), table_col_sum(table, 1, 2), table_col_sum(table, 1, 3), table_col_sum(table, 1, 4) ] )
+    
+    # Append a row for Fumi's payout. 0.5 of base tracking if positive, plus what is left of her allocation if positive
     fumi_projected = calculate_fumi_projected( table, 1, 7, 4 )
     table.append( [ "Payout", 0, fumi_projected, 0, 0 ] )
+    
+    # Append a total row 
+    subtotal_row = len(table)-2
+    payout_row = len(table)-1
+    total_projected = table[subtotal_row][2] + table[payout_row][2]
+    table.append( [ "Total", table[subtotal_row][1], total_projected, CONST.BUDGET_SPENDING, CONST.BUDGET_SPENDING - total_projected ] )
     
     rpt.add_heading("Summary")
     rpt.add_table(table, formats)
     
-    plan_projected = (recon_projected + CONST.BUDGET_FIXED) / (1 - CONST.BUDGET_TAX_RATE)
+    plan_projected = (total_projected) / (1 - CONST.BUDGET_TAX_RATE)
     rpt.add_string( "BLRP " + rpt.format_ccy(plan_projected) + "=(" +
-                    rpt.format_ccy(recon_projected) + "+" +
-                    rpt.format_ccy(CONST.BUDGET_FIXED) +
+                    rpt.format_ccy(total_projected) +
                     ")/(1-" + rpt.format_ccy(CONST.BUDGET_TAX_RATE) + ")"
                     )
     rpt.add_string( "BLRB " + rpt.format_ccy(CONST.BUDGET_GROSS) + "=(" +
-                    rpt.format_ccy(CONST.BUDGET_SPENDING) + "+" +
-                    rpt.format_ccy(CONST.BUDGET_FIXED) +
+                    rpt.format_ccy(CONST.BUDGET_SPENDING) +
                     ")/(1-" + rpt.format_ccy(CONST.BUDGET_TAX_RATE) + ")"     
                     )
 
