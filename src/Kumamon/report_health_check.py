@@ -73,7 +73,7 @@ def populate_cash( db, rpt ):
         [ "Cash (Play)", cash_play, cash_play / total_rotc ],
         [ "Cash (Managed)", cash_managed, cash_managed / total_rotc ],
         ]
-    rpt.add_string( "Cash - Aim for 2.5% Red, Zero, Zero, Zero" )
+    rpt.add_string( "Cash - Aim for Fumi Red, Zero, Zero, Zero" )
     rpt.add_table( table, formats )
         
 def populate_allocations( db, rpt ):
