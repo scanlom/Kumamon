@@ -7,55 +7,52 @@ Downloads account information using ofxclient
 '''
 
 from os import path
-from ofxclient.config import OfxConfig
-from ofxparse import OfxParser
+from ofxtools.Client import OFXClient, InvStmtRq
+from ofxtools.Parser import OFXTree
 from psycopg2 import connect
 from psycopg2.extras import DictCursor       
-from api_config import config_database_connect
+from api_config import config_database_connect, config_ofx_symbols, config_ofx_user1, config_ofx_pass1, config_ofx_acct1, config_ofx_user2, config_ofx_pass2, config_ofx_acct2 
 from api_log import log
 
 def main():
     log.info("Started...")
-        
+
+    symbols = config_ofx_symbols
+    
+    # Connect to the db
     conn = connect( config_database_connect )
     cur = conn.cursor(cursor_factory=DictCursor)
-    sql = "select * from accounts_types where download=true";
-    cur.execute(sql)
-    banks = cur.fetchall()   
-    for bank in banks:
-        try:
-            log.info("Downloading: " + " " + bank['description'])
-            GlobalConfig = OfxConfig()
-            a = GlobalConfig.account(bank['id'])
-            ofxdata = a.download(days=0)
-            f = open(path.expanduser('~/tmp/ofxdata.tmp'), 'w')
-            f.write(ofxdata.read())
-            f.close()
-            f = open(path.expanduser('~/tmp/ofxdata.tmp'), 'r')
-            parsed = OfxParser.parse(f)
-            f.close()
-            log.info("OfxParser complete")
-            positions = {}
-            for pos in parsed.account.statement.positions:
-                positions[pos.security] = round(pos.units * pos.unit_price, 2)
-                log.info("Downloaded: " + str(bank['description']) + " " + str(pos.security))
-            
-            sql = "select * from accounts where type=" + str(bank['type']);
+
+    client = OFXClient("https://vesnc.vanguard.com/us/OfxProfileServlet", userid=config_ofx_user1,
+                    org="Vanguard", fid="15103", brokerid="vanguard.com", prettyprint=True,
+                    version=220)
+
+    response = client.request_statements(config_ofx_pass1, InvStmtRq(acctid=config_ofx_acct1) )
+    parser = OFXTree()
+    parser.parse(response)
+    ofx = parser.convert()
+    for pos in ofx.invstmtmsgsrsv1[0].invstmtrs.invposlist:
+        if pos.mktval > 0 and pos.secid.uniqueid in symbols:
+            sql = "update constituents set value=" + str(pos.mktval) + " where symbol='" + symbols[pos.secid.uniqueid] + "'"
             cur.execute(sql)
-            accounts = cur.fetchall()
-            for account in accounts:
-                if account['name'] not in positions:
-                    raise Exception('account ' + account['name'] + ' not present in download')
-                log.info( bank['description'] + '\t' + account['name_local'] + '\t' + str(positions[account['name']]) ) 
-                sql = "update constituents set value=" + str(positions[account['name']]) + "where symbol='" + account['name_local'] + "'"
-                cur.execute(sql)
-                conn.commit()
-                log.info("Set: " + str(account['name_local']))
-                
-        except Exception as err:
-            log.exception(err)
-            log.error("Failed loading for bank: " + bank['description'])
+            conn.commit()
+            log.info("Set: " + symbols[pos.secid.uniqueid] + " to " + str(pos.mktval))
     
+    client = OFXClient("https://seven.was.alight.com/eftxweb/access.ofx", userid=config_ofx_user2,
+                    org="hewitt.com", fid="242", brokerid="hewitt.com", prettyprint=True,
+                    version=220)
+
+    response = client.request_statements(config_ofx_pass2, InvStmtRq(acctid=config_ofx_acct2))
+    parser = OFXTree()
+    parser.parse(response)
+    ofx = parser.convert()
+    for pos in ofx.invstmtmsgsrsv1[0].invstmtrs.invposlist:
+        if pos.mktval > 0 and pos.secid.uniqueid in symbols:
+            sql = "update constituents set value=" + str(pos.mktval) + " where symbol='" + symbols[pos.secid.uniqueid] + "'"
+            cur.execute(sql)
+            conn.commit()
+            log.info("Set: " + symbols[pos.secid.uniqueid] + " to " + str(pos.mktval))
+                       
     # Close the db
     cur.close()
     conn.close()
