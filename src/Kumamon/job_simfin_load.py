@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 from json import loads
 from os import path
 from shutil import rmtree
-from simfin import load_income, load_balance, load_cashflow, load_companies, load_industries, load_shareprices
+from simfin import load_income, load_balance, load_cashflow, load_companies, load_industries, load_shareprices, load_markets
 from simfin import set_api_key
 from simfin import set_data_dir
 from api_blue_lion import simfin_income_by_ticker, post_simfin_income, simfin_balance_by_ticker, post_simfin_balance, simfin_cashflow_by_ticker, post_simfin_cashflow
@@ -20,7 +20,7 @@ from api_log import log
 from api_mail import send_mail_html_self
 from api_reporting import report
 
-def frame_to_json( df ):
+def frame_to_json( df, force_int ):
     df = df.rename({
         'Ticker': 'ticker',
         'Report Date': 'reportDate',
@@ -31,6 +31,10 @@ def frame_to_json( df ):
         'Publish Date': 'publishDate',
         'Shares (Basic)': 'sharesBasic',
         'Shares (Diluted)': 'sharesDiluted',
+        #Markets
+        'MarketId': 'marketId',
+        'Market Name': 'marketName',
+        'Currency': 'ccy',      
         #Market Data
         'Date': 'date',
         'Close': 'close',
@@ -102,7 +106,12 @@ def frame_to_json( df ):
         'Net Change in Cash': 'netChgCash',
     }, axis='columns')
     
-    json = loads(df.reset_index().to_json(orient='records',double_precision=0,date_format='iso'))
+    if force_int:
+        json = loads(df.reset_index().to_json(orient='records',double_precision=0,date_format='iso'))
+    else:
+        json = loads(df.reset_index().to_json(orient='records',date_format='iso'))
+        
+    # Column rename fails for some fields (keys?) so has to be redone
     for j in json:
         if 'Ticker' in j:
             j['ticker'] = j['Ticker']
@@ -113,19 +122,22 @@ def frame_to_json( df ):
         if 'IndustryId' in j:
             j['industryId'] = j['IndustryId']
             j.pop('IndustryId', None)
+        if 'MarketId' in j:
+            j['marketId'] = j['MarketId']
+            j.pop('MarketId', None)            
         if 'Date' in j:
             j['date'] = j['Date']
             j.pop('Date', None)
 
     return json
 
-def simfin_load(msg, func_simfin, func_get_by_ticker, func_delete_by_id, func_post):
-    log.info("Called simfin_load %s..." % (msg))
+def simfin_load(msg, market, func_simfin, func_get_by_ticker, func_delete_by_id, func_post):
+    log.info("Called simfin_load %s for %s..." % (msg, market))
     
-    # Load the annual Statements for all companies in USA.
+    # Load the annual Statements for all companies in market.
     # The data is automatically downloaded if you don't have it already.
-    df = func_simfin(variant='annual', market='us')
-    json = frame_to_json(df)     
+    df = func_simfin(variant='annual', market=market)
+    json = frame_to_json(df, True)     
  
     num_inserted = 0
     num_collisions_simfin = 0   
@@ -170,13 +182,13 @@ def simfin_load(msg, func_simfin, func_get_by_ticker, func_delete_by_id, func_po
     log.info(ret)
     return ret
 
-def simfin_load_ref_data():
-    log.info("Called simfin_load_ref_data...")
+def simfin_load_ref_data(market):
+    log.info("Called simfin_load_ref_data for %s..." % (market))
 
-    df = load_companies(market='us')
-    json_companies = frame_to_json(df)     
+    df = load_companies(market=market)
+    json_companies = frame_to_json(df, True)     
     df = load_industries()
-    json_industries = frame_to_json(df)
+    json_industries = frame_to_json(df, True)
     industries_by_id = { i['industryId'] : i for i in json_industries }
             
     num_inserted = 0
@@ -200,11 +212,11 @@ def simfin_load_ref_data():
     log.info(ret)
     return ret
 
-def simfin_load_market_data():
-    log.info("Called simfin_load_market_data...")
+def simfin_load_market_data(market):
+    log.info("Called simfin_load_market_data for %s..." % (market))
 
-    df = load_shareprices(variant='latest', market='us')
-    json = frame_to_json(df)
+    df = load_shareprices(variant='latest', market=market)
+    json = frame_to_json(df, False)
 
     num_inserted = 0
     num_updated = 0
@@ -238,10 +250,10 @@ def simfin_load_market_data():
     log.info(ret)
     return ret
 
-def simfin_load_market_data_historical():
-    log.info("Called simfin_load_market_data...")
-    df = load_shareprices(variant='daily', market='us')
-    json = frame_to_json(df)
+def simfin_load_market_data_historical(market):
+    log.info("Called simfin_load_market_data for %s..." % (market))
+    df = load_shareprices(variant='daily', market=market)
+    json = frame_to_json(df, False)
 
     num_inserted = 0
     num_updated = 0
@@ -272,7 +284,7 @@ def simfin_load_market_data_historical():
 
 def main():
     log.info("Started...")
-    
+
     if path.exists( '/home/scanlom/simfin_data/' ):
         rmtree( '/home/scanlom/simfin_data/' )
     
@@ -286,19 +298,29 @@ def main():
     # The dir will be created if it does not already exist.
     set_data_dir('~/simfin_data/')
 
-    rpt = report()
-    rpt.add_string( simfin_load("income", load_income, simfin_income_by_ticker, delete_simfin_income_by_id, post_simfin_income) )
-    rpt.add_string( simfin_load("balance", load_balance, simfin_balance_by_ticker, delete_simfin_balance_by_id, post_simfin_balance) )
-    rpt.add_string( simfin_load("cashflow", load_cashflow, simfin_cashflow_by_ticker, delete_simfin_cashflow_by_id, post_simfin_cashflow) )
-    subject = 'Blue Lion - Simfin Load - Financials'
-    send_mail_html_self(subject, rpt.get_html())
+    df = load_markets()
+    json = frame_to_json(df, False)
 
-    rpt2 = report()
-    rpt2.add_string( simfin_load_ref_data() )
-    rpt2.add_string( simfin_load_market_data() )
-    rpt2.add_string( simfin_load_market_data_historical() )
-    subject = 'Blue Lion - Simfin Load - Market Data'
-    send_mail_html_self(subject, rpt2.get_html())
+    for j in json:
+        rpt = report()
+        rpt.add_string( simfin_load("income", j['marketId'], load_income, simfin_income_by_ticker, delete_simfin_income_by_id, post_simfin_income) )
+        rpt.add_string( simfin_load("balance", j['marketId'], load_balance, simfin_balance_by_ticker, delete_simfin_balance_by_id, post_simfin_balance) )
+        rpt.add_string( simfin_load("cashflow", j['marketId'], load_cashflow, simfin_cashflow_by_ticker, delete_simfin_cashflow_by_id, post_simfin_cashflow) )
+        subject = 'Blue Lion - Simfin Load - Financials - %s' % (j['marketId'])
+        send_mail_html_self(subject, rpt.get_html())
+
+    for j in json:
+        rpt = report()
+        rpt.add_string( simfin_load_ref_data(j['marketId']) )
+        rpt.add_string( simfin_load_market_data(j['marketId']) )
+        subject = 'Blue Lion - Simfin Load - Market Data - %s' % (j['marketId'])
+        send_mail_html_self(subject, rpt.get_html())
+
+    for j in json:
+        rpt = report()
+        rpt.add_string( simfin_load_market_data_historical(j['marketId']) )
+        subject = 'Blue Lion - Simfin Load - Market Data Historical - %s' % (j['marketId'])
+        send_mail_html_self(subject, rpt.get_html())
 
     log.info("Completed")
 

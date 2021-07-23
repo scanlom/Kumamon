@@ -5,6 +5,7 @@ Created on Aug 7, 2013
 '''
 
 from api_analytics import historicals
+from api_constants import CONST
 from api_log import log
 from api_blue_lion import ref_data_focus, mdh_by_ref_data_id_date, post_market_data_historical, put_market_data_historical
 

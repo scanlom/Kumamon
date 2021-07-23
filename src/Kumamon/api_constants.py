@@ -25,7 +25,9 @@ class CONST:
     BUDGET_TAX_RATE   = Decimal(0.1823)     # 2021/04/02 - Cap Gains plus Obamacare
     BUDGET_GROSS      = Decimal(round((BUDGET_SPENDING)/(1-BUDGET_TAX_RATE),0))
     
-    PLAN_FINISH_PCT                 = Decimal(0.04)
+    PLAN_FINISH_PCT   = Decimal(0.04)
     
     INCEPT_INDEX   = Decimal(72444.29)
-    INCEPT_DATE    = date(2021,4,19)    
+    INCEPT_DATE    = date(2021,4,19)
+    
+    MAX_ALPHA_VANTAGE_CALLS = 490

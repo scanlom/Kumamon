@@ -58,11 +58,7 @@ def populate_magic( rpt ):
     rpt.add_string( "Screen Magic Top Ten" )
     headlines = []
     instruments = ref_data()
-    n = 0
     for i in instruments:
-        n = n + 1
-        if n > 20:
-            break
         log.info("Requesting headline for " + i['symbol'])
         headlines.append(headline_by_ticker( i['symbol'] ))
     sorted_headlines = sorted(headlines, reverse = True, key = lambda i: i['magic'])
