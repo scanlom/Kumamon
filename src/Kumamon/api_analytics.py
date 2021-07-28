@@ -11,10 +11,11 @@ from decimal import Decimal
 from json import loads
 from time import sleep
 from urllib.request import urlopen
+from yfinance import Ticker
 from api_log import log
 
 CONST_THROTTLE_SECONDS  = 16
-CONST_RETRIES           = 5
+CONST_RETRIES           = 1
 CONST_RETRY_SECONDS     = 61
 
 def get_market_data_symbol(symbol):
@@ -33,10 +34,18 @@ def sanity_check_historical_data(key, value):
     return True
 
 def last(symbol):
-    retry = 1
-    sleep(CONST_THROTTLE_SECONDS) # Sleep to avoid AlphaVantage throttling error
+    sleep(CONST_THROTTLE_SECONDS) # Sleep to avoid throttling errors
+    
+    # First try is yahoo finance
+    try:
+        data = Ticker(symbol)
+        return round(data.history(period='1d')['Close'][0], 2)
+    except Exception as err:
+        log.warning( "Unable to retrieve last (Yahoo Finance) for %s" % (symbol) )
+    
+    # Second try is AlphaVantage
     url = 'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=%s&apikey=2YG6SAN57NRYNPJ8' % (symbol)
-   
+    retry = 1
     while retry <= CONST_RETRIES:
         try:
             raw_bytes = urlopen(url).read()
@@ -45,11 +54,11 @@ def last(symbol):
             return last
         except Exception as err:
             if retry >= CONST_RETRIES:
-                log.warning( "Unable to retrieve last for %s" % (symbol) )
+                log.warning( "Unable to retrieve last (AlphaVantage) for %s" % (symbol) )
                 log.info( data )
                 raise err
             else:
-                log.warning( "Unable to retrieve last for %s, retry %d" % (symbol, retry) )
+                log.warning( "Unable to retrieve last (AlphaVantage) for %s, retry %d" % (symbol, retry) )
                 retry += 1
                 sleep(CONST_RETRY_SECONDS) # For some reason AlphaVantage is not returning, sleep to try and allow them to recover              
 
@@ -194,7 +203,7 @@ class historicals:
               
 def main():
     log.info("Started...")
-    
+
     # Test
     print( last('MSFT') )
     

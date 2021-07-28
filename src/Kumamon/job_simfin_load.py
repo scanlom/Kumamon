@@ -8,9 +8,9 @@ from datetime import datetime, timedelta
 from json import loads
 from os import path
 from shutil import rmtree
+from simfin import set_api_key, set_data_dir
 from simfin import load_income, load_balance, load_cashflow, load_companies, load_industries, load_shareprices, load_markets
-from simfin import set_api_key
-from simfin import set_data_dir
+from simfin import load_income_banks, load_balance_banks, load_cashflow_banks, load_income_insurance, load_balance_insurance, load_cashflow_insurance
 from api_blue_lion import simfin_income_by_ticker, post_simfin_income, simfin_balance_by_ticker, post_simfin_balance, simfin_cashflow_by_ticker, post_simfin_cashflow
 from api_blue_lion import delete_simfin_income_by_id, delete_simfin_balance_by_id, delete_simfin_cashflow_by_id
 from api_blue_lion import ref_data_by_symbol, post_ref_data, put_ref_data
@@ -29,6 +29,7 @@ def frame_to_json( df, force_int ):
         'Fiscal Year': 'fiscalYear',
         'Fiscal Period': 'fiscalPeriod',
         'Publish Date': 'publishDate',
+        'Restated Date': 'restatedDate',
         'Shares (Basic)': 'sharesBasic',
         'Shares (Diluted)': 'sharesDiluted',
         #Markets
@@ -60,6 +61,7 @@ def frame_to_json( df, force_int ):
         'Abnormal Gains (Losses)': 'abnormGainLoss',
         'Pretax Income (Loss)': 'pretaxIncomeLoss',
         'Income Tax (Expense) Benefit, Net': 'incomeTax',
+        'Income (Loss) from Affiliates, Net of Taxes': 'incomeAffilNetTax',
         'Income (Loss) from Continuing Operations': 'incomeContOp',
         'Net Extraordinary Gains (Losses)': 'netExtrGainLoss',
         'Net Income': 'netIncome',
@@ -80,6 +82,7 @@ def frame_to_json( df, force_int ):
         'Long Term Debt': 'ltDebt',
         'Total Noncurrent Liabilities': 'totalNoncurLiab',
         'Total Liabilities': 'totalLiabilities',
+        'Preferred Equity': 'preferredEquity',
         'Share Capital & Additional Paid-In Capital': 'shareCapitalAdd',
         'Treasury Stock': 'treasuryStock',
         'Retained Earnings': 'retainedEarnings',
@@ -103,6 +106,7 @@ def frame_to_json( df, force_int ):
         'Cash from (Repayment of) Debt': 'cashRepayDebt',
         'Cash from (Repurchase of) Equity': 'cashRepurchaseEquity',
         'Net Cash from Financing Activities': 'netCashFin',
+        'Effect of Foreign Exchange Rates': 'effectFxRates',
         'Net Change in Cash': 'netChgCash',
     }, axis='columns')
     
@@ -306,6 +310,12 @@ def main():
         rpt.add_string( simfin_load("income", j['marketId'], load_income, simfin_income_by_ticker, delete_simfin_income_by_id, post_simfin_income) )
         rpt.add_string( simfin_load("balance", j['marketId'], load_balance, simfin_balance_by_ticker, delete_simfin_balance_by_id, post_simfin_balance) )
         rpt.add_string( simfin_load("cashflow", j['marketId'], load_cashflow, simfin_cashflow_by_ticker, delete_simfin_cashflow_by_id, post_simfin_cashflow) )
+        rpt.add_string( simfin_load("income_banks", j['marketId'], load_income_banks, simfin_income_by_ticker, delete_simfin_income_by_id, post_simfin_income) )
+        rpt.add_string( simfin_load("balance_banks", j['marketId'], load_balance_banks, simfin_balance_by_ticker, delete_simfin_balance_by_id, post_simfin_balance) )
+        rpt.add_string( simfin_load("cashflow_banks", j['marketId'], load_cashflow_banks, simfin_cashflow_by_ticker, delete_simfin_cashflow_by_id, post_simfin_cashflow) )
+        rpt.add_string( simfin_load("income_insurance", j['marketId'], load_income_insurance, simfin_income_by_ticker, delete_simfin_income_by_id, post_simfin_income) )
+        rpt.add_string( simfin_load("balance_insurance", j['marketId'], load_balance_insurance, simfin_balance_by_ticker, delete_simfin_balance_by_id, post_simfin_balance) )
+        rpt.add_string( simfin_load("cashflow_insurance", j['marketId'], load_cashflow_insurance, simfin_cashflow_by_ticker, delete_simfin_cashflow_by_id, post_simfin_cashflow) )
         subject = 'Blue Lion - Simfin Load - Financials - %s' % (j['marketId'])
         send_mail_html_self(subject, rpt.get_html())
 
