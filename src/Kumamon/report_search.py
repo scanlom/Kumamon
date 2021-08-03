@@ -16,6 +16,7 @@ from api_blue_lion import cagr, confidence, headline_by_ticker, ref_data
 CONST_CONFIDENCE_NONE           = 'NONE'
 CONST_CONFIDENCE_HIGH           = 'HIGH'
 CONST_CONFIDENCE_MEDIUM         = 'MEDIUM'
+CONST_CONFIDENCE_BLAH           = 'BLAH'
 CONST_CONFIDENCE_LOW            = 'LOW'
 CONST_CONFIDENCE_CONSTITUENT    = 'CONSTITUENT'
 
@@ -43,7 +44,7 @@ def populate_five_cagr( db, rpt ):
                     filter(db.Constituents.stock_id == row.id).first()
                 if rowConstituent != None:
                     r = CONST_CONFIDENCE_CONSTITUENT
-                if r != CONST_CONFIDENCE_LOW:
+                if r != CONST_CONFIDENCE_LOW and r != CONST_CONFIDENCE_BLAH:
                     table.append( [ row.symbol, c, r ] )
     if len(table) > 1:
         table.sort(key=lambda a : a[1],reverse=True)
