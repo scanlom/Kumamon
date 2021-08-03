@@ -31,7 +31,7 @@ def populate_five_cagr( db, rpt ):
         rpt.add_string( "5yr CAGR < 5% - Sell" )
         rpt.add_table( table, formats )
     else:
-        rpt.add_string( "5yr CAGR < 5% - " )
+        rpt.add_string( "5yr CAGR < 5% - OK" )
 
 def populate_reds( db, rpt ):
     rows = db.session.query(db.Constituents).\

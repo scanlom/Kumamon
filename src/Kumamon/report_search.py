@@ -48,14 +48,14 @@ def populate_five_cagr( db, rpt ):
     if len(table) > 1:
         table.sort(key=lambda a : a[1],reverse=True)
         table.insert(0, [ "Symbol", "5yr CAGR", "Confidence" ])
-        rpt.add_string( "Watch List 5yr CAGR > 10%" )
+        rpt.add_heading( "Watch List - 5yr CAGR > 10%" )
         rpt.add_table( table, formats )
     else:
-        rpt.add_string( "Watch List 5yr CAGR > 10% - None" )
+        rpt.add_heading( "Watch List - 5yr CAGR > 10% - None" )
 
 def populate_magic( rpt ):
     log.info("populate_magic called...")
-    rpt.add_string( "Screen Magic Top Ten" )
+    rpt.add_heading( "Screen - Magic Top Ten" )
     headlines = []
     instruments = ref_data()
     for i in instruments:

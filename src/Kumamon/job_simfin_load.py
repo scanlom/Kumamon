@@ -305,8 +305,8 @@ def main():
     df = load_markets()
     json = frame_to_json(df, False)
 
+    rpt = report()
     for j in json:
-        rpt = report()
         rpt.add_string( simfin_load("income", j['marketId'], load_income, simfin_income_by_ticker, delete_simfin_income_by_id, post_simfin_income) )
         rpt.add_string( simfin_load("balance", j['marketId'], load_balance, simfin_balance_by_ticker, delete_simfin_balance_by_id, post_simfin_balance) )
         rpt.add_string( simfin_load("cashflow", j['marketId'], load_cashflow, simfin_cashflow_by_ticker, delete_simfin_cashflow_by_id, post_simfin_cashflow) )
@@ -316,21 +316,21 @@ def main():
         rpt.add_string( simfin_load("income_insurance", j['marketId'], load_income_insurance, simfin_income_by_ticker, delete_simfin_income_by_id, post_simfin_income) )
         rpt.add_string( simfin_load("balance_insurance", j['marketId'], load_balance_insurance, simfin_balance_by_ticker, delete_simfin_balance_by_id, post_simfin_balance) )
         rpt.add_string( simfin_load("cashflow_insurance", j['marketId'], load_cashflow_insurance, simfin_cashflow_by_ticker, delete_simfin_cashflow_by_id, post_simfin_cashflow) )
-        subject = 'Blue Lion - Simfin Load - Financials - %s' % (j['marketId'])
-        send_mail_html_self(subject, rpt.get_html())
+    subject = 'Blue Lion - Simfin Load - Financials'
+    send_mail_html_self(subject, rpt.get_html())
 
+    rpt = report()
     for j in json:
-        rpt = report()
         rpt.add_string( simfin_load_ref_data(j['marketId']) )
         rpt.add_string( simfin_load_market_data(j['marketId']) )
-        subject = 'Blue Lion - Simfin Load - Market Data - %s' % (j['marketId'])
-        send_mail_html_self(subject, rpt.get_html())
+    subject = 'Blue Lion - Simfin Load - Market Data')
+    send_mail_html_self(subject, rpt.get_html())
 
+    rpt = report()
     for j in json:
-        rpt = report()
         rpt.add_string( simfin_load_market_data_historical(j['marketId']) )
-        subject = 'Blue Lion - Simfin Load - Market Data Historical - %s' % (j['marketId'])
-        send_mail_html_self(subject, rpt.get_html())
+    subject = 'Blue Lion - Simfin Load - Market Data Historical'
+    send_mail_html_self(subject, rpt.get_html())
 
     log.info("Completed")
 
