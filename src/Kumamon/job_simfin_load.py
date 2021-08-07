@@ -323,7 +323,7 @@ def main():
     for j in json:
         rpt.add_string( simfin_load_ref_data(j['marketId']) )
         rpt.add_string( simfin_load_market_data(j['marketId']) )
-    subject = 'Blue Lion - Simfin Load - Market Data')
+    subject = 'Blue Lion - Simfin Load - Market Data'
     send_mail_html_self(subject, rpt.get_html())
 
     rpt = report()
