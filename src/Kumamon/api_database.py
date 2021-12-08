@@ -30,10 +30,14 @@ class database2:
     CONST_INDEX_MANAGED     = 4
     CONST_INDEX_PLAY        = 5
     
-    CONST_PORTFOLIO_SELF    = 1
-    CONST_PORTFOLIO_MANAGED = 2
-    CONST_PORTFOLIO_CASH    = 3
-    CONST_PORTFOLIO_PLAY    = 5
+    CONST_PORTFOLIO_SELF        = 1
+    CONST_PORTFOLIO_MANAGED     = 2
+    CONST_PORTFOLIO_CASH        = 3
+    CONST_PORTFOLIO_PLAY        = 5
+    CONST_PORTFOLIO_OAK         = 23
+    CONST_PORTFOLIO_RISK_ARB    = 24
+    CONST_PORTFOLIO_TRADE_FIN   = 25
+    CONST_PORTFOLIO_QUICK       = 26
 
     CONST_BALANCES_TYPE_AMEX_CX         = 1
     CONST_BALANCES_TYPE_CAPITAL_ONE     = 2
@@ -141,8 +145,19 @@ class database2:
     def get_index_history(self, index, date):
         return self.session.query(self.IndexHistory).filter(self.IndexHistory.type == index, self.IndexHistory.date == date).one().value
 
+    def get_index_history_min_date(self, index):
+        return self.session.query(func.min(self.IndexHistory.date)).filter(self.IndexHistory.type == index).scalar()
+
+    def get_index_history_max_date(self, index):
+        return self.session.query(func.max(self.IndexHistory.date)).filter(self.IndexHistory.type == index).scalar()
+
     def get_index_history_minus_years(self, index, years):
         date = datetime.now().date() - timedelta(days=years*database2.CONST_DAYS_IN_YEAR)
+        date = self.session.query(func.max(self.IndexHistory.date)).filter(self.IndexHistory.type == index, self.IndexHistory.date <= date).scalar()
+        return self.session.query(self.IndexHistory).filter(self.IndexHistory.type == index, self.IndexHistory.date == date).one()
+
+    def get_index_history_minus_years_from_date(self, index, years, date):
+        date = date - timedelta(days=years*database2.CONST_DAYS_IN_YEAR)
         date = self.session.query(func.max(self.IndexHistory.date)).filter(self.IndexHistory.type == index, self.IndexHistory.date <= date).scalar()
         return self.session.query(self.IndexHistory).filter(self.IndexHistory.type == index, self.IndexHistory.date == date).one()
 

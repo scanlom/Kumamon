@@ -14,12 +14,14 @@ CONST_FX_HKD = Decimal(7.75)
 CONST_FX_ILS = Decimal(342)
 CONST_FX_INR = Decimal(73.52)
 CONST_FX_JPY = Decimal(104.01)
+CONST_FX_SGD = Decimal(1.35)
 CONST_FX_MAP = {
         "1373.HK": CONST_FX_HKD,
         "6670.T": CONST_FX_JPY,
         "ASALCBR.NS": CONST_FX_INR,
         "MRO.L": CONST_FX_GBP,
         "TEVA.TA": CONST_FX_ILS,
+        "U11.SI": CONST_FX_SGD,
     }
 
 def populate_price_and_value(db, rows, populate_value):
