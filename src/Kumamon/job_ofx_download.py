@@ -37,6 +37,8 @@ def main():
             cur.execute(sql)
             conn.commit()
             log.info("Set: " + symbols[pos.secid.uniqueid] + " to " + str(pos.mktval))
+        elif pos.mktval > 0:
+            log.info("Unprocessed: " + pos.secid.uniqueid + " with value " + str(pos.mktval))
     
     client = OFXClient("https://seven.was.alight.com/eftxweb/access.ofx", userid=config_ofx_user2,
                     org="hewitt.com", fid="242", brokerid="hewitt.com", prettyprint=True,
@@ -52,6 +54,8 @@ def main():
             cur.execute(sql)
             conn.commit()
             log.info("Set: " + symbols[pos.secid.uniqueid] + " to " + str(pos.mktval))
+        elif pos.mktval > 0:
+            log.info("Unprocessed: " + pos.secid.uniqueid + " with value " + str(pos.mktval))
                        
     # Close the db
     cur.close()

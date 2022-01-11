@@ -293,10 +293,7 @@ def main():
         rmtree( '/home/scanlom/simfin_data/' )
     
     # Set your API-key for downloading data.
-    # If the API-key is 'free' then you will get the free data,
-    # otherwise you will get the data you have paid for.
-    # See www.simfin.com for what data is free and how to buy more.
-    set_api_key('free')
+    set_api_key('UA3JM1aaiLkoMgdUvWz0Xa9RdKz6p1dV')
     
     # Set the local directory where data-files are stored.
     # The dir will be created if it does not already exist.

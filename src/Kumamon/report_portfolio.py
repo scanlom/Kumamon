@@ -52,15 +52,13 @@ def populate_summary(db, rpt, index_roe, total_roe, total_finish, profit, spendi
         [ "", "YTD", "QTD", "Day" ],
         [ "Total (ROE)" ],
         [ "Total (ROTC)" ],
-        [ "Self" ],
         [ "Play" ],
         [ "Managed" ],
         ]
     append_ytd_qtd_day( db, table[1], db.CONST_INDEX_ROE )
     append_ytd_qtd_day( db, table[2], db.CONST_INDEX_ROTC )
-    append_ytd_qtd_day( db, table[3], db.CONST_INDEX_SELF )
-    append_ytd_qtd_day( db, table[4], db.CONST_INDEX_PLAY )
-    append_ytd_qtd_day( db, table[5], db.CONST_INDEX_MANAGED )
+    append_ytd_qtd_day( db, table[3], db.CONST_INDEX_PLAY )
+    append_ytd_qtd_day( db, table[4], db.CONST_INDEX_MANAGED )
     rpt.add_table(table, formats)
 
     formats = [ rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_PCT, rpt.CONST_FORMAT_CCY_INT_COLOR, rpt.CONST_FORMAT_YEARS, rpt.CONST_FORMAT_YEARS, rpt.CONST_FORMAT_DATE_SHORT]
