@@ -34,16 +34,16 @@ def sanity_check_historical_data(key, value):
     return True
 
 def last(symbol):
-    sleep(CONST_THROTTLE_SECONDS) # Sleep to avoid throttling errors
-    
-    # First try is yahoo finance
+    # First try is yahoo finance (no throttling necessary)
     try:
         data = Ticker(symbol)
-        return round(data.history(period='1d')['Close'][0], 2)
+        frame = data.history(period='5d')
+        return round(frame['Close'][len(frame)-1], 2)
     except Exception as err:
         log.warning( "Unable to retrieve last (Yahoo Finance) for %s" % (symbol) )
     
     # Second try is AlphaVantage
+    sleep(CONST_THROTTLE_SECONDS) # Sleep to avoid throttling errors
     url = 'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=%s&apikey=2YG6SAN57NRYNPJ8' % (symbol)
     retry = 1
     while retry <= CONST_RETRIES:
@@ -205,7 +205,7 @@ def main():
     log.info("Started...")
 
     # Test
-    print( last('MSFT') )
+    print( last('OAYLX') )
     
     # foo = historicals('BAS.F')
     # print( foo.change_ten_years()[0] )
