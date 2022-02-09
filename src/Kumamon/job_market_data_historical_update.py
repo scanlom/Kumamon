@@ -12,6 +12,13 @@ from api_blue_lion import ref_data_focus, mdh_by_ref_data_id_date, post_market_d
 def main():
     log.info("Started loading market data...")
     instruments = ref_data_focus()
+
+    #instruments = [{
+    #    'id': 3303,
+    #    'symbol': '8074.T',
+    #    'symbolAlphaVantage': '8074.T',
+    #}]
+
     for i in instruments:
         try:
             h = historicals( i['symbolAlphaVantage'] )

@@ -29,6 +29,10 @@ class database2:
     CONST_INDEX_ROTC        = 3
     CONST_INDEX_MANAGED     = 4
     CONST_INDEX_PLAY        = 5
+    CONST_INDEX_OAK         = 23
+    CONST_INDEX_RISK_ARB    = 24
+    CONST_INDEX_TRADE_FIN   = 25
+    CONST_INDEX_QUICK       = 26
     
     CONST_PORTFOLIO_SELF        = 1
     CONST_PORTFOLIO_MANAGED     = 2

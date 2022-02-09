@@ -11,34 +11,18 @@ from decimal import Decimal
 from json import loads
 from time import sleep
 from urllib.request import urlopen
-from yfinance import Ticker
+import api_fundamentals as _af
 from api_log import log
 
 CONST_THROTTLE_SECONDS  = 16
 CONST_RETRIES           = 1
 CONST_RETRY_SECONDS     = 61
 
-def get_market_data_symbol(symbol):
-    if symbol == "BRKB":
-        return "BRK-B"
-    return symbol
-
-# AlphaVantage may return some garbage data, we do our best to avoid that here (example 3030.T)
-def sanity_check_historical_data(key, value):
-    adj_close = Decimal( value['5. adjusted close'] )
-    
-    # Adjusted close clearly can't be negative, and on the high side, numeric(14,4), that is, ten digits, is a decent bound
-    if adj_close <= 0 or adj_close >= 10000000000:
-        return False
-    
-    return True
-
 def last(symbol):
     # First try is yahoo finance (no throttling necessary)
     try:
-        data = Ticker(symbol)
-        frame = data.history(period='5d')
-        return round(frame['Close'][len(frame)-1], 2)
+        quote = _af.get_quote(symbol)
+        return round(quote['QuoteSummaryStore']['price']['regularMarketPrice'], 2)
     except Exception as err:
         log.warning( "Unable to retrieve last (Yahoo Finance) for %s" % (symbol) )
     
@@ -75,81 +59,24 @@ class historicals:
         
         self.symbol = symbol
 
-        retry = 1
-        while retry <= CONST_RETRIES:
-            try:
-                sleep(CONST_THROTTLE_SECONDS) # Sleep to avoid AlphaVantage throttling error
-                url = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=%s&outputsize=full&apikey=2YG6SAN57NRYNPJ8' % (symbol)
-                raw_bytes = urlopen(url).read()
-                data_full = loads(raw_bytes.decode(), object_pairs_hook=OrderedDict)
-        
-                sleep(CONST_THROTTLE_SECONDS) # Sleep to avoid AlphaVantage throttling error
-                url = 'https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=%s&apikey=2YG6SAN57NRYNPJ8' % (symbol)
-                raw_bytes = urlopen(url).read()
-                data_compact = loads(raw_bytes.decode(), object_pairs_hook=OrderedDict)
-        
-                # For outputsize=full, TiME_SERIES_DAILY_ADJUSTED is one week delayed.  So we have to get the compact information,
-                # store it, and then add the rest from full
-                
-                self.data_adj_close = OrderedDict()
-                self.data_close = OrderedDict() 
-                self.data_high = OrderedDict() 
-                self.data_low = OrderedDict() 
-                for key, value in data_compact['Time Series (Daily)'].items():
-                    if sanity_check_historical_data(key, value):
-                        self.data_adj_close[key] = Decimal( value['5. adjusted close'] )
-                        self.data_close[key] = Decimal( value['4. close'] )
-                        self.data_high[key] = Decimal( value['2. high'] )
-                        self.data_low[key] = Decimal( value['3. low'] )
-        
-                for key, value in data_full['Time Series (Daily)'].items():
-                    if sanity_check_historical_data(key, value):
-                        if not (key in self.data_adj_close):
-                            self.data_adj_close[key] = Decimal( value['5. adjusted close'] )
-                        if not (key in self.data_close):
-                            self.data_close[key] = Decimal( value['4. close'] )
-                        if not (key in self.data_high):
-                            self.data_high[key] = Decimal( value['2. high'] )
-                        if not (key in self.data_low):
-                            self.data_low[key] = Decimal( value['3. low'] )
-                        
-                self.data_adj_close = list( self.data_adj_close.items() )
-                self.data_close = list( self.data_close.items() )
-                self.data_high = list( self.data_high.items() )
-                self.data_low = list( self.data_low.items() )
-                break
-            except Exception as err:
-                if retry >= CONST_RETRIES:
-                    # Note, there are many circumstances where we don't have historical data, so raise as a warning rather
-                    # than error
-                    log.warning( "Unable to retrieve historicals for %s" % (self.symbol) )
-                    log.info( data_compact )
-                    raise err
-                else:
-                    log.warning( "Unable to retrieve historicals for %s, retry %d" % (self.symbol, retry) )
-                    retry += 1
-                    sleep(CONST_RETRY_SECONDS) # For some reason AlphaVantage is not returning, sleep to try and allow them to recover              
-
-    def change_one_day(self):
-        return self.change(self.CONST_BUSINESS_DAYS_ONE )
-
-    def change_one_week(self):
-        return self.change(self.CONST_BUSINESS_DAYS_WEEK )
+        try:
+            prices = _af.get_historicals(symbol)['HistoricalPriceStore']['prices']
+            self.data_adj_close = []
+            self.data_close = []
+            self.data_high = []
+            self.data_low = []
+            for price in prices:
+                if 'type' in price:
+                    continue # Skip corporate actions
+                date_str = datetime.utcfromtimestamp(price['date']).strftime('%Y-%m-%d')
+                self.data_adj_close.append([ date_str, Decimal(round(price['adjclose'],2)) ])
+                self.data_close.append([ date_str, Decimal(round(price['close'],2)) ])
+                self.data_high.append([ date_str, Decimal(round(price['high'],2)) ])
+                self.data_low.append([ date_str, Decimal(round(price['low'],2)) ])
     
-    def change_one_month(self):
-        return self.change(self.CONST_BUSINESS_DAYS_MONTH )
-    
-    def change_three_months(self):
-        return self.change(self.CONST_BUSINESS_DAYS_THREE_MONTHS )
-
-    def change_one_year(self):
-        return self.change(self.CONST_BUSINESS_DAYS_YEAR )
-    
-    def change_five_years(self):
-        return self.change(self.CONST_BUSINESS_DAYS_FIVE_YEARS )
-    
-    def change_ten_years(self):
-        return self.change(self.CONST_BUSINESS_DAYS_TEN_YEARS )
+        except Exception as err:
+            log.warning( "Unable to retrieve historicals for %s" % (self.symbol) )
+            log.exception(err)
 
     def change(self, days):
         # Make sure we're not off the end of the list - if we are, use the last one
@@ -207,8 +134,8 @@ def main():
     # Test
     print( last('OAYLX') )
     
-    # foo = historicals('BAS.F')
-    # print( foo.change_ten_years()[0] )
+    foo = historicals('BAS.F')
+    print( foo.change_ten_years()[0] )
     
     log.info("Completed")
 

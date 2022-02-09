@@ -53,12 +53,20 @@ def populate_summary(db, rpt, index_roe, total_roe, total_finish, profit, spendi
         [ "Total (ROE)" ],
         [ "Total (ROTC)" ],
         [ "Play" ],
+        [ "Oak" ],
         [ "Managed" ],
+        [ "Risk Arb" ],
+        [ "Trade Fin" ],
+        [ "Quick" ],
         ]
     append_ytd_qtd_day( db, table[1], db.CONST_INDEX_ROE )
     append_ytd_qtd_day( db, table[2], db.CONST_INDEX_ROTC )
     append_ytd_qtd_day( db, table[3], db.CONST_INDEX_PLAY )
-    append_ytd_qtd_day( db, table[4], db.CONST_INDEX_MANAGED )
+    append_ytd_qtd_day( db, table[4], db.CONST_INDEX_OAK )
+    append_ytd_qtd_day( db, table[5], db.CONST_INDEX_MANAGED )
+    append_ytd_qtd_day( db, table[6], db.CONST_INDEX_RISK_ARB )
+    append_ytd_qtd_day( db, table[7], db.CONST_INDEX_TRADE_FIN )
+    append_ytd_qtd_day( db, table[8], db.CONST_INDEX_QUICK )
     rpt.add_table(table, formats)
 
     formats = [ rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_PCT, rpt.CONST_FORMAT_CCY_INT_COLOR, rpt.CONST_FORMAT_YEARS, rpt.CONST_FORMAT_YEARS, rpt.CONST_FORMAT_DATE_SHORT]
@@ -118,7 +126,7 @@ def populate_stress_test_fifty_percent_drop_from_max(db, rpt, index_roe_max, ind
     append_inflection_report(db, table[3], 15, index_roe, total_roe, total_finish, spending)    
     append_inflection_report(db, table[4], 20, index_roe, total_roe, total_finish, spending)    
     rpt.add_table(table, formats)
-    rpt.add_string( "Max Index " + rpt.format_ccy(index_roe_max) + " (" + rpt.format_pct(factor) + "), CNW " + rpt.format_ccy(total_roe) )
+    rpt.add_string( "Factor " + rpt.format_pct(factor) + " CNW " + rpt.format_ccy(total_roe) )
     
 def main():
     log.info("Started...")
