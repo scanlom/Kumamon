@@ -114,6 +114,9 @@ class database2:
     def get_latest_research_by_symbol(self, symbol):
         return self.session.query(self.Researches).filter(self.Researches.symbol == symbol).order_by(self.Researches.date.desc()).first()
 
+    def get_researches(self):
+        return self.session.query(self.Researches).all()
+
     def get_balance(self, balance):
         return self.session.query(self.Balances).filter(self.Balances.type == balance).one().value
 

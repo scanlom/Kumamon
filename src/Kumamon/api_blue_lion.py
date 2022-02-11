@@ -92,6 +92,13 @@ def headline_by_ticker( ticker ):
     r.raise_for_status()
     return r.json()
 
+def projections_by_symbol( symbol ):
+    url = 'http://localhost:8081/blue-lion/read/projections?symbol=%s' % (symbol)
+    response = get(url)
+    if response.status_code == 200:
+        return response.json()
+    return None
+
 def simfin_income_by_ticker( ticker ):
     url = 'http://localhost:8081/blue-lion/read/simfin-income?ticker=%s' % (ticker)
     r = get(url)
