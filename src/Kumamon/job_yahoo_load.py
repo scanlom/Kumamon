@@ -162,7 +162,7 @@ def load_cashflow_statements( ticker, financials ):
 def main():
     log.info("Started...")
 
-    ticker = "1373.HK"
+    ticker = "U11.SI"
     quote = _af.get_quote(ticker)
     load_ref_data(ticker, quote)
     financials = _af.get_financials(ticker)

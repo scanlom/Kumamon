@@ -107,7 +107,13 @@ class database2:
         
     def get_stocks(self):
         return self.session.query(self.Stocks).filter(self.Stocks.hidden == False).all()
-    
+
+    def get_stocks_all(self):
+        return self.session.query(self.Stocks).all()
+
+    def get_latest_research_by_symbol(self, symbol):
+        return self.session.query(self.Researches).filter(self.Researches.symbol == symbol).order_by(self.Researches.date.desc()).first()
+
     def get_balance(self, balance):
         return self.session.query(self.Balances).filter(self.Balances.type == balance).one().value
 
