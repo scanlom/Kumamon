@@ -67,7 +67,7 @@ def load_statements( ticker, statements, get_statements, post_statement, delete_
         log.info("Processing %s" % foo['reportDate'])
         skip = False
         for e in entries:
-            if e['reportDate'] == foo['reportDate']:
+            if e['fiscalYear'] == foo['fiscalYear']:
                 log.info("Collision found, type %s" % (e['entryType']))
                 if 'S' == e['entryType']:
                     log.info("Skipping")
@@ -162,7 +162,7 @@ def load_cashflow_statements( ticker, financials ):
 def main():
     log.info("Started...")
 
-    ticker = "U11.SI"
+    ticker = "UCB.BR"
     quote = _af.get_quote(ticker)
     load_ref_data(ticker, quote)
     financials = _af.get_financials(ticker)

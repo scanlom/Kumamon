@@ -9,6 +9,7 @@ from psycopg2.extras import DictCursor
 from api_config import config_database_connect
 from api_database import database2
 from api_log import log
+import api_blue_lion as _abl
 
 def format_ccy_sql(number):
     return str(round(number,2))
@@ -24,6 +25,11 @@ def calculate_index(db, total, index):
     divisor = db.get_divisor(index)
     index = total*divisor
     return index    
+
+def blb_portfolio(db, id, name, value, index, index_id, portfolio_id):
+    divisor = db.get_divisor(index_id)
+    cash = db.get_constituents_by_portfolio_symbol(portfolio_id, db.CONST_SYMBOL_CASH)
+    _abl.put_portfolio(id, name, value, index, divisor, cash, 0, value, index, divisor)
 
 def main():
     log.info("Started...")
@@ -95,6 +101,15 @@ def main():
     cur.close()
     conn.close()
     
+    # Blue Lion Bridge
+    _abl.put_portfolio(1, 'Total', total_roe, index_roe, db.get_divisor(db.CONST_INDEX_ROE), cash, debt, total_rotc, index_rotc, db.get_divisor(db.CONST_INDEX_ROTC))
+    blb_portfolio(db, 2, 'Selfie', total_play, index_play, db.CONST_INDEX_PLAY, db.CONST_PORTFOLIO_PLAY)
+    blb_portfolio(db, 3, 'Oak', total_oak, index_oak, db.CONST_PORTFOLIO_OAK, db.CONST_PORTFOLIO_OAK)
+    blb_portfolio(db, 4, 'Managed', total_managed, index_managed, db.CONST_INDEX_MANAGED, db.CONST_PORTFOLIO_MANAGED)
+    blb_portfolio(db, 5, 'Risk Arb', total_risk_arb, index_risk_arb, db.CONST_PORTFOLIO_RISK_ARB, db.CONST_PORTFOLIO_RISK_ARB)
+    blb_portfolio(db, 6, 'Trade Fin', total_trade_fin, index_trade_fin, db.CONST_PORTFOLIO_TRADE_FIN, db.CONST_PORTFOLIO_TRADE_FIN)
+    blb_portfolio(db, 7, 'Quick', total_quick, index_quick, db.CONST_PORTFOLIO_QUICK, db.CONST_PORTFOLIO_QUICK)
+
     log.info("Completed")
     
 if __name__ == '__main__':

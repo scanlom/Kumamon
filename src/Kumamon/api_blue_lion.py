@@ -86,6 +86,12 @@ def put_market_data_historical( id, date, ref_data_id, close, adj_close ):
     r = put(url, json={'id':id, 'date':date, 'refDataId':ref_data_id, 'close':float(close), 'adjClose':float(adj_close)} )
     r.raise_for_status()
 
+def put_portfolio( id, name, value, index, divisor, cash, debt, value_total_capital, index_total_capital, divisor_total_capital ):
+    url = 'http://localhost:8083/blue-lion/write/portfolios/%d' % (id)
+    r = put(url, json={'id':id, 'name':name, 'value':float(value), 'index':float(index), 'divisor':float(divisor), 'cash':float(cash), 'debt':float(debt), 
+    'valueTotalCapital':float(value_total_capital), 'indexTotalCapital':float(index_total_capital), 'divisorTotalCapital':float(divisor_total_capital)} )
+    r.raise_for_status()
+
 def headline_by_ticker( ticker ):
     url = 'http://localhost:8081/blue-lion/read/headline?ticker=%s' % (ticker)
     r = get(url)
