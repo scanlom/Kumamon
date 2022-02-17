@@ -31,6 +31,29 @@ def blb_portfolio(db, id, name, value, index, index_id, portfolio_id):
     cash = db.get_constituents_by_portfolio_symbol(portfolio_id, db.CONST_SYMBOL_CASH)
     _abl.put_portfolio(id, name, value, index, divisor, cash, 0, value, index, divisor)
 
+    rows = db.get_constituents_by_portfolio(portfolio_id)
+    for row in rows:
+        if row.symbol == db.CONST_SYMBOL_CASH:
+            continue
+        position = _abl.positions_by_symbol_portfolio_id(row.symbol, id)
+        if position is not None:
+            position['quantity'] = row.quantity if row.quantity is not None else 0
+            position['price'] = row.price if row.price is not None else 0
+            position['value'] = row.value if row.value is not None else 0
+            position['model'] = row.model if row.model is not None else 0
+            _abl.put_position(position)
+        else:
+            position = {}
+            refData = _abl.ref_data_by_symbol(row.symbol)
+            position['refDataId'] = refData['id']
+            position['portfolioId'] = id
+            position['quantity'] = row.quantity if row.quantity is not None else 0
+            position['price'] = row.price if row.price is not None else 0
+            position['value'] = row.value if row.value is not None else 0
+            position['model'] = row.model if row.model is not None else 0
+            position['pricingType'] = row.pricing_type if row.pricing_type is not None else 1
+            _abl.post_position(position)
+
 def main():
     log.info("Started...")
     

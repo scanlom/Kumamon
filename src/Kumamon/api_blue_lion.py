@@ -92,14 +92,26 @@ def put_portfolio( id, name, value, index, divisor, cash, debt, value_total_capi
     'valueTotalCapital':float(value_total_capital), 'indexTotalCapital':float(index_total_capital), 'divisorTotalCapital':float(divisor_total_capital)} )
     r.raise_for_status()
 
-def headline_by_ticker( ticker ):
-    url = 'http://localhost:8081/blue-lion/read/headline?ticker=%s' % (ticker)
+def positions_by_symbol_portfolio_id( symbol, portfolio_id ):
+    url = 'http://localhost:8081/blue-lion/read/positions?symbol=%s&portfolioId=%d' % (symbol, portfolio_id)
+    print(url)
     r = get(url)
+    if r.status_code == 200:
+        return r.json()
+    return None
+
+def put_position( data ):
+    url = 'http://localhost:8083/blue-lion/write/positions/%d' % (data['id'])
+    r = put(url, json=data )
     r.raise_for_status()
-    return r.json()
+
+def post_position( data ):
+    url = 'http://localhost:8083/blue-lion/write/positions'
+    r = post(url, json=data )
+    r.raise_for_status()
 
 def projections_by_symbol( symbol ):
-    url = 'http://localhost:8081/blue-lion/read/projections?symbol=%s' % (symbol)
+    url = 'http://localhost:8081/blue-lion/read/enriched-projections?symbol=%s' % (symbol)
     response = get(url)
     if response.status_code == 200:
         return response.json()

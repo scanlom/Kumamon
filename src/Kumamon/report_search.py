@@ -11,7 +11,7 @@ from api_database import database2
 from api_log import log
 from api_mail import send_mail_html_self
 from api_reporting import report
-from api_blue_lion import cagr, confidence, headline_by_ticker, ref_data
+from api_blue_lion import cagr, confidence, projections_by_symbol, ref_data
 
 CONST_CONFIDENCE_NONE           = 'NONE'
 CONST_CONFIDENCE_HIGH           = 'HIGH'
@@ -57,17 +57,17 @@ def populate_five_cagr( db, rpt ):
 def populate_magic( rpt ):
     log.info("populate_magic called...")
     rpt.add_heading( "Screen - Magic Top Ten" )
-    headlines = []
+    projections = []
     instruments = ref_data()
     for i in instruments:
-        log.info("Requesting headline for " + i['symbol'])
-        headlines.append(headline_by_ticker( i['symbol'] ))
-    sorted_headlines = sorted(headlines, reverse = True, key = lambda i: i['magic'])
+        log.info("Requesting projections for " + i['symbol'])
+        projections.append(projections_by_symbol( i['symbol'] ))
+    sorted_projections = sorted(projections, reverse = True, key = lambda i: i['magic'])
     formats = [ rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_CCY_COLOR ]
     table = [ ]
     table.append( [ "Ticker", "Description", "Magic" ] )
     for x in range(10):
-        table.append( [sorted_headlines[x]['ticker'], sorted_headlines[x]['description'], sorted_headlines[x]['magic']] )
+        table.append( [sorted_projections[x]['ticker'], sorted_projections[x]['description'], sorted_projections[x]['magic']] )
     rpt.add_table( table, formats )
 
 def main():
