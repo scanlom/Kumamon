@@ -164,6 +164,9 @@ class database2:
     def get_index_history_max_date(self, index):
         return self.session.query(func.max(self.IndexHistory.date)).filter(self.IndexHistory.type == index).scalar()
 
+    def get_index_history_all(self, index):
+        return self.session.query(self.IndexHistory).filter(self.IndexHistory.type == index).order_by(desc(self.IndexHistory.date)).all()
+
     def get_index_history_minus_years(self, index, years):
         date = datetime.now().date() - timedelta(days=years*database2.CONST_DAYS_IN_YEAR)
         date = self.session.query(func.max(self.IndexHistory.date)).filter(self.IndexHistory.type == index, self.IndexHistory.date <= date).scalar()

@@ -94,7 +94,6 @@ def put_portfolio( id, name, value, index, divisor, cash, debt, value_total_capi
 
 def positions_by_symbol_portfolio_id( symbol, portfolio_id ):
     url = 'http://localhost:8081/blue-lion/read/positions?symbol=%s&portfolioId=%d' % (symbol, portfolio_id)
-    print(url)
     r = get(url)
     if r.status_code == 200:
         return r.json()
@@ -107,6 +106,18 @@ def put_position( data ):
 
 def post_position( data ):
     url = 'http://localhost:8083/blue-lion/write/positions'
+    r = post(url, json=data )
+    r.raise_for_status()
+
+def portfolios_history_by_portfolio_id_date( portfolio_id, date ):
+    url = 'http://localhost:8081/blue-lion/read/portfolios-history?portfolioId=%d&date=%s' % (portfolio_id, date)
+    r = get(url)
+    if r.status_code == 200:
+        return r.json()
+    return None
+
+def post_portfolios_history( data ):
+    url = 'http://localhost:8083/blue-lion/write/portfolios-history'
     r = post(url, json=data )
     r.raise_for_status()
 
