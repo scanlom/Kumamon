@@ -36,7 +36,8 @@ class database2:
     
     CONST_PORTFOLIO_SELF        = 1
     CONST_PORTFOLIO_MANAGED     = 2
-    CONST_PORTFOLIO_CASH        = 3
+    CONST_PORTFOLIO_CASH        = 3    
+    CONST_PORTFOLIO_NONE        = 4
     CONST_PORTFOLIO_PLAY        = 5
     CONST_PORTFOLIO_OAK         = 23
     CONST_PORTFOLIO_RISK_ARB    = 24
@@ -62,6 +63,10 @@ class database2:
     CONST_BALANCES_TYPE_SAVINGS         = 17
     CONST_BALANCES_TYPE_TOTAL_ROTC      = 18
     CONST_BALANCES_TYPE_TOTAL_PLAY      = 19
+    CONST_BALANCES_TYPE_OAK         = 23
+    CONST_BALANCES_TYPE_RISK_ARB    = 24
+    CONST_BALANCES_TYPE_TRADE_FIN   = 25
+    CONST_BALANCES_TYPE_QUICK       = 26
     
     CONST_PRICING_TYPE_BY_PRICE = 1
     CONST_PRICING_TYPE_BY_VALUE = 2
@@ -72,6 +77,7 @@ class database2:
     CONST_ACTION_TYPE_BOUGHT_PORTFOLIO      = 11
     CONST_ACTION_TYPE_SOLD_PORTFOLIO        = 16
     CONST_ACTION_TYPE_DIVIDEND_PORTFOLIO    = 1
+    CONST_ACTION_TYPE_CI_TOTAL    = 17
     
     def __init__(self):
         self.Base = automap_base()
@@ -83,6 +89,7 @@ class database2:
         self.BalancesHistory = self.Base.classes.balances_history
         self.Constituents = self.Base.classes.constituents
         self.Divisors = self.Base.classes.divisors
+        self.DivisorsHistory = self.Base.classes.divisors_history
         self.Fundamentals = self.Base.classes.fundamentals
         self.IndexHistory = self.Base.classes.index_history
         self.PortfolioHistory = self.Base.classes.portfolio_history
@@ -153,8 +160,19 @@ class database2:
         return date(yesterday.year, yesterday.month, yesterday.day)
         
     def get_balance_history(self, balance, date):
-        return self.session.query(self.BalancesHistory).filter(self.BalancesHistory.type == balance, self.BalancesHistory.date == date).one().value
-       
+        row = self.session.query(self.BalancesHistory).filter(self.BalancesHistory.type == balance, self.BalancesHistory.date == date).one_or_none()
+        ret = 0
+        if row is not None:
+            ret = row.value
+        return ret
+
+    def get_divisor_history(self, index, date):
+        row = self.session.query(self.DivisorsHistory).filter(self.DivisorsHistory.type == index, self.DivisorsHistory.date == date).one_or_none()
+        ret = 0
+        if row is not None:
+            ret = row.value
+        return ret
+
     def get_index_history(self, index, date):
         return self.session.query(self.IndexHistory).filter(self.IndexHistory.type == index, self.IndexHistory.date == date).one().value
 
@@ -180,11 +198,21 @@ class database2:
     def get_portfolio_history(self, portfolio, symbol, date):
         return self.session.query(self.PortfolioHistory).filter(self.PortfolioHistory.type == portfolio, self.PortfolioHistory.symbol == symbol, self.PortfolioHistory.date == date).one().value
 
+    def get_portfolio_history_safe(self, portfolio, symbol, date):
+        row = self.session.query(self.PortfolioHistory).filter(self.PortfolioHistory.type == portfolio, self.PortfolioHistory.symbol == symbol, self.PortfolioHistory.date == date).one_or_none()
+        ret = 0
+        if row is not None:
+            ret = row.value
+        return ret
+
     def get_portfolio_history_by_date(self, portfolio, date):
         return self.session.query(self.PortfolioHistory).filter(self.PortfolioHistory.type == portfolio, self.PortfolioHistory.date == date).all()
     
     def get_actions_by_date_range_type(self, start, end, type):
         return self.session.query(self.Actions).filter(self.Actions.date >= start, self.Actions.date <= end, self.Actions.actions_type_id == type).all()
+
+    def get_actions_by_type(self, type):
+        return self.session.query(self.Actions).filter(self.Actions.actions_type_id == type).order_by(desc(self.Actions.date)).all()
 
     def get_ytd_spending_sum(self):
         ret = self.session.query(func.sum(self.Spending.amount)).filter(self.Spending.date >= self.get_ytd_base_date()).scalar()
