@@ -121,6 +121,11 @@ def post_portfolios_history( data ):
     r = post(url, json=data )
     r.raise_for_status()
 
+def post_positions_history( data ):
+    url = 'http://localhost:8083/blue-lion/write/positions-history'
+    r = post(url, json=data )
+    r.raise_for_status()
+
 def projections_by_symbol( symbol ):
     url = 'http://localhost:8081/blue-lion/read/enriched-projections?symbol=%s' % (symbol)
     response = get(url)
