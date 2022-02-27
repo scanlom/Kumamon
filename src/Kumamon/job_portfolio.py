@@ -29,7 +29,8 @@ def calculate_index(db, total, index):
 def blb_portfolio(db, id, name, value, index, index_id, portfolio_id):
     divisor = db.get_divisor(index_id)
     cash = db.get_constituents_by_portfolio_symbol(portfolio_id, db.CONST_SYMBOL_CASH)
-    _abl.put_portfolio(id, name, value, index, divisor, cash, 0, value, index, divisor)
+    portfolio = _abl.portfolio_by_id(id)
+    _abl.put_portfolio(id, name, value, index, divisor, cash, 0, value, index, divisor, portfolio['model'], True)
 
     rows = db.get_constituents_by_portfolio(portfolio_id)
     for row in rows:
@@ -41,6 +42,7 @@ def blb_portfolio(db, id, name, value, index, index_id, portfolio_id):
             position['price'] = row.price if row.price is not None else 0
             position['value'] = row.value if row.value is not None else 0
             position['model'] = row.model if row.model is not None else 0
+            position['active'] = True
             _abl.put_position(position)
         else:
             position = {}
@@ -52,6 +54,7 @@ def blb_portfolio(db, id, name, value, index, index_id, portfolio_id):
             position['value'] = row.value if row.value is not None else 0
             position['model'] = row.model if row.model is not None else 0
             position['pricingType'] = row.pricing_type if row.pricing_type is not None else 1
+            position['active'] = True
             _abl.post_position(position)
 
 def main():
@@ -125,7 +128,7 @@ def main():
     conn.close()
     
     # Blue Lion Bridge
-    _abl.put_portfolio(1, 'Total', total_roe, index_roe, db.get_divisor(db.CONST_INDEX_ROE), cash, debt, total_rotc, index_rotc, db.get_divisor(db.CONST_INDEX_ROTC))
+    _abl.put_portfolio(1, 'Total', total_roe, index_roe, db.get_divisor(db.CONST_INDEX_ROE), cash, debt, total_rotc, index_rotc, db.get_divisor(db.CONST_INDEX_ROTC), 0, True)
     blb_portfolio(db, 2, 'Selfie', total_play, index_play, db.CONST_INDEX_PLAY, db.CONST_PORTFOLIO_PLAY)
     blb_portfolio(db, 3, 'Oak', total_oak, index_oak, db.CONST_PORTFOLIO_OAK, db.CONST_PORTFOLIO_OAK)
     blb_portfolio(db, 4, 'Managed', total_managed, index_managed, db.CONST_INDEX_MANAGED, db.CONST_PORTFOLIO_MANAGED)

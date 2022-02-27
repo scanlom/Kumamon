@@ -13,7 +13,7 @@ from datetime import date
 from datetime import datetime
 from datetime import timedelta
 from decimal import Decimal
-from sqlalchemy import create_engine
+from sqlalchemy import asc, create_engine
 from sqlalchemy import desc
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
@@ -231,7 +231,7 @@ class database2:
         return self.session.query(self.Actions).filter(self.Actions.date >= start, self.Actions.date <= end, self.Actions.actions_type_id == type).all()
 
     def get_actions_by_type(self, type):
-        return self.session.query(self.Actions).filter(self.Actions.actions_type_id == type).order_by(desc(self.Actions.date)).all()
+        return self.session.query(self.Actions).filter(self.Actions.actions_type_id == type).order_by(asc(self.Actions.date)).all()
 
     def get_ytd_spending_sum(self):
         ret = self.session.query(func.sum(self.Spending.amount)).filter(

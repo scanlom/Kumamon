@@ -86,10 +86,17 @@ def put_market_data_historical( id, date, ref_data_id, close, adj_close ):
     r = put(url, json={'id':id, 'date':date, 'refDataId':ref_data_id, 'close':float(close), 'adjClose':float(adj_close)} )
     r.raise_for_status()
 
-def put_portfolio( id, name, value, index, divisor, cash, debt, value_total_capital, index_total_capital, divisor_total_capital ):
+def portfolio_by_id( id ):
+    url = 'http://localhost:8081/blue-lion/read/portfolios/%d' % (id)
+    response = get(url)
+    if response.status_code == 200:
+        return response.json()
+    return None
+
+def put_portfolio( id, name, value, index, divisor, cash, debt, value_total_capital, index_total_capital, divisor_total_capital, model, active ):
     url = 'http://localhost:8083/blue-lion/write/portfolios/%d' % (id)
     r = put(url, json={'id':id, 'name':name, 'value':float(value), 'index':float(index), 'divisor':float(divisor), 'cash':float(cash), 'debt':float(debt), 
-    'valueTotalCapital':float(value_total_capital), 'indexTotalCapital':float(index_total_capital), 'divisorTotalCapital':float(divisor_total_capital)} )
+    'valueTotalCapital':float(value_total_capital), 'indexTotalCapital':float(index_total_capital), 'divisorTotalCapital':float(divisor_total_capital), 'mode':model, 'active':active} )
     r.raise_for_status()
 
 def positions_by_symbol_portfolio_id( symbol, portfolio_id ):
@@ -119,6 +126,11 @@ def portfolios_history_by_portfolio_id_date( portfolio_id, date ):
 def post_portfolios_history( data ):
     url = 'http://localhost:8083/blue-lion/write/portfolios-history'
     r = post(url, json=data )
+    r.raise_for_status()
+
+def put_portfolios_history( data ):
+    url = 'http://localhost:8083/blue-lion/write/portfolios-history/%d' % (data['id'])
+    r = put(url, json=data )
     r.raise_for_status()
 
 def post_positions_history( data ):
