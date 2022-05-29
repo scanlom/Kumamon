@@ -12,9 +12,10 @@ from api_log import log
 CONST_URL_QUOTE = 'https://finance.yahoo.com/quote'
 CONST_FORMAT_URL_HISTORICALS = 'https://finance.yahoo.com/quote/{}/history?period1=0&period2=9999999999&interval=1d&filter=history&frequency=1d&includeAdjustedClose=true'
 CONST_HEADERS = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
+CONST_TIMEOUT = 10
 
 def get_json( url ):
-    html = _requests.get(url=url, headers=CONST_HEADERS).text
+    html = _requests.get(url=url, headers=CONST_HEADERS, timeout=CONST_TIMEOUT).text
     json_str = html.split('root.App.main =')[1].split(
         '(this)')[0].split(';\n}')[0].strip()
     data = _json.loads(json_str)[

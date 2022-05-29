@@ -85,10 +85,16 @@ class database2:
     CONST_SYMBOL_CASH = "CASH"
     CONST_SYMBOL_DEBT = "DEBT"
 
+    CONST_ACTION_TYPE_DIVIDEND_PORTFOLIO = 1
     CONST_ACTION_TYPE_BOUGHT_PORTFOLIO = 11
     CONST_ACTION_TYPE_SOLD_PORTFOLIO = 16
-    CONST_ACTION_TYPE_DIVIDEND_PORTFOLIO = 1
     CONST_ACTION_TYPE_CI_TOTAL = 17
+    CONST_ACTION_TYPE_DIVIDEND_PLAY = 19
+    CONST_ACTION_TYPE_BOUGHT_PLAY = 21
+    CONST_ACTION_TYPE_SOLD_PLAY = 22
+    CONST_ACTION_TYPE_DIVIDEND = 26
+    CONST_ACTION_TYPE_BOUGHT = 24
+    CONST_ACTION_TYPE_SOLD = 25
 
     def __init__(self):
         self.Base = automap_base()
@@ -225,13 +231,18 @@ class database2:
         return self.session.query(self.PortfolioHistory).filter(self.PortfolioHistory.type == portfolio, self.PortfolioHistory.date == date).all()
 
     def get_portfolio_history_all(self):
-        return self.session.query(self.PortfolioHistory).order_by(desc(self.PortfolioHistory.date)).all()
+        return self.session.query(self.PortfolioHistory).order_by(asc(self.PortfolioHistory.date)).all()
 
     def get_actions_by_date_range_type(self, start, end, type):
         return self.session.query(self.Actions).filter(self.Actions.date >= start, self.Actions.date <= end, self.Actions.actions_type_id == type).all()
 
     def get_actions_by_type(self, type):
         return self.session.query(self.Actions).filter(self.Actions.actions_type_id == type).order_by(asc(self.Actions.date)).all()
+
+    def get_actions_by_type_portfolio_id(self, type, portfolio_id):
+        if type is self.CONST_ACTION_TYPE_DIVIDEND:
+            return self.session.query(self.Actions).filter(self.Actions.actions_type_id == type, self.Actions.value2 == portfolio_id).order_by(asc(self.Actions.date)).all()
+        return self.session.query(self.Actions).filter(self.Actions.actions_type_id == type, self.Actions.value3 == portfolio_id).order_by(asc(self.Actions.date)).all()
 
     def get_ytd_spending_sum(self):
         ret = self.session.query(func.sum(self.Spending.amount)).filter(

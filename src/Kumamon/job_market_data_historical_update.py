@@ -4,6 +4,8 @@ Created on Aug 7, 2013
 @author: scanlom
 '''
 
+from api_mail import send_mail_html_self
+from api_reporting import report
 from api_analytics import historicals
 from api_constants import CONST
 from api_log import log
@@ -12,6 +14,7 @@ from api_blue_lion import ref_data_focus, mdh_by_ref_data_id_date, post_market_d
 def main():
     log.info("Started loading market data...")
     instruments = ref_data_focus()
+    ref_data_msg = ""
 
     #instruments = [{
     #    'id': 3303,
@@ -23,8 +26,9 @@ def main():
         try:
             h = historicals( i['symbolAlphaVantage'] )
         except Exception as err:
-            # Log exceptions as warnings, there often won't be historical data for international names
-            log.warning( "Could not get data for %s" % ( i['symbol'] ) )
+            msg = "Could not get data for %s<br>" % ( i['symbol'] )
+            log.warning( msg )
+            ref_data_msg += msg
             continue   
         log.info("Populating for %s" % (i['symbol']))
         post = 0
@@ -40,6 +44,12 @@ def main():
                 put_market_data_historical( mdh['id'], close[0], i['id'], close[1], adj_close[1] )
                 put += 1
         log.info("Posted %d records, Put %d records" % (post, put))
+
+    rpt = report()
+    rpt.add_string( ref_data_msg )
+    subject = 'Blue Lion - Market Data Historical Update - Bad Ref Data'
+    send_mail_html_self(subject, rpt.get_html())
+
     log.info("Completed")
     
 if __name__ == '__main__':

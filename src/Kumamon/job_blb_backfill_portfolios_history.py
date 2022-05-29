@@ -15,7 +15,6 @@ def populate_portfolios_history(db, index_from, balance_from, portfolio_from, in
 	rows = db.get_index_history_all(index_from)
 	for row in rows:
 		try:
-			#print("Index %d Date %s" % (index_to, row.date.strftime('%Y-%m-%d')))
 			index_tc = db.get_index_history(index_tc_from, row.date)
 			divisor = db.get_divisor_history(index_from, row.date)
 			divisor_tc = db.get_divisor_history(index_tc_from, row.date)
@@ -37,8 +36,10 @@ def populate_portfolios_history(db, index_from, balance_from, portfolio_from, in
 			entry['debt'] = debt if debt is not None else 0
 			if _abl.portfolios_history_by_portfolio_id_date(index_to, entry['date']) is None:
 				_abl.post_portfolios_history(entry)
-		except:
+		except Exception as err:
 			print("Index %d Date %s" % (index_to, row.date.strftime('%Y-%m-%d')))
+			log.exception(err)
+			log.info("Aborted")
 
 def main():
 	log.info("Started...")
@@ -52,7 +53,7 @@ def main():
 	populate_portfolios_history(db, db.CONST_PORTFOLIO_TRADE_FIN, db.CONST_BALANCES_TYPE_TRADE_FIN, db.CONST_PORTFOLIO_TRADE_FIN, db.CONST_PORTFOLIO_TRADE_FIN, db.CONST_BALANCES_TYPE_TRADE_FIN, 6, "Trade Fin")
 	populate_portfolios_history(db, db.CONST_PORTFOLIO_QUICK, db.CONST_BALANCES_TYPE_QUICK, db.CONST_PORTFOLIO_QUICK, db.CONST_PORTFOLIO_QUICK, db.CONST_BALANCES_TYPE_QUICK, 7, "Quick")
 	populate_portfolios_history(db, db.CONST_INDEX_SELF, db.CONST_BALANCES_TYPE_TOTAL_SELF, db.CONST_PORTFOLIO_SELF, db.CONST_INDEX_SELF, db.CONST_BALANCES_TYPE_TOTAL_SELF, 8, "Portfolio")
-	#populate_portfolios_history(db, db.CONST_PORTFOLIO_QUICK, 9, "None")
+	#populate_portfolios_history(db, db.CONST_PORTFOLIO_QUICK, 9, "None") <- None portfolio is added by the positions history script where needed
 
 	log.info("Completed")
 

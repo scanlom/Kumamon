@@ -59,6 +59,13 @@ def market_data_by_symbol( symbol ):
         return response.json()
     return None
 
+def enriched_market_data_by_symbol( symbol ):
+    url = 'http://localhost:8081/blue-lion/read/enriched-market-data?symbol=%s' % (symbol)
+    response = get(url)
+    if response.status_code == 200:
+        return response.json()
+    return None
+
 def post_market_data( ref_data_id, last ):
     url = 'http://localhost:8083/blue-lion/write/market-data'
     r = post(url, json={'refDataId':ref_data_id, 'last':float(last)} )
@@ -96,11 +103,18 @@ def portfolio_by_id( id ):
 def put_portfolio( id, name, value, index, divisor, cash, debt, value_total_capital, index_total_capital, divisor_total_capital, model, active ):
     url = 'http://localhost:8083/blue-lion/write/portfolios/%d' % (id)
     r = put(url, json={'id':id, 'name':name, 'value':float(value), 'index':float(index), 'divisor':float(divisor), 'cash':float(cash), 'debt':float(debt), 
-    'valueTotalCapital':float(value_total_capital), 'indexTotalCapital':float(index_total_capital), 'divisorTotalCapital':float(divisor_total_capital), 'mode':model, 'active':active} )
+    'valueTotalCapital':float(value_total_capital), 'indexTotalCapital':float(index_total_capital), 'divisorTotalCapital':float(divisor_total_capital), 'model':float(model), 'active':active} )
     r.raise_for_status()
 
 def positions_by_symbol_portfolio_id( symbol, portfolio_id ):
     url = 'http://localhost:8081/blue-lion/read/positions?symbol=%s&portfolioId=%d' % (symbol, portfolio_id)
+    r = get(url)
+    if r.status_code == 200:
+        return r.json()
+    return None
+
+def enriched_positions_by_portfolio_id( portfolio_id ):
+    url = 'http://localhost:8081/blue-lion/read/enriched-positions?portfolioId=%d' % (portfolio_id)
     r = get(url)
     if r.status_code == 200:
         return r.json()
@@ -123,6 +137,20 @@ def portfolios_history_by_portfolio_id_date( portfolio_id, date ):
         return r.json()
     return None
 
+def positions_history_by_portfolio_id_date( portfolio_id, date ):
+    url = 'http://localhost:8081/blue-lion/read/positions-history?portfolioId=%d&date=%s' % (portfolio_id, date)
+    r = get(url)
+    if r.status_code == 200:
+        return r.json()
+    return None
+
+def enriched_positions_history_by_portfolio_id_date( portfolio_id, date ):
+    url = 'http://localhost:8081/blue-lion/read/enriched-positions-history?portfolioId=%d&date=%s' % (portfolio_id, date)
+    r = get(url)
+    if r.status_code == 200:
+        return r.json()
+    return None
+
 def post_portfolios_history( data ):
     url = 'http://localhost:8083/blue-lion/write/portfolios-history'
     r = post(url, json=data )
@@ -136,6 +164,21 @@ def put_portfolios_history( data ):
 def post_positions_history( data ):
     url = 'http://localhost:8083/blue-lion/write/positions-history'
     r = post(url, json=data )
+    r.raise_for_status()
+
+def put_positions_history( data ):
+    url = 'http://localhost:8083/blue-lion/write/positions-history/%d' % (data['id'])
+    r = put(url, json=data )
+    r.raise_for_status()
+
+def post_transaction( data ):
+    url = 'http://localhost:8083/blue-lion/write/transactions'
+    r = post(url, json=data )
+    r.raise_for_status()
+
+def put_transaction( data ):
+    url = 'http://localhost:8083/blue-lion/write/transactions/%d' % (data['id'])
+    r = put(url, json=data )
     r.raise_for_status()
 
 def projections_by_symbol( symbol ):

@@ -44,7 +44,7 @@ def main():
                     org="hewitt.com", fid="242", brokerid="hewitt.com", prettyprint=True,
                     version=220)
 
-    response = client.request_statements(config_ofx_pass2, InvStmtRq(acctid=config_ofx_acct2))
+    """response = client.request_statements(config_ofx_pass2, InvStmtRq(acctid=config_ofx_acct2))
     parser = OFXTree()
     parser.parse(response)
     ofx = parser.convert()
@@ -55,7 +55,7 @@ def main():
             conn.commit()
             log.info("Set: " + symbols[pos.secid.uniqueid] + " to " + str(pos.mktval))
         elif pos.mktval > 0:
-            log.info("Unprocessed: " + pos.secid.uniqueid + " with value " + str(pos.mktval))
+            log.info("Unprocessed: " + pos.secid.uniqueid + " with value " + str(pos.mktval))"""
                        
     # Close the db
     cur.close()

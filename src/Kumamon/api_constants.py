@@ -30,4 +30,4 @@ class CONST:
     INCEPT_INDEX   = Decimal(72444.29)
     INCEPT_DATE    = date(2021,4,19)
     
-    MAX_ALPHA_VANTAGE_CALLS = 200
+    MAX_MARKET_DATA_CALLS = 500

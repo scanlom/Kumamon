@@ -41,6 +41,7 @@ def load_ref_data( ticker, quote ):
 def process_statements( ticker, currency, statements, simple_mappings, double_mappings, time_series_store,  time_series_mappings ):
     ret = {}
     for foo in statements:
+        print(foo)
         bar = {}
         report_date = _datetime.datetime.utcfromtimestamp(foo['endDate'])
         bar['ticker'] = ticker
@@ -56,8 +57,20 @@ def process_statements( ticker, currency, statements, simple_mappings, double_ma
 
     for tuple in time_series_mappings:
         for foo in time_series_store[tuple[0]]:
-            if foo['asOfDate'] in ret:
-                ret[foo['asOfDate']][tuple[1]] = int( foo['reportedValue'] )
+            # We have to fuzzy map on the asOfDate year and month, as unfortunately it differs between the shares items and the income statement items
+            # Statement information has date in the form 'endDate': 1633132800 (in this example 2021-10-02), while shares information is in the form
+            # {'dataId': 29010, 'asOfDate': '2021-09-30', 'periodType': '12M', 'currencyCode': 'USD', 'reportedValue': 1816000000}
+            if foo is None or foo['asOfDate'] is None:
+                log.warning('Unable to process time_series_store %s, asOfDate None', tuple[0])
+                continue
+            log.info('Processing time_series_store %s with asOfDate %s' % (tuple[0],foo['asOfDate'][0:7]))
+            for key in ret:
+                if foo['asOfDate'][0:7] == key[0:7]:
+                    ret[key][tuple[1]] = int( foo['reportedValue'] )
+                    break
+                elif foo['asOfDate'][0:4] == key[0:4]:
+                    ret[key][tuple[1]] = int( foo['reportedValue'] )
+                    break
 
     return ret
 
@@ -75,11 +88,8 @@ def load_statements( ticker, statements, get_statements, post_statement, delete_
                 elif 'O' == e['entryType']:
                     log.info("Skipping")
                     skip = True
-                elif 'Y' == e['entryType']:
-                    log.info("Skipping")
-                    skip = True
                 else:
-                    log.info("Overwriting")
+                    log.info("Overwriting, entryType " + e['entryType'])
                     delete_statement(e['id'])
         
         if not skip:
@@ -162,7 +172,7 @@ def load_cashflow_statements( ticker, financials ):
 def main():
     log.info("Started...")
 
-    ticker = "UCB.BR"
+    ticker = "BRK-B"
     quote = _af.get_quote(ticker)
     load_ref_data(ticker, quote)
     financials = _af.get_financials(ticker)

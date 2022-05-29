@@ -14,7 +14,7 @@ from simfin import load_income_banks, load_balance_banks, load_cashflow_banks, l
 from api_blue_lion import simfin_income_by_ticker, post_simfin_income, simfin_balance_by_ticker, post_simfin_balance, simfin_cashflow_by_ticker, post_simfin_cashflow
 from api_blue_lion import delete_simfin_income_by_id, delete_simfin_balance_by_id, delete_simfin_cashflow_by_id
 from api_blue_lion import ref_data_by_symbol, post_ref_data, put_ref_data
-from api_blue_lion import market_data_by_symbol, post_market_data, put_market_data
+from api_blue_lion import enriched_market_data_by_symbol, post_market_data, put_market_data
 from api_blue_lion import mdh_by_ref_data_id_date, post_market_data_historical, put_market_data_historical
 from api_log import log
 from api_mail import send_mail_html_self
@@ -182,7 +182,7 @@ def simfin_load(msg, market, func_simfin, func_get_by_ticker, func_delete_by_id,
         func_post(j)
         num_inserted += 1
         
-    ret = "%s: Inserted %d records, collisions simfin: %d, override %d, manual %d" % (msg, num_inserted, num_collisions_simfin, num_collisions_override, num_collisions_manual)
+    ret = "%s %s: Inserted %d records, collisions simfin: %d, override %d, manual %d" % (market, msg, num_inserted, num_collisions_simfin, num_collisions_override, num_collisions_manual)
     log.info(ret)
     return ret
 
@@ -212,7 +212,7 @@ def simfin_load_ref_data(market):
             num_updated += 1
             put_ref_data(cur['id'], cur['symbol'], cur['symbolAlphaVantage'], c['companyName'], sector, industry, cur['active'], cur['focus'])
 
-    ret = "ref_data: Inserted %d records, Updated %d records" % (num_inserted, num_updated)
+    ret = "%s ref_data: Inserted %d records, Updated %d records" % (market, num_inserted, num_updated)
     log.info(ret)
     return ret
 
@@ -227,6 +227,7 @@ def simfin_load_market_data(market):
     num_price_to_old = 0
     num_no_ref_data = 0
     num_no_close = 0
+    num_not_stale = 0
     for j in json:
         log.info("Processing %s" % (j['ticker']))
         if j['close'] == None:
@@ -237,7 +238,7 @@ def simfin_load_market_data(market):
             num_price_to_old += 1
             log.info("Price too old (%s), skipping" % (j['date']))
             continue
-        cur = market_data_by_symbol(j['ticker'])
+        cur = enriched_market_data_by_symbol(j['ticker'])
         if cur == None:
             ref = ref_data_by_symbol(j['ticker'])
             if ref == None:
@@ -246,11 +247,14 @@ def simfin_load_market_data(market):
                 continue
             num_inserted += 1
             post_market_data(ref['id'], j['close'])
-        else:
+        elif cur['stale']:
             num_updated += 1
             put_market_data(cur['id'], cur['refDataId'], j['close'])
+        else:
+            num_not_stale += 1
+            log.info("Skipping, market data not stale")
 
-    ret = "market_data: Inserted %d records, Updated %d records, %d price to old and %d no ref data and %d no close" % (num_inserted, num_updated, num_price_to_old, num_no_ref_data, num_no_close)
+    ret = "%s market_data: Inserted %d records, Updated %d records, %d price to old, %d no ref data, %d no close, %d not stale" % (market, num_inserted, num_updated, num_price_to_old, num_no_ref_data, num_no_close, num_not_stale)
     log.info(ret)
     return ret
 
@@ -282,7 +286,7 @@ def simfin_load_market_data_historical(market):
             num_updated += 1
             put_market_data_historical(cur['id'], cur['date'], cur['refDataId'], j['close'], j['adjClose'])
 
-    ret = "market_data_historical: Inserted %d records, Updated %d records, %d no ref data and %d no close" % (num_inserted, num_updated, num_no_ref_data, num_no_close)
+    ret = "%s market_data_historical: Inserted %d records, Updated %d records, %d no ref data and %d no close" % (market, num_inserted, num_updated, num_no_ref_data, num_no_close)
     log.info(ret)
     return ret
 

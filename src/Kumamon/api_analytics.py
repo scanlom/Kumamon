@@ -21,16 +21,18 @@ CONST_RETRY_SECONDS     = 61
 def last(symbol):
     # First try is yahoo finance (no throttling necessary)
     try:
+        log.info( "Yahoo Finance - Downloading quote for %s" % (symbol) )
         quote = _af.get_quote(symbol)
         return round(quote['QuoteSummaryStore']['price']['regularMarketPrice'], 2)
     except Exception as err:
-        log.warning( "Unable to retrieve last (Yahoo Finance) for %s" % (symbol) )
+        log.warning( "Yahoo Finance - Unable to retrieve last for %s" % (symbol) )
     
     # Second try is AlphaVantage
     sleep(CONST_THROTTLE_SECONDS) # Sleep to avoid throttling errors
     url = 'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=%s&apikey=2YG6SAN57NRYNPJ8' % (symbol)
     retry = 1
     while retry <= CONST_RETRIES:
+        log.info( "AlphaVantage - Downloading quote for %s" % (symbol) )
         try:
             raw_bytes = urlopen(url).read()
             data = loads(raw_bytes.decode())
@@ -38,11 +40,11 @@ def last(symbol):
             return last
         except Exception as err:
             if retry >= CONST_RETRIES:
-                log.warning( "Unable to retrieve last (AlphaVantage) for %s" % (symbol) )
+                log.warning( "AlphaVantage - Unable to retrieve last for %s" % (symbol) )
                 log.info( data )
                 raise err
             else:
-                log.warning( "Unable to retrieve last (AlphaVantage) for %s, retry %d" % (symbol, retry) )
+                log.warning( "AlphaVantage - Unable to retrieve last for %s, retry %d" % (symbol, retry) )
                 retry += 1
                 sleep(CONST_RETRY_SECONDS) # For some reason AlphaVantage is not returning, sleep to try and allow them to recover              
 
@@ -76,7 +78,7 @@ class historicals:
     
         except Exception as err:
             log.warning( "Unable to retrieve historicals for %s" % (self.symbol) )
-            log.exception(err)
+            raise err
 
     def change(self, days):
         # Make sure we're not off the end of the list - if we are, use the last one
@@ -132,10 +134,10 @@ def main():
     log.info("Started...")
 
     # Test
-    print( last('OAYLX') )
+    print( last('CHNG') )
     
-    foo = historicals('BAS.F')
-    print( foo.change_ten_years()[0] )
+    # foo = historicals('BAS.F')
+    # print( foo.change_ten_years()[0] )
     
     log.info("Completed")
 
