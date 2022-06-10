@@ -25,6 +25,23 @@ from api_log import log
 class database2:
     CONST_DAYS_IN_YEAR = 365
 
+    CONST_BLB_PORTFOLIO_TOTAL = 1
+    CONST_BLB_PORTFOLIO_SELFIE = 2
+    CONST_BLB_PORTFOLIO_OAK = 3
+    CONST_BLB_PORTFOLIO_MANAGED = 4
+    CONST_BLB_PORTFOLIO_RISK_ARB = 5
+    CONST_BLB_PORTFOLIO_TRADE_FIN = 6
+    CONST_BLB_PORTFOLIO_QUICK = 7
+    CONST_BLB_PORTFOLIO_PORTFOLIO = 8
+    CONST_BLB_PORTFOLIO_NONE = 99
+
+    CONST_BLB_TXN_TYPE_BUY = 1
+    CONST_BLB_TXN_TYPE_SELL = 2
+    CONST_BLB_TXN_TYPE_DIV = 3
+    CONST_BLB_TXN_TYPE_CI = 4
+    CONST_BLB_TXN_TYPE_DI = 5
+    CONST_BLB_TXN_TYPE_INT = 6
+
     CONST_INDEX_SELF = 1
     CONST_INDEX_ROE = 2
     CONST_INDEX_ROTC = 3
@@ -44,16 +61,6 @@ class database2:
     CONST_PORTFOLIO_RISK_ARB = 24
     CONST_PORTFOLIO_TRADE_FIN = 25
     CONST_PORTFOLIO_QUICK = 26
-
-    CONST_BLB_PORTFOLIO_TOTAL = 1
-    CONST_BLB_PORTFOLIO_SELFIE = 2
-    CONST_BLB_PORTFOLIO_OAK = 3
-    CONST_BLB_PORTFOLIO_MANAGED = 4
-    CONST_BLB_PORTFOLIO_RISK_ARB = 5
-    CONST_BLB_PORTFOLIO_TRADE_FIN = 6
-    CONST_BLB_PORTFOLIO_QUICK = 7
-    CONST_BLB_PORTFOLIO_PORTFOLIO = 8
-    CONST_BLB_PORTFOLIO_NONE = 99
 
     CONST_BALANCES_TYPE_AMEX_CX = 1
     CONST_BALANCES_TYPE_CAPITAL_ONE = 2
@@ -86,15 +93,23 @@ class database2:
     CONST_SYMBOL_DEBT = "DEBT"
 
     CONST_ACTION_TYPE_DIVIDEND_PORTFOLIO = 1
+    CONST_ACTION_TYPE_INTEREST = 2
+    CONST_ACTION_TYPE_DI = 6
+    CONST_ACTION_TYPE_BOUGHT_MANAGED = 7
+    CONST_ACTION_TYPE_DIVIDEND_TOTAL = 8
+    CONST_ACTION_TYPE_CI_PORTFOLIO = 10
     CONST_ACTION_TYPE_BOUGHT_PORTFOLIO = 11
+    CONST_ACTION_TYPE_SOLD_MANAGED = 15
     CONST_ACTION_TYPE_SOLD_PORTFOLIO = 16
     CONST_ACTION_TYPE_CI_TOTAL = 17
     CONST_ACTION_TYPE_DIVIDEND_PLAY = 19
+    CONST_ACTION_TYPE_CI_PLAY = 20
     CONST_ACTION_TYPE_BOUGHT_PLAY = 21
     CONST_ACTION_TYPE_SOLD_PLAY = 22
-    CONST_ACTION_TYPE_DIVIDEND = 26
+    CONST_ACTION_TYPE_CI = 23
     CONST_ACTION_TYPE_BOUGHT = 24
     CONST_ACTION_TYPE_SOLD = 25
+    CONST_ACTION_TYPE_DIVIDEND = 26
 
     def __init__(self):
         self.Base = automap_base()
@@ -236,11 +251,14 @@ class database2:
     def get_actions_by_date_range_type(self, start, end, type):
         return self.session.query(self.Actions).filter(self.Actions.date >= start, self.Actions.date <= end, self.Actions.actions_type_id == type).all()
 
+    def get_actions_all(self):
+        return self.session.query(self.Actions).order_by(asc(self.Actions.date)).all()
+
     def get_actions_by_type(self, type):
         return self.session.query(self.Actions).filter(self.Actions.actions_type_id == type).order_by(asc(self.Actions.date)).all()
 
     def get_actions_by_type_portfolio_id(self, type, portfolio_id):
-        if type is self.CONST_ACTION_TYPE_DIVIDEND:
+        if type is self.CONST_ACTION_TYPE_DIVIDEND or type is self.CONST_ACTION_TYPE_CI:
             return self.session.query(self.Actions).filter(self.Actions.actions_type_id == type, self.Actions.value2 == portfolio_id).order_by(asc(self.Actions.date)).all()
         return self.session.query(self.Actions).filter(self.Actions.actions_type_id == type, self.Actions.value3 == portfolio_id).order_by(asc(self.Actions.date)).all()
 

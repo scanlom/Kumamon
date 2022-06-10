@@ -4,11 +4,13 @@ Created on Jan 27, 2022
 @author: scanlom
 '''
 
-import datetime as _datetime
-import json as _json
+'''
+			if _abl.portfolios_history_by_portfolio_id_date(index_to, entry['date']) is None:
+				_abl.post_portfolios_history(entry)
+'''
+
 from api_database import database2
 import api_blue_lion as _abl
-import api_fundamentals as _af
 from api_log import log
 
 def populate_portfolios_history(db, index_from, balance_from, portfolio_from, index_tc_from, balance_tc_from, index_to, name_to):

@@ -46,7 +46,7 @@ def populate_worst_best(db, rpt, date_start, date_end):
     rpt.add_table( table, formats )
 
 def populate_contributors(db, rpt, start, end):
-    CONST_PORTFOLIO = 1
+    CONST_PORTFOLIO = 5
     
     contributors = {}
     constituents_start = db.get_portfolio_history_by_date(CONST_PORTFOLIO,start)
@@ -58,15 +58,15 @@ def populate_contributors(db, rpt, start, end):
             contributors[ row.symbol ][ 5 ] = row.value
         else:
             contributors[ row.symbol ] = [ row.symbol, 0, 0, 0, 0, row.value, 0, 0 ]
-    divs = db.get_actions_by_date_range_type(start, end, db.CONST_ACTION_TYPE_DIVIDEND_PORTFOLIO )
+    divs = db.get_actions_by_date_range_type(start, end, db.CONST_ACTION_TYPE_DIVIDEND_PLAY )
     for row in divs:
         if row.symbol in contributors:
             contributors[ row.symbol ][ 4 ] += row.value1
-    buys = db.get_actions_by_date_range_type(start, end, db.CONST_ACTION_TYPE_BOUGHT_PORTFOLIO )
+    buys = db.get_actions_by_date_range_type(start, end, db.CONST_ACTION_TYPE_BOUGHT_PLAY )
     for row in buys:
         if row.symbol in contributors:
             contributors[ row.symbol ][ 2 ] += row.value1     
-    sells = db.get_actions_by_date_range_type(start, end, db.CONST_ACTION_TYPE_SOLD_PORTFOLIO )
+    sells = db.get_actions_by_date_range_type(start, end, db.CONST_ACTION_TYPE_SOLD_PLAY )
     for row in sells:
         if row.symbol in contributors:
             contributors[ row.symbol ][ 3 ] += row.value1     
@@ -88,15 +88,16 @@ def main():
     db = database2()
     rpt = report()
 
-    date_start = db.get_index_history_min_date(5)
-    date_end = db.get_index_history_max_date(5)
+    date_start = date(2021,1,1) #db.get_index_history_min_date(5)
+    date_end = date(2022,1,1) #db.get_index_history_max_date(5)
 
-    populate_worst_best(db, rpt, date_start, date_end)
+    #populate_worst_best(db, rpt, date_start, date_end)
 
     rpt.add_heading("Contributors")
     populate_contributors(db, rpt, date_start, date_end)
 
     subject = 'Blue Lion - One Pager'
+    print(rpt.get_html())
     send_mail_html_self(subject, rpt.get_html())
     log.info("Completed")
 

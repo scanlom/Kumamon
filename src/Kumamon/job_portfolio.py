@@ -33,7 +33,20 @@ def blb_portfolio(db, id, name, value, index, index_id, portfolio_id):
     portfolio = _abl.portfolio_by_id(id)
 
     # Update portfolio row
-    _abl.put_portfolio(id, name, value, index, divisor, cash, 0, value, index, divisor, portfolio['model'], True)
+    _abl.put_portfolio({
+        'id': id, 
+        'name': name, 
+        'value': value, 
+        'index': index, 
+        'divisor': divisor, 
+        'cash': cash, 
+        'debt': 0, 
+        'valueTotalCapital': value, 
+        'indexTotalCapital': index, 
+        'divisorTotalCapital': divisor, 
+        'model': portfolio['model'], 
+        'active': True,
+        })
     portfolio = _abl.portfolio_by_id(id)
 
     # Populate portfolio history row (add or update)
@@ -147,7 +160,23 @@ def main():
     conn.close()
     
     # Blue Lion Bridge
-    _abl.put_portfolio(1, 'Total', total_roe, index_roe, db.get_divisor(db.CONST_INDEX_ROE), cash, debt, total_rotc, index_rotc, db.get_divisor(db.CONST_INDEX_ROTC), 0, True)
+    status = _abl.run_job_valuation_cut()
+    log.info("BLB: Valuation Cut Successful, Status %d" % (status))
+
+    '''_abl.put_portfolio({
+        'id': 1, 
+        'name': 'Total', 
+        'value': total_roe, 
+        'index': index_roe, 
+        'divisor': db.get_divisor(db.CONST_INDEX_ROE), 
+        'cash': cash, 
+        'debt': debt, \
+        'valueTotalCapital': total_rotc, 
+        'indexTotalCapital': index_rotc, 
+        'divisorTotalCapital': db.get_divisor(db.CONST_INDEX_ROTC), 
+        'model': 0, 
+        'active': True,
+        })
     portfolio = _abl.portfolio_by_id(1)
     date = _datetime.datetime.today().strftime('%Y-%m-%d')
     portfolio['portfolioId'] = 1
@@ -165,7 +194,7 @@ def main():
     blb_portfolio(db, 4, 'Managed', total_managed, index_managed, db.CONST_INDEX_MANAGED, db.CONST_PORTFOLIO_MANAGED)
     blb_portfolio(db, 5, 'Risk Arb', total_risk_arb, index_risk_arb, db.CONST_PORTFOLIO_RISK_ARB, db.CONST_PORTFOLIO_RISK_ARB)
     blb_portfolio(db, 6, 'Trade Fin', total_trade_fin, index_trade_fin, db.CONST_PORTFOLIO_TRADE_FIN, db.CONST_PORTFOLIO_TRADE_FIN)
-    blb_portfolio(db, 7, 'Quick', total_quick, index_quick, db.CONST_PORTFOLIO_QUICK, db.CONST_PORTFOLIO_QUICK)
+    blb_portfolio(db, 7, 'Quick', total_quick, index_quick, db.CONST_PORTFOLIO_QUICK, db.CONST_PORTFOLIO_QUICK)'''
 
     log.info("Completed")
     

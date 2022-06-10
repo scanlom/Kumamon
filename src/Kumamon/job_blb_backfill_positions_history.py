@@ -4,13 +4,15 @@ Created on Jan 27, 2022
 @author: scanlom
 '''
 
-import datetime as _datetime
-import json as _json
+'''
+TODO
+1. Togabou does not have a final update for positions, so when this script is run, some positions are left active because 
+there is not a final zero in position history (VNE for example)
+'''
+
 from api_database import database2
 import api_blue_lion as _abl
-import api_fundamentals as _af
 from api_log import log
-
 
 def map_blb_portfolio_id(db, id):
     mapIDs = {
@@ -29,19 +31,22 @@ def map_blb_portfolio_id(db, id):
     log.info("Failed to map portfolio id " + str(id))
     raise LookupError()
 
-
 def main():
     log.info("Started...")
 
     db = database2()
     rows = db.get_portfolio_history_all()
+    rows_processed = rows_portfolio_cash = rows_symbol_cash = rows_position_added = rows_history_added = 0
     for row in rows:
         log.info("Processing %s %d %s" % (row.date, row.type, row.symbol))
+        rows_processed += 1
         if row.type == db.CONST_PORTFOLIO_CASH:
             # Cash portfolio is handled by portfolios backfill
+            rows_portfolio_cash += 1
             continue
         if row.symbol == db.CONST_SYMBOL_CASH:
             # Cash symbol is handled by portfolios backfill
+            rows_symbol_cash += 1
             continue
         if row.type == db.CONST_PORTFOLIO_NONE:
             # None portfolio we should add ourselves if necessary
@@ -95,7 +100,9 @@ def main():
         data['date'] = row.date.strftime('%Y-%m-%d')
         data['positionId'] = position['id']
         _abl.post_positions_history(data)
+        rows_history_added += 1
 
+    log.info("%d rows_processed %d rows_portfolio_cash %d rows_symbol_cash %d rows_position_added %d rows_history_added" % (rows_processed, rows_portfolio_cash, rows_symbol_cash, rows_position_added, rows_history_added))
     log.info("Completed")
 
 

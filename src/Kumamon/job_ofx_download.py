@@ -12,7 +12,9 @@ from ofxtools.Parser import OFXTree
 from psycopg2 import connect
 from psycopg2.extras import DictCursor       
 from api_config import config_database_connect, config_ofx_symbols, config_ofx_user1, config_ofx_pass1, config_ofx_acct1, config_ofx_user2, config_ofx_pass2, config_ofx_acct2 
+from api_database import database2
 from api_log import log
+import api_blue_lion as _abl
 
 def main():
     log.info("Started...")
@@ -22,6 +24,7 @@ def main():
     # Connect to the db
     conn = connect( config_database_connect )
     cur = conn.cursor(cursor_factory=DictCursor)
+    db = database2()
 
     client = OFXClient("https://vesnc.vanguard.com/us/OfxProfileServlet", userid=config_ofx_user1,
                     org="Vanguard", fid="15103", brokerid="vanguard.com", prettyprint=True,
@@ -36,7 +39,13 @@ def main():
             sql = "update constituents set value=" + str(pos.mktval) + " where symbol='" + symbols[pos.secid.uniqueid] + "'"
             cur.execute(sql)
             conn.commit()
-            log.info("Set: " + symbols[pos.secid.uniqueid] + " to " + str(pos.mktval))
+            log.info("Togabou Set: " + symbols[pos.secid.uniqueid] + " to " + str(pos.mktval))
+            kpos = _abl.positions_by_symbol_portfolio_id(symbols[pos.secid.uniqueid], db.CONST_BLB_PORTFOLIO_MANAGED)
+            kpos['value'] = pos.mktval
+            kpos['index'] = kpos['value'] * kpos['divisor']
+            _abl.put_position(kpos)
+            log.info("Kapparu Set: " + str(kpos['refDataId']) + " to " + str(kpos['value']))
+
         elif pos.mktval > 0:
             log.info("Unprocessed: " + pos.secid.uniqueid + " with value " + str(pos.mktval))
     

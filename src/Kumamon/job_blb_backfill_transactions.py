@@ -4,155 +4,366 @@ Created on Jan 27, 2022
 @author: scanlom
 '''
 
+'''
+Backfills transactions, also updates position_history and portfolios_history with index values
+db.get_actions_by_type_portfolio_id
+
+_abl.post_transaction
+_abl.enriched_positions_by_portfolio_id
+_abl.enriched_positions_history_by_portfolio_id_date
+_abl.put_portfolios_history
+
+In order to run
+delete from transactions
+
+TODO:
+1. Verify I am pulling in all information from finances (verify the same thing for portfolios_history and positions_history and document in Arukuma)
+2. Update the position and portfolio rows with necessary info
+3. Portfolios do not seem to have an inaugural CI. Need to do that, and figure out the process for positions also (what == the begin state, what == the final state)
+4. For positions - how do i save index and total cash infusion on names that have closed out
+5. Add note
+6. How am I backfilling Play
+7. Sanity checks - position_history without txn first
+'''
+
+from copy import copy, deepcopy
 import datetime as _datetime
-import json as _json
 from api_database import database2
 import api_blue_lion as _abl
-import api_fundamentals as _af
 from api_log import log
 
-CONST_START_DATE    = _datetime.date(2014,12,1)
-CONST_END_DATE    = _datetime.date(2022,4,1)
-
-CONST_TXN_TYPE_BUY = 1
-CONST_TXN_TYPE_SELL = 2
-CONST_TXN_TYPE_DIV = 3
+CONST_START_DATE    = _datetime.date(1999,7,1)
+CONST_END_DATE    = _datetime.date(2004,4,5)
 
 def daterange(start_date, end_date):
     for n in range(int((end_date - start_date).days)):
         yield start_date + _datetime.timedelta(n)
 
-def process_action(db, next_index, actions, date, type, accumulated_dividends, cost_basis, divisor, index, total_cash_infusion, positions_by_symbol, positions_history_by_symbol, more_actions):
-	if next_index < len(actions) and actions[next_index].date.strftime("%Y-%m-%d") == date.strftime("%Y-%m-%d"):
-		symbol = actions[next_index].symbol
-		if symbol not in positions_by_symbol:
-			legacy_position = {
-				'id': 0,
-				'portfolioId': 0,
-				'active': False,
-			}
-			positions_by_symbol[symbol] = legacy_position # MSTODO: have to get the legacy positions in for real
-		position = positions_by_symbol[symbol]
-		position_history = None
-		if symbol in positions_history_by_symbol:
-			position_history = positions_history_by_symbol[symbol]
-		log.info(date.strftime("%Y-%m-%d") + " BLB Portfolio %d BLB Action Type %d Symbol %s Value %f" % (position['portfolioId'], type, symbol, actions[next_index].value1))
+def action_to_string(action):
+	return "ID: %d Date: %s Type: %d" % (action.id, action.date.strftime("%Y-%m-%d"), action.actions_type_id)
 
-		# accumulated_dividends and total_cash_infusion so we can answer "what is our cash profit?" using the top level record
-		if symbol not in accumulated_dividends:
-			accumulated_dividends[symbol] = 0.0
-		if symbol not in total_cash_infusion:
-			total_cash_infusion[symbol] = 0.0
+def make_position_id_key(portfolio_id, symbol):
+	return "%d:%s" % (portfolio_id, symbol)
 
-		# cost_basis so we can answer "what is our average price?" at the top level
-		if symbol not in cost_basis:
-			cost_basis[symbol] = 0.0
+def is_position_txn(db, txn):
+	if txn['type'] in [db.CONST_BLB_TXN_TYPE_BUY, db.CONST_BLB_TXN_TYPE_SELL, db.CONST_BLB_TXN_TYPE_DIV]:
+		return True
+	return False
 
-		if type is CONST_TXN_TYPE_BUY:
-			total_cash_infusion[symbol] += float(actions[next_index].value1)
-			cost_basis[symbol] += float(actions[next_index].value1)
-			if symbol not in index:
-				index[symbol] = float(actions[next_index].value1)
-				divisor[symbol] = 1.0
-			else:
-				last_index = position_history['index']
-				divisor[symbol] = last_index / ( position_history['value'] + float(actions[next_index].value1) )
-				index[symbol] = last_index
-		elif type is CONST_TXN_TYPE_SELL:
-			total_cash_infusion[symbol] -= float(actions[next_index].value1)
-			if actions[next_index].value2 == position_history['quantity']:
-				cost_basis[symbol] = 0.0
-				divisor[symbol] = 0.0
-				index[symbol] = 0.0
-			else:
-				cost_basis[symbol] -= float(cost_basis[symbol]) * (float(actions[next_index].value2) / position_history['quantity'])
-				last_index = position_history['index']
-				divisor[symbol] = last_index / ( position_history['value'] - float(actions[next_index].value1) )
-				index[symbol] = last_index
-		else:
-			accumulated_dividends[symbol] += float(actions[next_index].value1)
-			# There are circumstances where a dividend occurs after a buy but before the buy has been entered in Togabou, so there is no
-			# position_history object. We aren't going to go backfilling position_history objects that aren't in Togabou, so work around
-			if position_history is not None:
-				last_index = position_history['index']
-				divisor[symbol] = last_index / ( position_history['value'] - float(actions[next_index].value1) )
-				index[symbol] = position_history['value'] * divisor[symbol]
-			else:
-				last_index = index[symbol]
-				divisor[symbol] = last_index / ( last_index - float(actions[next_index].value1) )
-				index[symbol] = last_index * divisor[symbol]
-		txn = {
-			'date': date.strftime("%Y-%m-%d"),
-			'type': type,
-			'subType': 0,
-			'positionId': position['id'],
-			'portfolioId': position['portfolioId'],
-			'value': float(actions[next_index].value1),
-			'quantity': float(actions[next_index].value2),
-			'positionAfter': {
-				'symbol': symbol,
-				'costBasis': cost_basis[symbol],
-				'totalCashInfusion': total_cash_infusion[symbol],
-				'accumulatedDividends': accumulated_dividends[symbol],
-				'divisor': divisor[symbol],
-				'index': index[symbol],
-				}
+def convert_action(db, portfolio_id_map, position_id_map, action):
+	ret = {
+		'date': action.date.strftime("%Y-%m-%d"),
+		'type': 0,
+		'subType': 0,
+		'positionId': 0,
+		'portfolioId': 0,
+		'value': 0,
+		'quantity': 0,
+		'positionBefore': {
+			'symbol': action.symbol,
 		}
-		_abl.post_transaction(txn)
-		more_actions = True
-		next_index += 1
-	return next_index, more_actions
+	}
+	if action.actions_type_id == db.CONST_ACTION_TYPE_INTEREST:
+		ret['type'] = db.CONST_BLB_TXN_TYPE_INT
+		ret['portfolioId'] = db.CONST_BLB_PORTFOLIO_TOTAL
+		ret['value'] = float(action.value1)
+	elif action.actions_type_id == db.CONST_ACTION_TYPE_DI:
+		ret['type'] = db.CONST_BLB_TXN_TYPE_DI
+		ret['portfolioId'] = db.CONST_BLB_PORTFOLIO_TOTAL
+		ret['value'] = float(action.value1)
+	elif action.actions_type_id == db.CONST_ACTION_TYPE_CI_PORTFOLIO:
+		ret['type'] = db.CONST_BLB_TXN_TYPE_CI
+		ret['portfolioId'] = db.CONST_BLB_PORTFOLIO_PORTFOLIO
+		ret['value'] = float(action.value1)
+	elif action.actions_type_id == db.CONST_ACTION_TYPE_CI_TOTAL:
+		ret['type'] = db.CONST_BLB_TXN_TYPE_CI
+		ret['portfolioId'] = db.CONST_BLB_PORTFOLIO_TOTAL
+		ret['value'] = float(action.value1)
+	elif action.actions_type_id == db.CONST_ACTION_TYPE_CI_PLAY:
+		ret['type'] = db.CONST_BLB_TXN_TYPE_CI
+		ret['portfolioId'] = db.CONST_BLB_PORTFOLIO_SELFIE
+		ret['value'] = float(action.value1)
+	elif action.actions_type_id == db.CONST_ACTION_TYPE_CI:
+		ret['type'] = db.CONST_BLB_TXN_TYPE_CI
+		ret['portfolioId'] = portfolio_id_map[int(action.value2)]
+		ret['value'] = float(action.value1)
+	elif action.actions_type_id == db.CONST_ACTION_TYPE_DIVIDEND_PORTFOLIO:
+		ret['type'] = db.CONST_BLB_TXN_TYPE_DIV
+		ret['positionId'] = position_id_map[make_position_id_key(db.CONST_BLB_PORTFOLIO_PORTFOLIO, action.symbol)]
+		ret['portfolioId'] = db.CONST_BLB_PORTFOLIO_PORTFOLIO
+		ret['value'] = float(action.value1)
+	elif action.actions_type_id == db.CONST_ACTION_TYPE_BOUGHT_MANAGED:
+		ret['type'] = db.CONST_BLB_TXN_TYPE_CI
+		ret['portfolioId'] = db.CONST_BLB_PORTFOLIO_MANAGED
+		ret['value'] = float(action.value1)
+	elif action.actions_type_id == db.CONST_ACTION_TYPE_DIVIDEND_TOTAL:
+		ret['type'] = db.CONST_BLB_TXN_TYPE_INT
+		ret['portfolioId'] = db.CONST_BLB_PORTFOLIO_TOTAL
+		ret['value'] = float(action.value1)
+	elif action.actions_type_id == db.CONST_ACTION_TYPE_BOUGHT_PORTFOLIO:
+		ret['type'] = db.CONST_BLB_TXN_TYPE_BUY
+		ret['positionId'] = position_id_map[make_position_id_key(db.CONST_BLB_PORTFOLIO_PORTFOLIO, action.symbol)]
+		ret['portfolioId'] = db.CONST_BLB_PORTFOLIO_PORTFOLIO
+		ret['value'] = float(action.value1)
+		ret['quantity'] = float(action.value2)
+	elif action.actions_type_id == db.CONST_ACTION_TYPE_SOLD_MANAGED:
+		ret['type'] = db.CONST_BLB_TXN_TYPE_CI
+		ret['portfolioId'] = db.CONST_BLB_PORTFOLIO_MANAGED
+		ret['value'] = -1*float(action.value1)
+	elif action.actions_type_id == db.CONST_ACTION_TYPE_SOLD_PORTFOLIO:
+		ret['type'] = db.CONST_BLB_TXN_TYPE_SELL
+		ret['positionId'] = position_id_map[make_position_id_key(db.CONST_BLB_PORTFOLIO_PORTFOLIO, action.symbol)]
+		ret['portfolioId'] = db.CONST_BLB_PORTFOLIO_PORTFOLIO
+		ret['value'] = float(action.value1)
+		ret['quantity'] = float(action.value2)
+	elif action.actions_type_id == db.CONST_ACTION_TYPE_DIVIDEND_PLAY:
+		if action.symbol == 'CASH':
+			ret['type'] = db.CONST_BLB_TXN_TYPE_INT
+			ret['portfolioId'] = db.CONST_BLB_PORTFOLIO_SELFIE
+			ret['value'] = float(action.value1)			
+		else:
+			ret['type'] = db.CONST_BLB_TXN_TYPE_DIV
+			ret['positionId'] = position_id_map[make_position_id_key(db.CONST_BLB_PORTFOLIO_SELFIE, action.symbol)]
+			ret['portfolioId'] = db.CONST_BLB_PORTFOLIO_SELFIE
+			ret['value'] = float(action.value1)
+	elif action.actions_type_id == db.CONST_ACTION_TYPE_BOUGHT_PLAY:
+		ret['type'] = db.CONST_BLB_TXN_TYPE_BUY
+		ret['positionId'] = position_id_map[make_position_id_key(db.CONST_BLB_PORTFOLIO_SELFIE, action.symbol)]
+		ret['portfolioId'] = db.CONST_BLB_PORTFOLIO_SELFIE
+		ret['value'] = float(action.value1)
+		ret['quantity'] = float(action.value2)	
+	elif action.actions_type_id == db.CONST_ACTION_TYPE_SOLD_PLAY:
+		ret['type'] = db.CONST_BLB_TXN_TYPE_SELL
+		ret['positionId'] = position_id_map[make_position_id_key(db.CONST_BLB_PORTFOLIO_SELFIE, action.symbol)]
+		ret['portfolioId'] = db.CONST_BLB_PORTFOLIO_SELFIE
+		ret['value'] = float(action.value1)
+		ret['quantity'] = float(action.value2)
+	elif action.actions_type_id == db.CONST_ACTION_TYPE_DIVIDEND:
+		portfolio_id = portfolio_id_map[int(action.value2)]
+		if action.symbol == 'CASH':
+			ret['type'] = db.CONST_BLB_TXN_TYPE_INT
+			ret['portfolioId'] = portfolio_id
+			ret['value'] = float(action.value1)			
+		else:
+			ret['type'] = db.CONST_BLB_TXN_TYPE_DIV
+			ret['positionId'] = position_id_map[make_position_id_key(portfolio_id, action.symbol)]
+			ret['portfolioId'] = portfolio_id
+			ret['value'] = float(action.value1)
+	elif action.actions_type_id == db.CONST_ACTION_TYPE_BOUGHT:
+		portfolio_id = portfolio_id_map[int(action.value3)]
+		ret['type'] = db.CONST_BLB_TXN_TYPE_BUY
+		ret['positionId'] = position_id_map[make_position_id_key(portfolio_id, action.symbol)]
+		ret['portfolioId'] = portfolio_id
+		ret['value'] = float(action.value1)
+		ret['quantity'] = float(action.value2)	
+	elif action.actions_type_id == db.CONST_ACTION_TYPE_SOLD:
+		portfolio_id = portfolio_id_map[int(action.value3)]
+		ret['type'] = db.CONST_BLB_TXN_TYPE_SELL
+		ret['positionId'] = position_id_map[make_position_id_key(portfolio_id, action.symbol)]
+		ret['portfolioId'] = portfolio_id
+		ret['value'] = float(action.value1)
+		ret['quantity'] = float(action.value2)
+
+	return ret
+
+def default_portfolio_history(txn):
+	return {
+		'portfolioId': 0,
+		'totalCashInfusion': 0,
+		'divisor': 0,
+		'index': 0,
+		'value': 0,
+	}
+
+def default_position_history(txn):
+	return {
+		'portfolioId': 0,
+		'positionId': 0,
+		'symbol': "",
+		'costBasis': 0,
+		'totalCashInfusion': 0,
+		'accumulatedDividends': 0,
+		'divisor': 0,
+		'index': 0,
+		'value': 0,
+		'quantity': 0,
+	}
+
+def pre_prcosess_txn(db, txn, portfolios_histories, positions_histories):
+	# Get the history objects or create defaults
+	portfolio_history = default_portfolio_history(txn)
+	if txn['portfolioId'] in portfolios_histories:
+		portfolio_history = portfolios_histories[txn['portfolioId']]
+	else:
+		portfolio_history['portfolioId'] = txn['portfolioId']
+		portfolios_histories[txn['portfolioId']] = portfolio_history
+	position_history = default_position_history(txn)
+	if txn['positionId'] in positions_histories:
+		position_history = positions_histories[txn['positionId']]
+	else:
+		position_history['positionId'] = txn['positionId']
+		position_history['symbol'] = txn['positionBefore']['symbol']
+		positions_histories[txn['positionId']] = position_history
+
+	# Deep copy before objects (need to flip id's)
+	txn['portfolioBefore'] = deepcopy(portfolio_history)
+	txn['portfolioBefore']['id'] = txn['portfolioBefore']['portfolioId']
+	del txn['portfolioBefore']['portfolioId']
+	if is_position_txn(db, txn):
+		txn['positionBefore'] = deepcopy(position_history)
+		txn['positionBefore']['id'] = txn['positionBefore']['positionId']
+		del txn['positionBefore']['positionId']
+	
+	return portfolio_history, position_history
+
+def process_txn(db, txn, portfolio_history, position_history):
+	# Process the transaction
+	if txn['type'] == db.CONST_BLB_TXN_TYPE_BUY:
+		position_history['totalCashInfusion'] += txn['value']
+		position_history['costBasis'] += txn['value']
+		if position_history['index'] <= 0:
+			position_history['index'] = txn['value']
+			position_history['divisor'] = 1.0
+			position_history['value'] = txn['value']
+			position_history['quantity'] = txn['quantity']
+		else:
+			position_history['value'] += txn['value']
+			position_history['quantity'] += txn['quantity']
+			position_history['divisor'] = position_history['index'] / position_history['value']
+	elif txn['type'] == db.CONST_BLB_TXN_TYPE_SELL:
+		position_history['totalCashInfusion'] -= txn['value']
+		if int(txn['quantity']) == int(position_history['quantity']):  # Did we sell down to zero? Float qty's (VNE) caught us out, so compare the integer
+			position_history['costBasis'] = 0.0
+			position_history['quantity'] = 0.0
+			# Value and index are frozen at next to last values
+			position_history['value'] = txn['value']
+			position_history['index'] = position_history['value'] * position_history['divisor']
+		else:
+			position_history['costBasis'] -= position_history['costBasis'] * (txn['quantity'] / position_history['quantity'])
+			position_history['value'] -= txn['value']
+			position_history['quantity'] -= txn['quantity']
+			position_history['divisor'] = position_history['index'] / position_history['value']
+	elif txn['type'] == db.CONST_BLB_TXN_TYPE_DIV:
+		position_history['accumulatedDividends'] += txn['value']
+		# Due to the dividend the index will increase, but then we basically immediately take the dividend out
+		position_history['index'] = (position_history['value'] + txn['value']) * position_history['divisor']
+		position_history['divisor'] = position_history['index'] / position_history['value']
+	elif txn['type'] == db.CONST_BLB_TXN_TYPE_CI:
+		portfolio_history['totalCashInfusion'] += txn['value']
+		portfolio_history['value'] += txn['value']
+		portfolio_history['divisor'] = portfolio_history['index'] / portfolio_history['value']
+	#elif txn['type'] == db.CONST_BLB_TXN_TYPE_DI: 	# Nothing needs saving for this migration, txn's are kept for audit purposes only
+	#elif txn['type'] == db.CONST_BLB_TXN_TYPE_INT: # Nothing needs saving for this migration, txn's are kept for audit purposes only
+
+def post_process_txn(db, txn, portfolio_history, position_history):
+	# Deep copy after objects (need to flip id's)
+	txn['portfolioAfter'] = deepcopy(portfolio_history)
+	txn['portfolioAfter']['id'] = txn['portfolioAfter']['portfolioId']
+	del txn['portfolioAfter']['portfolioId']
+	if is_position_txn(db, txn):
+		txn['positionAfter'] = deepcopy(position_history)
+		txn['positionAfter']['id'] = txn['positionAfter']['positionId']
+		del txn['positionAfter']['positionId']
+
+def save_txn(txn):
+	# Save the txn
+	_abl.post_transaction(txn)
+
+def	update_histories_and_currents(date, portfolios_histories, positions_histories):
+	# Update any exisitng portfolio histories for today
+	actual_portfolios_histories =_abl.portfolios_history_by_date(date)
+	for actual_portfolio_history in actual_portfolios_histories:
+		if actual_portfolio_history['portfolioId'] in portfolios_histories:
+			portfolio_history = portfolios_histories[actual_portfolio_history['portfolioId']]
+			actual_portfolio_history['totalCashInfusion'] = portfolio_history['totalCashInfusion']
+			_abl.put_portfolios_history(actual_portfolio_history)
+
+			# Update the current portfolio
+			portfolio = _abl.portfolio_by_id(portfolio_history['portfolioId'])
+			portfolio['totalCashInfusion'] = actual_portfolio_history['totalCashInfusion']
+			_abl.put_portfolio(portfolio)
+		
+		# Save the existing portfolio history object for later use
+		portfolios_histories[actual_portfolio_history['portfolioId']] = actual_portfolio_history
+
+		# Update any exisitng position histories for today
+		actual_positions_histories =_abl.enriched_positions_history_by_portfolio_id_date(actual_portfolio_history['portfolioId'], date)
+		for actual_position_history in actual_positions_histories:
+			if actual_position_history['positionId'] in positions_histories:
+				position_history = positions_histories[actual_position_history['positionId']]
+				actual_position_history['costBasis'] = position_history['costBasis']
+				actual_position_history['totalCashInfusion'] = position_history['totalCashInfusion']
+				actual_position_history['accumulatedDividends'] = position_history['accumulatedDividends']
+				actual_position_history['divisor'] = position_history['divisor']
+				actual_position_history['index'] = actual_position_history['value'] * actual_position_history['divisor']
+				_abl.put_positions_history(actual_position_history)
+
+				# Update the current position
+				position = _abl.position_by_id(actual_position_history['positionId'])
+				position['costBasis'] = actual_position_history['costBasis']
+				position['totalCashInfusion'] = actual_position_history['totalCashInfusion']
+				position['accumulatedDividends'] = actual_position_history['accumulatedDividends']
+				position['divisor'] = actual_position_history['divisor']
+				position['index'] = actual_position_history['index']
+				_abl.put_position(position)
+			
+			# Save the existing position history object for later use
+			positions_histories[actual_position_history['positionId']] = actual_position_history
 
 def main():
 	log.info("Started...")
 
 	db = database2()
-	portfolio_blb_id = db.CONST_BLB_PORTFOLIO_SELFIE
-	portfolio_id = db.CONST_PORTFOLIO_PLAY
-	positions = _abl.enriched_positions_by_portfolio_id(portfolio_blb_id)
-	positions_by_symbol = {}
-	for position in positions:
-		positions_by_symbol[position['symbol']] = position
-	buys = db.get_actions_by_type_portfolio_id(db.CONST_ACTION_TYPE_BOUGHT, portfolio_id)
-	sells = db.get_actions_by_type_portfolio_id(db.CONST_ACTION_TYPE_SOLD, portfolio_id)
-	divs = db.get_actions_by_type_portfolio_id(db.CONST_ACTION_TYPE_DIVIDEND, portfolio_id)
-	next_buy = 0
-	next_sell = 0
-	next_div = 0
-	cost_basis = {}
-	divisor = {}
-	index = {}
-	total_cash_infusion = {}
-	accumulated_dividends = {}
-	positions_history_by_symbol = {}
-	for date in daterange(CONST_START_DATE, CONST_END_DATE):
-		log.info("Processing " + date.strftime("%Y-%m-%d"))
 
-		# MSTODO - Also verify quantities stay in line
-		# If there are actions for today, process them first (can be multiple)
+	# Build up a portfolio id map and position id map
+	portfolio_id_map = {
+		db.CONST_PORTFOLIO_SELF: db.CONST_BLB_PORTFOLIO_PORTFOLIO,
+        db.CONST_PORTFOLIO_MANAGED: db.CONST_BLB_PORTFOLIO_MANAGED,
+        db.CONST_PORTFOLIO_NONE: db.CONST_BLB_PORTFOLIO_NONE,
+        db.CONST_PORTFOLIO_PLAY: db.CONST_BLB_PORTFOLIO_SELFIE,
+        db.CONST_PORTFOLIO_OAK: db.CONST_BLB_PORTFOLIO_OAK,
+        db.CONST_PORTFOLIO_RISK_ARB: db.CONST_BLB_PORTFOLIO_RISK_ARB,
+        db.CONST_PORTFOLIO_TRADE_FIN: db.CONST_BLB_PORTFOLIO_TRADE_FIN,
+        db.CONST_PORTFOLIO_QUICK: db.CONST_BLB_PORTFOLIO_QUICK,
+	}
+
+	position_id_map = {}
+	for portfolio_id in portfolio_id_map.values():
+		positions = _abl.enriched_positions_all_by_portfolio_id(portfolio_id)
+		for position in positions:
+			position_id_map[make_position_id_key(portfolio_id, position['symbol'])] = position['id']
+
+	# Get all Togabou actions
+	actions = db.get_actions_all()
+	action_index = 0
+	log.info("Next action " + action_to_string(actions[action_index]))
+	portfolios_histories = positions_histories = {}
+
+	# For each day
+	for raw_date in daterange(CONST_START_DATE, CONST_END_DATE):
+		date = raw_date.strftime("%Y-%m-%d")
+		log.info("Proccessing " + date)
 		more_actions = True
-		while more_actions is True:
-			more_actions = False
-			next_buy, more_actions = process_action(db, next_buy, buys, date, CONST_TXN_TYPE_BUY, accumulated_dividends, cost_basis, divisor, index, total_cash_infusion, positions_by_symbol, positions_history_by_symbol, more_actions)
-			next_sell, more_actions = process_action(db, next_sell, sells, date, CONST_TXN_TYPE_SELL, accumulated_dividends, cost_basis, divisor, index, total_cash_infusion, positions_by_symbol, positions_history_by_symbol, more_actions)
-			next_div, more_actions = process_action(db, next_div, divs, date, CONST_TXN_TYPE_DIV, accumulated_dividends, cost_basis, divisor, index, total_cash_infusion, positions_by_symbol, positions_history_by_symbol, more_actions)
+		while more_actions == True:
+			if action_index < len(actions) and actions[action_index].date.strftime("%Y-%m-%d") == date:
+				# Convert Togabou action to Kapparu action
+				log.info("Convert action")
+				txn = convert_action(db, portfolio_id_map, position_id_map, actions[action_index])
+				if txn is not None:
+					# Process and save the Kapparu action
+					portfolio_history, position_history = pre_prcosess_txn(db, txn, portfolios_histories, positions_histories)
+					process_txn(db, txn, portfolio_history, position_history)
+					post_process_txn(db, txn, portfolio_history, position_history)
+					save_txn(txn)
+				else:
+					log.error("Proccessing " + date)
+				action_index += 1
+				log.info("Next action " + action_to_string(actions[action_index]))
+			else:
+				more_actions = False
 
-		# If there are any positions history entries for today, populate the new data and save the entry for later use
-		# Note - These are handled after actions, because under Togabou the action may have been handled and then history entry recreated (job_portfolio.py)
-		positions_histories = _abl.enriched_positions_history_by_portfolio_id_date(portfolio_blb_id, date.strftime("%Y-%m-%d"))
-		if positions_histories is not None:
-			for position_history in positions_histories:
-				symbol = position_history['symbol']
-				positions_history_by_symbol[symbol] = position_history
-				position_history['costBasis'] = cost_basis[symbol]
-				position_history['totalCashInfusion'] = total_cash_infusion[symbol]
-				position_history['accumulatedDividends'] = accumulated_dividends[symbol]
-				position_history['divisor'] = divisor[symbol]
-				position_history['index'] = position_history['value'] * divisor[symbol]
-				_abl.put_portfolios_history(position_history)
-
-				# Keep the most updated history entry for use in transaction processing
-				positions_history_by_symbol[symbol] = position_history
+		# Update Kapparu Portfolios, Positions, Portfolio Histories, Position Histories
+		update_histories_and_currents(date, portfolios_histories, positions_histories)
 
 	log.info("Completed")
 
