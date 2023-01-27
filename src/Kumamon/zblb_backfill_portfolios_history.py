@@ -5,8 +5,24 @@ Created on Jan 27, 2022
 '''
 
 '''
-			if _abl.portfolios_history_by_portfolio_id_date(index_to, entry['date']) is None:
-				_abl.post_portfolios_history(entry)
+Summary:
+Togabou -> Fujippi Migration. Backfills Togabou portfolios history to Fujippi. Note that
+index, divisor, totalCashInfusion, costBasis, and accumulatedDividends values are left blank
+to be populated by the transactions script
+
+Togabou Touchpoints:
+db.get_index_history_all
+db.get_index_history
+db.get_divisor_history
+db.get_balance_history
+db.get_portfolio_history_safe
+
+Sanomaru Touchpoints:
+_abl.portfolios_history_by_portfolio_id_date
+_abl.post_portfolios_history
+
+Prep:
+1. delete from portfolios_history (start with a clean slate)
 '''
 
 from api_database import database2

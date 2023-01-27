@@ -5,9 +5,25 @@ Created on Jan 27, 2022
 '''
 
 '''
-TODO
-1. Togabou does not have a final update for positions, so when this script is run, some positions are left active because 
-there is not a final zero in position history (VNE for example)
+Summary:
+Togabou -> Fujippi Migration. Backfills Togabou positions history to Fujippi. Note that
+index, divisor, totalCashInfusion, costBasis, and accumulatedDividends values are left blank
+to be populated by the transactions script
+
+Togabou Touchpoints:
+db.get_portfolio_history_all
+
+Sanomaru Touchpoints:
+_abl.portfolios_history_by_portfolio_id_date
+_abl.post_portfolios_history
+_abl.ref_data_by_symbol
+_abl.positions_by_symbol_portfolio_id
+_abl.put_position
+_abl.post_positions_history
+
+Prep:
+1. Ensure portfolios_history is up to date
+2. delete from positions_history (start with a clean slate)
 '''
 
 from api_database import database2
@@ -94,11 +110,14 @@ def main():
         else:
             # Update the position with current data (records are sorted by date so our final update will the one kept)
             data['active'] = position['active']
+            data['model'] = position['model']
             data['id'] = position['id']
             _abl.put_position(data)
             del data['id']
         data['date'] = row.date.strftime('%Y-%m-%d')
         data['positionId'] = position['id']
+        data['active'] = True # Position would have been active at the point history was snapped
+        data['model'] = 0.0 # There was no tracking of model history under Togabou
         _abl.post_positions_history(data)
         rows_history_added += 1
 

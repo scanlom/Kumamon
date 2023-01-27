@@ -29,8 +29,8 @@ def main():
     instruments = ref_data()
 
     # For Testing
-    # instruments_focus = [i for i in instruments_focus if i['symbol'] == 'ABBV']
-    # instruments = [i for i in instruments if i['symbol'] == 'ABBV']
+    # instruments_focus = [i for i in instruments_focus if i['symbol'] == 'AZO']
+    # instruments = [i for i in instruments if i['symbol'] == 'AZO']
    
     log.info("Loading focus names...")
     

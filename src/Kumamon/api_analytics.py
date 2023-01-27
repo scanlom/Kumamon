@@ -23,7 +23,7 @@ def last(symbol):
     try:
         log.info( "Yahoo Finance - Downloading quote for %s" % (symbol) )
         quote = _af.get_quote(symbol)
-        return round(quote['QuoteSummaryStore']['price']['regularMarketPrice'], 2)
+        return round(quote['QuoteSummaryStore']['price']['regularMarketPrice']['raw'], 2)
     except Exception as err:
         log.warning( "Yahoo Finance - Unable to retrieve last for %s" % (symbol) )
     
@@ -134,7 +134,7 @@ def main():
     log.info("Started...")
 
     # Test
-    print( last('CHNG') )
+    print( last('HA') )
     
     # foo = historicals('BAS.F')
     # print( foo.change_ten_years()[0] )

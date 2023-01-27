@@ -11,15 +11,17 @@ import api_fundamentals as _af
 from api_log import log
 
 def safe_copy( df, json, name_df, name_json ):
-    if name_df in df and df[ name_df ] is not None and df[ name_df ] == df[ name_df ]:
-        json[ name_json ] = int( df[ name_df ] )
+    log.info('safe_copy from %s to %s' % (name_df, name_json))
+    if name_df in df and df[ name_df ] is not None and 'raw' in df[ name_df ] and df[ name_df ]['raw'] is not None and df[ name_df ]['raw'] == df[ name_df ]['raw']:
+        json[ name_json ] = int( df[ name_df ]['raw'] )
 
 def safe_copy_two( df, json, name_df, name_df_two, name_json ):
+    log.info('safe_copy_two from %s, %s to %s' % (name_df, name_df_two, name_json))
     val = 0
     save = False
     for name in [ name_df, name_df_two ]:
-        if name in df and df[ name ] is not None and df[ name ] == df[ name ]:
-            val += df[ name ]
+        if name in df and df[ name ] is not None and 'raw' in df[ name ] and df[ name ]['raw'] is not None and df[ name ]['raw'] == df[ name ]['raw']:
+            val += df[ name ]['raw']
             save = True
     if save:
         json[ name_json ] = int( val )
@@ -36,14 +38,14 @@ def load_ref_data( ticker, quote ):
     if _abl.market_data_by_symbol( ticker ) is None:
         ref_data = _abl.ref_data_by_symbol( ticker )
         log.info("Posting market_data for " + ticker)
-        _abl.post_market_data( ref_data['id'], quote['QuoteSummaryStore']['price']['regularMarketPrice'] )
+        _abl.post_market_data( ref_data['id'], quote['QuoteSummaryStore']['price']['regularMarketPrice']['raw'] )
 
 def process_statements( ticker, currency, statements, simple_mappings, double_mappings, time_series_store,  time_series_mappings ):
     ret = {}
     for foo in statements:
         print(foo)
         bar = {}
-        report_date = _datetime.datetime.utcfromtimestamp(foo['endDate'])
+        report_date = _datetime.datetime.utcfromtimestamp(foo['endDate']['raw'])
         bar['ticker'] = ticker
         bar['currency'] = currency
         bar['reportDate'] = bar['publishDate'] = bar['restatedDate'] = report_date.strftime("%Y-%m-%dT00:00:00Z")
@@ -66,10 +68,10 @@ def process_statements( ticker, currency, statements, simple_mappings, double_ma
             log.info('Processing time_series_store %s with asOfDate %s' % (tuple[0],foo['asOfDate'][0:7]))
             for key in ret:
                 if foo['asOfDate'][0:7] == key[0:7]:
-                    ret[key][tuple[1]] = int( foo['reportedValue'] )
+                    ret[key][tuple[1]] = int( foo['reportedValue']['raw'] )
                     break
                 elif foo['asOfDate'][0:4] == key[0:4]:
-                    ret[key][tuple[1]] = int( foo['reportedValue'] )
+                    ret[key][tuple[1]] = int( foo['reportedValue']['raw'] )
                     break
 
     return ret
@@ -98,26 +100,32 @@ def load_statements( ticker, statements, get_statements, post_statement, delete_
             post_statement(foo)
 
 def load_income_statements( ticker, financials ):
-    income_statements = process_statements(ticker, financials['QuoteSummaryStore']['earnings']['financialCurrency'],
-        financials['QuoteSummaryStore']['incomeStatementHistory']['incomeStatementHistory'], [
-            [ 'totalRevenue', 'revenue' ],
-            [ 'costOfRevenue', 'costRevenue' ],
-            [ 'grossProfit', 'grossProfit' ],
-            [ 'sellingGeneralAdministrative', 'sellingGenAdmin' ],
-            [ 'researchDevelopment', 'researchDev' ],
-            [ 'operatingIncome', 'operatingIncome' ],
-            [ 'interestExpense', 'interestExpNet' ],
-            [ 'incomeBeforeTax', 'pretaxIncomeLoss' ],
-            [ 'incomeTaxExpense', 'incomeTax' ],
-            [ 'netIncomeFromContinuingOps', 'incomeContOp' ],
-            [ 'netIncome', 'netIncome' ],
-            [ 'netIncomeApplicableToCommonShares', 'netIncomeCommon' ],
-        ], [
-        ], financials['QuoteTimeSeriesStore']['timeSeries'], [
-            [ 'annualBasicAverageShares', 'sharesBasic' ],
-            [ 'annualDilutedAverageShares', 'sharesDiluted' ]
-        ]
-        )
+    try:
+        income_statements = process_statements(ticker, financials['QuoteSummaryStore']['earnings']['financialCurrency'],
+            financials['QuoteSummaryStore']['incomeStatementHistory']['incomeStatementHistory'], [
+                [ 'totalRevenue', 'revenue' ],
+                [ 'costOfRevenue', 'costRevenue' ],
+                [ 'grossProfit', 'grossProfit' ],
+                [ 'sellingGeneralAdministrative', 'sellingGenAdmin' ],
+                [ 'researchDevelopment', 'researchDev' ],
+                [ 'operatingIncome', 'operatingIncome' ],
+                [ 'interestExpense', 'interestExpNet' ],
+                [ 'incomeBeforeTax', 'pretaxIncomeLoss' ],
+                [ 'incomeTaxExpense', 'incomeTax' ],
+                [ 'netIncomeFromContinuingOps', 'incomeContOp' ],
+                [ 'netIncome', 'netIncome' ],
+                [ 'netIncomeApplicableToCommonShares', 'netIncomeCommon' ],
+            ], [
+            ], financials['QuoteTimeSeriesStore']['timeSeries'], [
+                [ 'annualBasicAverageShares', 'sharesBasic' ],
+                [ 'annualDilutedAverageShares', 'sharesDiluted' ]
+            ]
+            )
+    except Exception as err:
+        with open('load_income_statements.json', 'w') as f:
+            _json.dump(financials, f)
+        log.error("json written to load_income_statements.json")
+        raise err
     load_statements( ticker, income_statements, _abl.simfin_income_by_ticker, _abl.post_simfin_income, _abl.delete_simfin_income_by_id )
 
 def load_balance_sheets( ticker, financials ):
@@ -172,7 +180,7 @@ def load_cashflow_statements( ticker, financials ):
 def main():
     log.info("Started...")
 
-    ticker = "BRK-B"
+    ticker = "HZNP"
     quote = _af.get_quote(ticker)
     load_ref_data(ticker, quote)
     financials = _af.get_financials(ticker)

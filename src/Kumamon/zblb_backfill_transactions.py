@@ -5,25 +5,22 @@ Created on Jan 27, 2022
 '''
 
 '''
-Backfills transactions, also updates position_history and portfolios_history with index values
+Summary:
+Togabou -> Fujippi Migration. Backfills Togabou actions to Fujippi transactions, also updates Fujippi position_history and portfolios_history with
+index, divisor, totalCashInfusion, costBasis, and accumulatedDividends values
+
+Togabou Touchpoints:
 db.get_actions_by_type_portfolio_id
 
+Sanomaru Touchpoints:
 _abl.post_transaction
 _abl.enriched_positions_by_portfolio_id
 _abl.enriched_positions_history_by_portfolio_id_date
 _abl.put_portfolios_history
 
-In order to run
-delete from transactions
-
-TODO:
-1. Verify I am pulling in all information from finances (verify the same thing for portfolios_history and positions_history and document in Arukuma)
-2. Update the position and portfolio rows with necessary info
-3. Portfolios do not seem to have an inaugural CI. Need to do that, and figure out the process for positions also (what == the begin state, what == the final state)
-4. For positions - how do i save index and total cash infusion on names that have closed out
-5. Add note
-6. How am I backfilling Play
-7. Sanity checks - position_history without txn first
+Prep:
+1. Ensure positions_history and portfolios_history are up to date
+2. delete from transactions (start with a clean slate)
 '''
 
 from copy import copy, deepcopy
@@ -32,8 +29,17 @@ from api_database import database2
 import api_blue_lion as _abl
 from api_log import log
 
-CONST_START_DATE    = _datetime.date(1999,7,1)
-CONST_END_DATE    = _datetime.date(2004,4,5)
+# For Debugging
+def log_position_history(foo):
+	log.info( "Position History ID: %d, Symbol: %s, Qty: %f, Val: %f, Index: %f" % (foo['positionId'], foo['symbol'], foo['quantity'], foo['value'], foo['index'] ) )
+
+def log_position_history_by_id(id, positions_histories):
+	if id in positions_histories:
+		foo = positions_histories[id]
+		log_position_history(foo)
+
+CONST_START_DATE    = _datetime.date(1999,8,1)
+CONST_END_DATE    = _datetime.date(2023,1,31)
 
 def daterange(start_date, end_date):
     for n in range(int((end_date - start_date).days)):
@@ -61,7 +67,8 @@ def convert_action(db, portfolio_id_map, position_id_map, action):
 		'quantity': 0,
 		'positionBefore': {
 			'symbol': action.symbol,
-		}
+		},
+		'note': "",
 	}
 	if action.actions_type_id == db.CONST_ACTION_TYPE_INTEREST:
 		ret['type'] = db.CONST_BLB_TXN_TYPE_INT
@@ -222,8 +229,9 @@ def process_txn(db, txn, portfolio_history, position_history):
 		position_history['totalCashInfusion'] += txn['value']
 		position_history['costBasis'] += txn['value']
 		if position_history['index'] <= 0:
-			position_history['index'] = txn['value']
-			position_history['divisor'] = 1.0
+			# Start index at 100 so we can easily check total pct gain
+			position_history['index'] = 100.0
+			position_history['divisor'] =  position_history['index'] / txn['value']
 			position_history['value'] = txn['value']
 			position_history['quantity'] = txn['quantity']
 		else:
@@ -235,9 +243,12 @@ def process_txn(db, txn, portfolio_history, position_history):
 		if int(txn['quantity']) == int(position_history['quantity']):  # Did we sell down to zero? Float qty's (VNE) caught us out, so compare the integer
 			position_history['costBasis'] = 0.0
 			position_history['quantity'] = 0.0
-			# Value and index are frozen at next to last values
-			position_history['value'] = txn['value']
-			position_history['index'] = position_history['value'] * position_history['divisor']
+			position_history['value'] = 0.0
+			# Index is calculated one final time, and divisor is frozen at the final value
+			position_history['index'] = txn['value'] * position_history['divisor']
+			# There may be a sell after the last history row back when we had gaps, so force an update to the position table below in update_histories_and_currents
+			position_history['forceUpdate'] = True
+			log.info( "process_txn: %s (%d) sold to zero, index frozen at %f" % (txn['positionBefore']['symbol'],  position_history['positionId'], position_history['index']) )
 		else:
 			position_history['costBasis'] -= position_history['costBasis'] * (txn['quantity'] / position_history['quantity'])
 			position_history['value'] -= txn['value']
@@ -245,15 +256,17 @@ def process_txn(db, txn, portfolio_history, position_history):
 			position_history['divisor'] = position_history['index'] / position_history['value']
 	elif txn['type'] == db.CONST_BLB_TXN_TYPE_DIV:
 		position_history['accumulatedDividends'] += txn['value']
-		# Due to the dividend the index will increase, but then we basically immediately take the dividend out
-		position_history['index'] = (position_history['value'] + txn['value']) * position_history['divisor']
-		position_history['divisor'] = position_history['index'] / position_history['value']
+		# A dividend may come in after a position is sold down, we've decided to drop this for final index calculation, as there is no good way to handle it
+		if position_history['value'] > 0.0:
+			# Due to the dividend the index will increase, but then we basically immediately take the dividend out
+			position_history['index'] = (position_history['value'] + txn['value']) * position_history['divisor']
+			position_history['divisor'] = position_history['index'] / position_history['value']
 	elif txn['type'] == db.CONST_BLB_TXN_TYPE_CI:
 		portfolio_history['totalCashInfusion'] += txn['value']
 		portfolio_history['value'] += txn['value']
 		portfolio_history['divisor'] = portfolio_history['index'] / portfolio_history['value']
-	#elif txn['type'] == db.CONST_BLB_TXN_TYPE_DI: 	# Nothing needs saving for this migration, txn's are kept for audit purposes only
-	#elif txn['type'] == db.CONST_BLB_TXN_TYPE_INT: # Nothing needs saving for this migration, txn's are kept for audit purposes only
+	#elif txn['type'] == db.CONST_BLB_TXN_TYPE_DI: 	# Nothing needs updating for this migration, txn's are kept for audit purposes only
+	#elif txn['type'] == db.CONST_BLB_TXN_TYPE_INT: # Nothing needs updating for this migration, txn's are kept for audit purposes only
 
 def post_process_txn(db, txn, portfolio_history, position_history):
 	# Deep copy after objects (need to flip id's)
@@ -286,7 +299,7 @@ def	update_histories_and_currents(date, portfolios_histories, positions_historie
 		# Save the existing portfolio history object for later use
 		portfolios_histories[actual_portfolio_history['portfolioId']] = actual_portfolio_history
 
-		# Update any exisitng position histories for today
+		# Update any exisitng position histories for today 
 		actual_positions_histories =_abl.enriched_positions_history_by_portfolio_id_date(actual_portfolio_history['portfolioId'], date)
 		for actual_position_history in actual_positions_histories:
 			if actual_position_history['positionId'] in positions_histories:
@@ -295,7 +308,15 @@ def	update_histories_and_currents(date, portfolios_histories, positions_historie
 				actual_position_history['totalCashInfusion'] = position_history['totalCashInfusion']
 				actual_position_history['accumulatedDividends'] = position_history['accumulatedDividends']
 				actual_position_history['divisor'] = position_history['divisor']
-				actual_position_history['index'] = actual_position_history['value'] * actual_position_history['divisor']
+				if int(position_history['value']) == 0 and position_history['index'] > 0.0:
+					# If we've already sold down to zero, leave the index frozen to the last value (see CONST_BLB_TXN_TYPE_SELL handling above)
+					actual_position_history['index'] = 	position_history['index']
+					# Also, value and quantity should be zero (ZGNX is an example of value left around in Togabou position history after the final sell)
+					actual_position_history['value'] = 	actual_position_history['quantity'] = 0.0
+					log.info( "update_histories_and_currents: pos %d value zero, using index frozen at %f" % (actual_position_history['positionId'], position_history['index']) )
+				else:
+					# If the position is still live, calculate index with the latest history value 
+					actual_position_history['index'] = actual_position_history['value'] * actual_position_history['divisor']
 				_abl.put_positions_history(actual_position_history)
 
 				# Update the current position
@@ -306,9 +327,24 @@ def	update_histories_and_currents(date, portfolios_histories, positions_historie
 				position['divisor'] = actual_position_history['divisor']
 				position['index'] = actual_position_history['index']
 				_abl.put_position(position)
+				position_history.pop('forceUpdate', None) 
 			
 			# Save the existing position history object for later use
 			positions_histories[actual_position_history['positionId']] = actual_position_history
+
+		for position_history in positions_histories.values():
+			if 'forceUpdate' in position_history:
+				# We have sold down to zero, but there is not a position history row today. Update positions directly in case there is not another history row
+				position = _abl.position_by_id(position_history['positionId'])
+				position['costBasis'] = position_history['costBasis']
+				position['totalCashInfusion'] = position_history['totalCashInfusion']
+				position['accumulatedDividends'] = position_history['accumulatedDividends']
+				position['divisor'] = position_history['divisor']
+				position['index'] = position_history['index']
+				position['quantity'] = position_history['quantity']
+				position['value'] = position_history['value']
+				_abl.put_position(position)
+				position_history.pop('forceUpdate', None)
 
 def main():
 	log.info("Started...")
@@ -336,6 +372,15 @@ def main():
 	# Get all Togabou actions
 	actions = db.get_actions_all()
 	action_index = 0
+
+	# For debugging, catch up actions to CONST_START_DATE
+	while action_index < len(actions):
+		if actions[action_index].date < CONST_START_DATE:
+			action_index += 1
+			log.info("Skipping action at " + actions[action_index].date.strftime("%Y-%m-%d"))
+		else:
+			break
+
 	log.info("Next action " + action_to_string(actions[action_index]))
 	portfolios_histories = positions_histories = {}
 
@@ -358,7 +403,8 @@ def main():
 				else:
 					log.error("Proccessing " + date)
 				action_index += 1
-				log.info("Next action " + action_to_string(actions[action_index]))
+				if action_index < len(actions):
+					log.info("Next action " + action_to_string(actions[action_index]))
 			else:
 				more_actions = False
 

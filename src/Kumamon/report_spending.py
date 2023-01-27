@@ -20,7 +20,7 @@ CONST_PROJECT_TYPE_FIXED           = 1
 
 def table_col_sum(table, start, col):
     sum = 0
-    for i in range(start, len(table)-1):
+    for i in range(start, len(table)):
         sum += table[i][col]
     return sum
 
@@ -55,14 +55,15 @@ def main():
         ]
     append_budget_row( db, table, "Base", [0,2,3,4,5,8,12,96], CONST.BUDGET_BASE, CONST_PROJECT_TYPE_PROJECT )
     append_budget_row( db, table, "Rent", [1], CONST.BUDGET_RENT, CONST_PROJECT_TYPE_FIXED )
-    append_budget_row( db, table, "Travel", [7], CONST.BUDGET_TRAVEL, CONST_PROJECT_TYPE_PROJECT )
+    append_budget_row( db, table, "Travel", [7], CONST.BUDGET_TRAVEL, CONST_PROJECT_TYPE_FIXED )
     append_budget_row( db, table, "Helper", [9], CONST.BUDGET_HELPER, CONST_PROJECT_TYPE_PROJECT )
-    append_budget_row( db, table, "Monchichi", [94], CONST.BUDGET_MONCHICHI, CONST_PROJECT_TYPE_PROJECT )
-    append_budget_row( db, table, "Deux", [93], CONST.BUDGET_DEUX, CONST_PROJECT_TYPE_PROJECT )
-    append_budget_row( db, table, "Fumi", [11], CONST.BUDGET_FUMI, CONST_PROJECT_TYPE_PROJECT )
-    append_budget_row( db, table, "Mike", [6,10], CONST.BUDGET_MIKE, CONST_PROJECT_TYPE_PROJECT )
-    append_budget_row( db, table, "Medical", [13], CONST.BUDGET_MEDICAL, CONST_PROJECT_TYPE_FIXED )
-    append_budget_row( db, table, "Special", [95,97,98,99], CONST.BUDGET_SPECIAL, CONST_PROJECT_TYPE_FIXED )
+    append_budget_row( db, table, "Monchichi", [94], CONST.BUDGET_MONCHICHI, CONST_PROJECT_TYPE_FIXED )
+    append_budget_row( db, table, "Deux", [93], CONST.BUDGET_DEUX, CONST_PROJECT_TYPE_FIXED )
+    append_budget_row( db, table, "Fumi", [11], CONST.BUDGET_FUMI, CONST_PROJECT_TYPE_FIXED )
+    append_budget_row( db, table, "Mike", [6,10], CONST.BUDGET_MIKE, CONST_PROJECT_TYPE_FIXED )
+    append_budget_row( db, table, "Medical", [13], CONST.BUDGET_MEDICAL, CONST_PROJECT_TYPE_PROJECT )
+    append_budget_row( db, table, "Car", [14], CONST.BUDGET_CAR, CONST_PROJECT_TYPE_PROJECT )
+    append_budget_row( db, table, "Special", [92,95,97,98,99], CONST.BUDGET_SPECIAL, CONST_PROJECT_TYPE_PROJECT )
     
     # Append a sub total row. Use the totals from above so we can take advantage of the project types
     table.append( [ "SubTotal", table_col_sum(table, 1, 1), table_col_sum(table, 1, 2), table_col_sum(table, 1, 3), table_col_sum(table, 1, 4) ] )
