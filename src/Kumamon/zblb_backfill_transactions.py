@@ -20,7 +20,9 @@ _abl.put_portfolios_history
 
 Prep:
 1. Ensure positions_history and portfolios_history are up to date
-2. delete from transactions (start with a clean slate)
+2. Run:
+delete from transactions;
+ALTER SEQUENCE transactions_id_seq RESTART WITH 1;
 '''
 
 from copy import copy, deepcopy
@@ -28,6 +30,10 @@ import datetime as _datetime
 from api_database import database2
 import api_blue_lion as _abl
 from api_log import log
+
+CONST_START_DATE    	= _datetime.date(1999,8,1)
+CONST_END_DATE    		= _datetime.date(2023,2,5)
+CONST_TRACK_POS_INDEX 	= [ 2,3,5,6,7,8 ] # Don't track position level indices for Managed or None as we don't have all the txn's (portfolio level index is always tracked)
 
 # For Debugging
 def log_position_history(foo):
@@ -38,8 +44,10 @@ def log_position_history_by_id(id, positions_histories):
 		foo = positions_histories[id]
 		log_position_history(foo)
 
-CONST_START_DATE    = _datetime.date(1999,8,1)
-CONST_END_DATE    = _datetime.date(2023,1,31)
+def log_portfolio_txn(foo):
+	if foo['portfolioAfter'] is not None:
+		log.info( "Transaction: Type %d, Portfolio %d, Position %d, Val: %f, Index: %f, TCI %f" % (foo['type'], foo['portfolioId'], foo['positionId'], foo['value'], foo['portfolioAfter']['index'], foo['portfolioAfter']['totalCashInfusion']))
+# Done
 
 def daterange(start_date, end_date):
     for n in range(int((end_date - start_date).days)):
@@ -68,7 +76,7 @@ def convert_action(db, portfolio_id_map, position_id_map, action):
 		'positionBefore': {
 			'symbol': action.symbol,
 		},
-		'note': "",
+		'note': "Backfilled, Togabou ID " + str(action.id),
 	}
 	if action.actions_type_id == db.CONST_ACTION_TYPE_INTEREST:
 		ret['type'] = db.CONST_BLB_TXN_TYPE_INT
@@ -162,14 +170,16 @@ def convert_action(db, portfolio_id_map, position_id_map, action):
 		ret['positionId'] = position_id_map[make_position_id_key(portfolio_id, action.symbol)]
 		ret['portfolioId'] = portfolio_id
 		ret['value'] = float(action.value1)
-		ret['quantity'] = float(action.value2)	
+		if action.value2 is not None:
+			ret['quantity'] = float(action.value2)	
 	elif action.actions_type_id == db.CONST_ACTION_TYPE_SOLD:
 		portfolio_id = portfolio_id_map[int(action.value3)]
 		ret['type'] = db.CONST_BLB_TXN_TYPE_SELL
 		ret['positionId'] = position_id_map[make_position_id_key(portfolio_id, action.symbol)]
 		ret['portfolioId'] = portfolio_id
 		ret['value'] = float(action.value1)
-		ret['quantity'] = float(action.value2)
+		if action.value2 is not None:
+			ret['quantity'] = float(action.value2)
 
 	return ret
 
@@ -194,6 +204,7 @@ def default_position_history(txn):
 		'index': 0,
 		'value': 0,
 		'quantity': 0,
+		'pricingType': database2.CONST_PRICING_TYPE_BY_PRICE,
 	}
 
 def pre_prcosess_txn(db, txn, portfolios_histories, positions_histories):
@@ -225,46 +236,52 @@ def pre_prcosess_txn(db, txn, portfolios_histories, positions_histories):
 
 def process_txn(db, txn, portfolio_history, position_history):
 	# Process the transaction
-	if txn['type'] == db.CONST_BLB_TXN_TYPE_BUY:
-		position_history['totalCashInfusion'] += txn['value']
-		position_history['costBasis'] += txn['value']
-		if position_history['index'] <= 0:
-			# Start index at 100 so we can easily check total pct gain
-			position_history['index'] = 100.0
-			position_history['divisor'] =  position_history['index'] / txn['value']
-			position_history['value'] = txn['value']
-			position_history['quantity'] = txn['quantity']
-		else:
-			position_history['value'] += txn['value']
-			position_history['quantity'] += txn['quantity']
-			position_history['divisor'] = position_history['index'] / position_history['value']
-	elif txn['type'] == db.CONST_BLB_TXN_TYPE_SELL:
-		position_history['totalCashInfusion'] -= txn['value']
-		if int(txn['quantity']) == int(position_history['quantity']):  # Did we sell down to zero? Float qty's (VNE) caught us out, so compare the integer
-			position_history['costBasis'] = 0.0
-			position_history['quantity'] = 0.0
-			position_history['value'] = 0.0
-			# Index is calculated one final time, and divisor is frozen at the final value
-			position_history['index'] = txn['value'] * position_history['divisor']
-			# There may be a sell after the last history row back when we had gaps, so force an update to the position table below in update_histories_and_currents
-			position_history['forceUpdate'] = True
-			log.info( "process_txn: %s (%d) sold to zero, index frozen at %f" % (txn['positionBefore']['symbol'],  position_history['positionId'], position_history['index']) )
-		else:
-			position_history['costBasis'] -= position_history['costBasis'] * (txn['quantity'] / position_history['quantity'])
-			position_history['value'] -= txn['value']
-			position_history['quantity'] -= txn['quantity']
-			position_history['divisor'] = position_history['index'] / position_history['value']
-	elif txn['type'] == db.CONST_BLB_TXN_TYPE_DIV:
-		position_history['accumulatedDividends'] += txn['value']
-		# A dividend may come in after a position is sold down, we've decided to drop this for final index calculation, as there is no good way to handle it
-		if position_history['value'] > 0.0:
-			# Due to the dividend the index will increase, but then we basically immediately take the dividend out
-			position_history['index'] = (position_history['value'] + txn['value']) * position_history['divisor']
-			position_history['divisor'] = position_history['index'] / position_history['value']
-	elif txn['type'] == db.CONST_BLB_TXN_TYPE_CI:
+	if txn['type'] == db.CONST_BLB_TXN_TYPE_CI:
 		portfolio_history['totalCashInfusion'] += txn['value']
 		portfolio_history['value'] += txn['value']
-		portfolio_history['divisor'] = portfolio_history['index'] / portfolio_history['value']
+	elif portfolio_history['portfolioId'] in CONST_TRACK_POS_INDEX:
+		if txn['type'] == db.CONST_BLB_TXN_TYPE_BUY:
+			position_history['totalCashInfusion'] += txn['value']
+			position_history['costBasis'] += txn['value']
+			if position_history['index'] <= 0:
+				# Start index at 100 so we can easily check total pct gain
+				position_history['index'] = 100.0
+				position_history['divisor'] =  position_history['index'] / txn['value']
+				position_history['value'] = txn['value']
+				position_history['quantity'] = txn['quantity']
+			else:
+				position_history['value'] += txn['value']
+				position_history['quantity'] += txn['quantity']
+				position_history['divisor'] = position_history['index'] / position_history['value']
+		elif txn['type'] == db.CONST_BLB_TXN_TYPE_SELL:
+			position_history['totalCashInfusion'] -= txn['value']
+			# Did we sell down to zero? Float qty's (VNE) caught us out, so compare the integer
+			# Note: We don't handle CONST_PRICING_TYPE_BY_VALUE positions being sold down to zero,
+			# but that's ok as we have not had any in the portfolios we track yet (so punt)
+			if position_history['pricingType'] == db.CONST_PRICING_TYPE_BY_PRICE and int(txn['quantity']) == int(position_history['quantity']):
+				position_history['costBasis'] = 0.0
+				position_history['quantity'] = 0.0
+				position_history['value'] = 0.0
+				# Index is calculated one final time, and divisor is frozen at the final value
+				position_history['index'] = txn['value'] * position_history['divisor']
+				# There may be a sell after the last history row back when we had gaps, so force an update to the position table below in update_histories_and_currents
+				position_history['forceUpdate'] = True
+				log.info( "process_txn: %s (%d) sold to zero, index frozen at %f" % (txn['positionBefore']['symbol'],  position_history['positionId'], position_history['index']) )
+			else:
+				if position_history['pricingType'] == db.CONST_PRICING_TYPE_BY_PRICE:
+					position_history['costBasis'] -= position_history['costBasis'] * (txn['quantity'] / position_history['quantity'])
+				else:
+					position_history['costBasis'] -= position_history['costBasis'] * (txn['value'] / position_history['value'])					
+				position_history['value'] -= txn['value']
+				position_history['quantity'] -= txn['quantity']
+				position_history['divisor'] = position_history['index'] / position_history['value']
+		elif txn['type'] == db.CONST_BLB_TXN_TYPE_DIV:
+			position_history['accumulatedDividends'] += txn['value']
+			# A dividend may come in after a position is sold down, we've decided to drop this for final index calculation, as there is no good way to handle it
+			if position_history['value'] > 0.0:
+				# Due to the dividend the index will increase, but then we basically immediately take the dividend out
+				position_history['index'] = (position_history['value'] + txn['value']) * position_history['divisor']
+				position_history['divisor'] = position_history['index'] / position_history['value']
 	#elif txn['type'] == db.CONST_BLB_TXN_TYPE_DI: 	# Nothing needs updating for this migration, txn's are kept for audit purposes only
 	#elif txn['type'] == db.CONST_BLB_TXN_TYPE_INT: # Nothing needs updating for this migration, txn's are kept for audit purposes only
 

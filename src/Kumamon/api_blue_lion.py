@@ -48,6 +48,11 @@ def run_job_valuation_cut():
     r.raise_for_status()
     return r.status_code
 
+def execute_book_transaction( data ):
+    url = 'http://localhost:8085/blue-lion/run/execute-book-transaction'
+    r = post(url, json=data )
+    r.raise_for_status()
+
 def post_ref_data( symbol, description, sector, industry ):
     url = 'http://localhost:8083/blue-lion/write/ref-data'
     r = post(url, json={'symbol':symbol, 'symbolAlphaVantage':symbol, 'description':description, 'sector':sector, 'industry':industry, 'active':True, 'focus': False} )

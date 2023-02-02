@@ -22,7 +22,8 @@ _abl.portfolios_history_by_portfolio_id_date
 _abl.post_portfolios_history
 
 Prep:
-1. delete from portfolios_history (start with a clean slate)
+delete from portfolios_history;
+ALTER SEQUENCE portfolios_history_id_seq RESTART WITH 1;
 '''
 
 from api_database import database2

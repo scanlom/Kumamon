@@ -31,23 +31,16 @@ def blb_portfolio(db, id, name, value, index, index_id, portfolio_id):
     divisor = db.get_divisor(index_id)
     cash = db.get_constituents_by_portfolio_symbol(portfolio_id, db.CONST_SYMBOL_CASH)
     portfolio = _abl.portfolio_by_id(id)
+    portfolio['value'] = value
+    portfolio['index'] = index
+    portfolio['divisor'] = divisor
+    portfolio['cash'] = cash
+    portfolio['valueTotalCapital'] = value
+    portfolio['indexTotalCapital'] = index
+    portfolio['divisorTotalCapital'] = divisor
 
     # Update portfolio row
-    _abl.put_portfolio({
-        'id': id, 
-        'name': name, 
-        'value': value, 
-        'index': index, 
-        'divisor': divisor, 
-        'cash': cash, 
-        'debt': 0, 
-        'valueTotalCapital': value, 
-        'indexTotalCapital': index, 
-        'divisorTotalCapital': divisor, 
-        'model': portfolio['model'], 
-        'active': True,
-        })
-    portfolio = _abl.portfolio_by_id(id)
+    _abl.put_portfolio(portfolio)
 
     # Populate portfolio history row (add or update)
     date = _datetime.datetime.today().strftime('%Y-%m-%d')
@@ -160,24 +153,19 @@ def main():
     conn.close()
     
     # Blue Lion Bridge
-    # status = _abl.run_job_valuation_cut()
-    # log.info("BLB: Valuation Cut Successful, Status %d" % (status))
+    status = _abl.run_job_valuation_cut()
+    log.info("BLB: Valuation Cut Successful, Status %d" % (status))
 
-    _abl.put_portfolio({
-        'id': 1, 
-        'name': 'Total', 
-        'value': total_roe, 
-        'index': index_roe, 
-        'divisor': db.get_divisor(db.CONST_INDEX_ROE), 
-        'cash': cash, 
-        'debt': debt, 
-        'valueTotalCapital': total_rotc, 
-        'indexTotalCapital': index_rotc, 
-        'divisorTotalCapital': db.get_divisor(db.CONST_INDEX_ROTC), 
-        'model': 0, 
-        'active': True,
-        })
-    portfolio = _abl.portfolio_by_id(1)
+    """portfolio = _abl.portfolio_by_id(1)
+    portfolio['value'] = total_roe
+    portfolio['index'] = index_roe
+    portfolio['divisor'] = db.get_divisor(db.CONST_INDEX_ROE)
+    portfolio['cash'] = cash
+    portfolio['debt'] = debt
+    portfolio['valueTotalCapital'] = total_rotc
+    portfolio['indexTotalCapital'] = index_rotc
+    portfolio['divisorTotalCapital'] = db.get_divisor(db.CONST_INDEX_ROTC)
+    _abl.put_portfolio(portfolio)
     date = _datetime.datetime.today().strftime('%Y-%m-%d')
     portfolio['portfolioId'] = 1
     portfolio['date'] = date
@@ -194,7 +182,7 @@ def main():
     blb_portfolio(db, 4, 'Managed', total_managed, index_managed, db.CONST_INDEX_MANAGED, db.CONST_PORTFOLIO_MANAGED)
     blb_portfolio(db, 5, 'Risk Arb', total_risk_arb, index_risk_arb, db.CONST_PORTFOLIO_RISK_ARB, db.CONST_PORTFOLIO_RISK_ARB)
     blb_portfolio(db, 6, 'Trade Fin', total_trade_fin, index_trade_fin, db.CONST_PORTFOLIO_TRADE_FIN, db.CONST_PORTFOLIO_TRADE_FIN)
-    blb_portfolio(db, 7, 'Quick', total_quick, index_quick, db.CONST_PORTFOLIO_QUICK, db.CONST_PORTFOLIO_QUICK)
+    blb_portfolio(db, 7, 'Quick', total_quick, index_quick, db.CONST_PORTFOLIO_QUICK, db.CONST_PORTFOLIO_QUICK)"""
 
     log.info("Completed")
     

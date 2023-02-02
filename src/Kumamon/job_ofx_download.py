@@ -62,7 +62,12 @@ def main():
             sql = "update constituents set value=" + str(pos.mktval) + " where symbol='" + symbols[pos.secid.uniqueid] + "'"
             cur.execute(sql)
             conn.commit()
-            log.info("Set: " + symbols[pos.secid.uniqueid] + " to " + str(pos.mktval))
+            log.info("Togabou Set: " + symbols[pos.secid.uniqueid] + " to " + str(pos.mktval))
+            kpos = _abl.positions_by_symbol_portfolio_id(symbols[pos.secid.uniqueid], db.CONST_BLB_PORTFOLIO_MANAGED)
+            kpos['value'] = pos.mktval
+            kpos['index'] = kpos['value'] * kpos['divisor']
+            _abl.put_position(kpos)
+            log.info("Kapparu Set: " + str(kpos['refDataId']) + " to " + str(kpos['value']))
         elif pos.mktval > 0:
             log.info("Unprocessed: " + pos.secid.uniqueid + " with value " + str(pos.mktval))
                        

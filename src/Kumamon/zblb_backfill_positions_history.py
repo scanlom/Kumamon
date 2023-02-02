@@ -23,7 +23,9 @@ _abl.post_positions_history
 
 Prep:
 1. Ensure portfolios_history is up to date
-2. delete from positions_history (start with a clean slate)
+2. Run:
+delete from positions_history;
+ALTER SEQUENCE positions_history_id_seq RESTART WITH 1;
 '''
 
 from api_database import database2
