@@ -13,14 +13,14 @@ def main():
     log.info("Started...")
     
     ret = {
-		'date': '2023-01-31',
-		'type': database2.CONST_BLB_TXN_TYPE_DIV,
-		'subType': 1,
-		'positionId': 268,
+		'date': '2023-02-08',
+		'type': database2.CONST_BLB_TXN_TYPE_CI,
+		'subType': 0,
+		'positionId': 0,
 		'portfolioId': 5,
-		'value': 58.65,
+		'value': -98.63,
 		'quantity': 0,
-		'note': "ATVI 17FEB23 85 C",
+		'note': "",
 	}
     _abl.execute_book_transaction(ret)
 

@@ -35,6 +35,11 @@ def ref_data_focus():
     response = get(url)
     return response.json()
 
+def ref_data_positions():
+    url = 'http://localhost:8081/blue-lion/read/ref-data/positions'
+    response = get(url)
+    return response.json()
+
 def ref_data_by_symbol( symbol ):
     url = 'http://localhost:8081/blue-lion/read/ref-data?symbol=%s' % (symbol)
     response = get(url)

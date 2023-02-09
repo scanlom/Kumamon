@@ -42,7 +42,6 @@ def main():
             log.info("Togabou Set: " + symbols[pos.secid.uniqueid] + " to " + str(pos.mktval))
             kpos = _abl.positions_by_symbol_portfolio_id(symbols[pos.secid.uniqueid], db.CONST_BLB_PORTFOLIO_MANAGED)
             kpos['value'] = pos.mktval
-            kpos['index'] = kpos['value'] * kpos['divisor']
             _abl.put_position(kpos)
             log.info("Kapparu Set: " + str(kpos['refDataId']) + " to " + str(kpos['value']))
 
@@ -65,7 +64,6 @@ def main():
             log.info("Togabou Set: " + symbols[pos.secid.uniqueid] + " to " + str(pos.mktval))
             kpos = _abl.positions_by_symbol_portfolio_id(symbols[pos.secid.uniqueid], db.CONST_BLB_PORTFOLIO_MANAGED)
             kpos['value'] = pos.mktval
-            kpos['index'] = kpos['value'] * kpos['divisor']
             _abl.put_position(kpos)
             log.info("Kapparu Set: " + str(kpos['refDataId']) + " to " + str(kpos['value']))
         elif pos.mktval > 0:
