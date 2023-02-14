@@ -11,7 +11,7 @@ from api_database import database2
 from api_log import log
 from api_mail import send_mail_html_self
 from api_reporting import report
-from api_blue_lion import cagr, confidence, projections_by_symbol, ref_data
+import api_blue_lion as _abl
 
 CONST_CONFIDENCE_NONE           = 'NONE'
 CONST_CONFIDENCE_HIGH           = 'HIGH'
@@ -20,32 +20,32 @@ CONST_CONFIDENCE_BLAH           = 'BLAH'
 CONST_CONFIDENCE_LOW            = 'LOW'
 CONST_CONFIDENCE_CONSTITUENT    = 'CONSTITUENT'
 
-def populate_five_cagr( db, rpt ):
-    log.info("populate_five_cagr called...")
-    rows = db.session.query(db.Stocks).\
-            filter(db.Stocks.hidden == False).\
-            filter(db.Stocks.pe_terminal > 0).\
-            all()
+def expand_confidence(c):
+    if c == 'H':
+        return CONST_CONFIDENCE_HIGH
+    if c == 'M':
+        return CONST_CONFIDENCE_MEDIUM
+    if c == 'N':
+        return CONST_CONFIDENCE_NONE
+    if c == 'B':
+        return CONST_CONFIDENCE_BLAH
+    if c == 'L':
+        return CONST_CONFIDENCE_LOW
+
+def populate_five_cagr( rpt ):
+    log.info("Populate_five_cagr called...")
+    rows = _abl.projections_positions()
+    rows += _abl.projections_watch()
+    rows += _abl.projections_research()
     formats = [ rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_PCT_COLOR, rpt.CONST_FORMAT_CONFIDENCE ]
     table = [ ]
     for row in rows:
-        log.info("Requesting cagr for " + row.symbol)
-        c = cagr(5, row.eps, row.payout, row.growth, row.pe_terminal, row.price)
-        if c > Decimal(0.10):
-            rowResearch = db.session.query(db.Researches).\
-                filter(db.Researches.stock_id == row.id).\
-                order_by(desc(db.Researches.id)).first()
-            if rowResearch == None:
-                table.append( [ row.symbol, c, CONST_CONFIDENCE_NONE ] )
-            else:
-                r = confidence(rowResearch.comment)
-                # If it's a constituent, don't worry about the confidence
-                rowConstituent = db.session.query(db.Constituents).\
-                    filter(db.Constituents.stock_id == row.id).first()
-                if rowConstituent != None:
-                    r = CONST_CONFIDENCE_CONSTITUENT
-                if r != CONST_CONFIDENCE_LOW and r != CONST_CONFIDENCE_BLAH:
-                    table.append( [ row.symbol, c, r ] )
+        if row['cagr5yr'] > Decimal(0.10):
+            c = expand_confidence(row['confidence'])
+            if row['percentPortfolio'] > Decimal(0.0):
+                c = CONST_CONFIDENCE_CONSTITUENT
+            if c != CONST_CONFIDENCE_LOW and c != CONST_CONFIDENCE_BLAH:
+                table.append( [ row['ticker'], row['cagr5yr'], c ] )
     if len(table) > 1:
         table.sort(key=lambda a : a[1],reverse=True)
         table.insert(0, [ "Symbol", "5yr CAGR", "Confidence" ])
@@ -55,13 +55,13 @@ def populate_five_cagr( db, rpt ):
         rpt.add_heading( "Watch List - 5yr CAGR > 10% - None" )
 
 def populate_magic( rpt ):
-    log.info("populate_magic called...")
+    log.info("Populate_magic called...")
     rpt.add_heading( "Screen - Magic Top Ten" )
     projections = []
-    instruments = ref_data()
+    instruments = _abl.ref_data()
     for i in instruments:
         log.info("Requesting projections for " + i['symbol'])
-        projections.append(projections_by_symbol( i['symbol'] ))
+        projections.append(_abl.projections_by_symbol( i['symbol'] ))
     sorted_projections = sorted(projections, reverse = True, key = lambda i: i['magic'])
     formats = [ rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_CCY_COLOR ]
     table = [ ]
@@ -72,10 +72,9 @@ def populate_magic( rpt ):
 
 def main():
     log.info("Started...")
-    db = database2()
     rpt = report()
     
-    populate_five_cagr( db, rpt )
+    populate_five_cagr( rpt )
     populate_magic( rpt )
   
     subject = 'Blue Lion - Search'

@@ -229,6 +229,27 @@ def projections_by_symbol( symbol ):
         return response.json()
     return None
 
+def projections_positions():
+    url = 'http://localhost:8084/blue-lion/cache/enriched-projections-positions'
+    response = get(url)
+    if response.status_code == 200:
+        return response.json()
+    return None
+
+def projections_watch():
+    url = 'http://localhost:8084/blue-lion/cache/enriched-projections-watch'
+    response = get(url)
+    if response.status_code == 200:
+        return response.json()
+    return None
+
+def projections_research():
+    url = 'http://localhost:8084/blue-lion/cache/enriched-projections-research'
+    response = get(url)
+    if response.status_code == 200:
+        return response.json()
+    return None
+
 def simfin_income_by_ticker( ticker ):
     url = 'http://localhost:8081/blue-lion/read/simfin-income?ticker=%s' % (ticker)
     r = get(url)
