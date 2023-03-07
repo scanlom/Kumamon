@@ -88,8 +88,8 @@ def main():
     db = database2()
     rpt = report()
 
-    date_start = date(2021,1,1) #db.get_index_history_min_date(5)
-    date_end = date(2022,1,1) #db.get_index_history_max_date(5)
+    date_start = date(2022,1,1) #db.get_index_history_min_date(5)
+    date_end = date(2023,1,1) #db.get_index_history_max_date(5)
 
     #populate_worst_best(db, rpt, date_start, date_end)
 
