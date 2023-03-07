@@ -11,6 +11,7 @@ from decimal import Decimal
 from json import loads
 from time import sleep
 from urllib.request import urlopen
+from yahooquery import Ticker
 import api_fundamentals as _af
 from api_log import log
 
@@ -22,8 +23,8 @@ def last(symbol):
     # First try is yahoo finance (no throttling necessary)
     try:
         log.info( "Yahoo Finance - Downloading quote for %s" % (symbol) )
-        quote = _af.get_quote(symbol)
-        return round(quote['QuoteSummaryStore']['price']['regularMarketPrice']['raw'], 2)
+        ticker = Ticker(symbol)
+        return round(ticker.price[symbol]['regularMarketPrice'], 2)
     except Exception as err:
         log.warning( "Yahoo Finance - Unable to retrieve last for %s" % (symbol) )
     
