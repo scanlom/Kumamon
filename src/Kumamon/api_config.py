@@ -34,6 +34,6 @@ config_backup_zip_dirs  = [
                 [ path.expanduser('~/bin'), 'bin' ],
                 [ path.expanduser('~/misc'), 'misc' ],
                 [ path.expanduser('~/dev'), 'dev' ],                
-                [ path.expanduser('~/.vim'), '.vim' ],                
+                #[ path.expanduser('~/.vim'), '.vim' ], # 2023/02/15 - Stopped using Vim with Mint Vera (tear)
             ] 
 
