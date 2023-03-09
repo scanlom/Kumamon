@@ -29,7 +29,8 @@ def main():
 
     aapl = Ticker('aapl')
 
-    foo = aapl.price['aapl']['regularMarketPrice']
+    foo = aapl.summary_profile
+    foo = aapl.price
     print(foo)
 
     log.info("Completed")
