@@ -10,8 +10,6 @@ from api_config import config_email_server
 from api_config import config_email_port
 from api_config import config_email_user
 from api_config import config_email_password
-from api_config import config_email_fumi
-
 
 def send_mail_msg(to, subject, msg):
     msg['Subject'] = subject
@@ -32,8 +30,4 @@ def send_mail_html(to, subject, body):
     send_mail_msg(to, subject, msg)
 
 def send_mail_html_self(subject, body):
-    send_mail_html(config_email_user, subject, body)
-    
-def send_mail_html_fumi(subject, body):
-    send_mail_html(config_email_fumi, subject, body)
-    
+    send_mail_html(config_email_user, subject, body)    

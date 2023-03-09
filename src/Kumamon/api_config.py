@@ -14,7 +14,6 @@ config_email_server         = config.get('Email','Server')
 config_email_port           = config.getint('Email','Port')
 config_email_user           = config.get('Email','User')
 config_email_password       = config.get('Email','Password')
-config_email_fumi           = config.get('Email','Fumi')
 config_database_connect     = config.get('Database','Connect')
 config_database2_connect    = config.get('Database2','Connect')
 config_ofx_symbols          = config._sections['OfxSymbols']
