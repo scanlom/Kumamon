@@ -6,7 +6,7 @@ Created on Aug 7, 2013
 
 from decimal import Decimal
 from api_blue_lion import last
-from Kumamon.common.api_database import database2
+from api_database import database2
 from lib_log import log
 
 CONST_FX_GBP = Decimal(76.34)

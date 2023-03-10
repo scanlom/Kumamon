@@ -6,7 +6,7 @@ Created on Jul 20, 2013
 from psycopg2 import connect
 from psycopg2.extras import DictCursor
 from lib_config import config_database_connect
-from Kumamon.common.api_database import database2
+from api_database import database2
 from lib_log import log
 import datetime as _datetime
 import api_blue_lion as _abl

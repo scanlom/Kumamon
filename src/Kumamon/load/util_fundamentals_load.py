@@ -6,7 +6,7 @@ Created on Jan 27, 2022
 import datetime as _datetime
 import json as _json
 import api_blue_lion as _abl
-import Kumamon.load.api_fundamentals as _af
+from interface_fundamentals import fundamentals_by_ticker
 from lib_log import log
 
 def safe_copy( df, json, name_df, name_json ):
@@ -180,12 +180,13 @@ def main():
     log.info("Started...")
 
     ticker = "HZNP"
-    quote = _af.get_quote(ticker)
+    print(fundamentals_by_ticker(ticker))
+    """quote = _af.get_quote(ticker)
     load_ref_data(ticker, quote)
     financials = _af.get_financials(ticker)
     load_income_statements(ticker, financials)
     load_balance_sheets(ticker, financials)
-    load_cashflow_statements(ticker, financials)
+    load_cashflow_statements(ticker, financials)"""
 
     log.info("Completed")
 
