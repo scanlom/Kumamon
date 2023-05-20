@@ -22,6 +22,7 @@ CONST_FX_MAP = {
         "ASALCBR.NS": CONST_FX_INR,
         "MRO.L": CONST_FX_GBP,
         "BATS.L": CONST_FX_GBP,
+        "DWL.L": CONST_FX_GBP,
         "TEVA.TA": CONST_FX_ILS,
         "U11.SI": CONST_FX_SGD,
     }
