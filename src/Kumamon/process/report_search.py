@@ -4,9 +4,6 @@ Created on Dec 8, 2019
 '''
 
 from decimal import Decimal
-from sqlalchemy import desc
-from sqlalchemy.sql import func
-from api_database import database2
 from lib_log import log
 from lib_mail import send_mail_html_self
 from lib_reporting import report
