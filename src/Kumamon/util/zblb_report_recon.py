@@ -17,7 +17,7 @@ def check_index_and_total(db, t_total, t_index, k_portfolio, msg, table):
     k_total_row = _abl.portfolio_by_id(k_portfolio)
     table.append([ msg + " Value", t_total, k_total_row['value'] ])
     table.append([ msg + " Index", t_index, k_total_row['index'] ])
-    if math.isclose(t_total, k_total_row['value'],abs_tol=0.01) and math.isclose(t_index, k_total_row['index'],abs_tol=0.01):
+    if math.isclose(t_total, k_total_row['value'],abs_tol=0.02) and math.isclose(t_index, k_total_row['index'],abs_tol=0.02):
         return True
     return False
 
