@@ -17,29 +17,13 @@ from sqlalchemy import desc
 from sqlalchemy.ext.automap import automap_base
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
+from lib_common import get_ytd_base_date
 from lib_config import config_database2_connect
 from lib_log import log
 
 
 class database2:
     CONST_DAYS_IN_YEAR = 365
-
-    CONST_BLB_PORTFOLIO_TOTAL = 1
-    CONST_BLB_PORTFOLIO_SELFIE = 2
-    CONST_BLB_PORTFOLIO_OAK = 3
-    CONST_BLB_PORTFOLIO_MANAGED = 4
-    CONST_BLB_PORTFOLIO_RISK_ARB = 5
-    CONST_BLB_PORTFOLIO_TRADE_FIN = 6
-    CONST_BLB_PORTFOLIO_QUICK = 7
-    CONST_BLB_PORTFOLIO_PORTFOLIO = 8
-    CONST_BLB_PORTFOLIO_NONE = 99
-
-    CONST_BLB_TXN_TYPE_BUY = 1
-    CONST_BLB_TXN_TYPE_SELL = 2
-    CONST_BLB_TXN_TYPE_DIV = 3
-    CONST_BLB_TXN_TYPE_CI = 4
-    CONST_BLB_TXN_TYPE_DI = 5
-    CONST_BLB_TXN_TYPE_INT = 6
 
     CONST_INDEX_SELF = 1
     CONST_INDEX_ROE = 2
@@ -168,28 +152,6 @@ class database2:
     def get_index_max(self, index):
         return self.session.query(func.max(self.IndexHistory.value)).filter(self.IndexHistory.type == index).scalar()
 
-    def get_ytd_base_date(self):
-        day = datetime.today()
-        if day.month == 1 and day.day == 1:
-            return date(day.year-1, 1, 1)
-        return date(day.year, 1, 1)
-
-    def get_qtd_base_date(self):
-        day = datetime.today()
-        if day.month > 9 and not (day.month == 10 and day.day == 1):
-            return date(day.year, 10, 1)
-        elif day.month > 6 and not (day.month == 7 and day.day == 1):
-            return date(day.year, 7, 1)
-        elif day.month > 3 and not (day.month == 4 and day.day == 1):
-            return date(day.year, 4, 1)
-        elif not (day.month == 1 and day.day == 1):
-            return date(day.year, 1, 1)
-        return date(day.year - 1, 10, 1)
-
-    def get_day_base_date(self):
-        yesterday = datetime.today() - timedelta(1)
-        return date(yesterday.year, yesterday.month, yesterday.day)
-
     def get_balance_history(self, balance, date):
         row = self.session.query(self.BalancesHistory).filter(
             self.BalancesHistory.type == balance, self.BalancesHistory.date == date).one_or_none()
@@ -263,27 +225,27 @@ class database2:
 
     def get_ytd_spending_sum(self):
         ret = self.session.query(func.sum(self.Spending.amount)).filter(
-            self.Spending.date >= self.get_ytd_base_date()).scalar()
+            self.Spending.date >= get_ytd_base_date()).scalar()
         if ret == None:
             return Decimal(0.0)
         return ret
 
     def get_ytd_spending_sum_by_date(self, date):
         ret = self.session.query(func.sum(self.Spending.amount)).filter(
-            self.Spending.date >= self.get_ytd_base_date(), self.Spending.date <= date).scalar()
+            self.Spending.date >= get_ytd_base_date(), self.Spending.date <= date).scalar()
         if ret == None:
             return Decimal(0.0)
         return ret
 
     def get_ytd_spending_sum_by_types(self, types):
         ret = self.session.query(func.sum(self.Spending.amount)).filter(
-            self.Spending.date >= self.get_ytd_base_date(), self.Spending.type.in_(types)).scalar()
+            self.Spending.date >= get_ytd_base_date(), self.Spending.type.in_(types)).scalar()
         if ret == None:
             return Decimal(0.0)
         return ret
 
     def get_ytd_spendings_by_types(self, types, minimum):
-        return self.session.query(self.Spending).filter(self.Spending.date >= self.get_ytd_base_date(),
+        return self.session.query(self.Spending).filter(self.Spending.date >= get_ytd_base_date(),
                                                         self.Spending.type.in_(
                                                             types),
                                                         self.Spending.amount >= minimum).order_by(desc(self.Spending.date)).all()
@@ -296,7 +258,6 @@ def main():
     db = database2()
     val = db.get_balance(database2.CONST_BALANCES_TYPE_TOTAL_ROE)
     print(val)
-    print(db.get_ytd_base_date())
     db.session.query(db.IndexHistory).filter(
         db.IndexHistory.type == 2, db.IndexHistory.date == '08/14/2018').one()
     print(db.get_ytd_spending_sum([0, 2, 3, 4, 5, 8, 12, 96]))

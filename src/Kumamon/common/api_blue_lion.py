@@ -184,6 +184,20 @@ def enriched_positions_history_by_portfolio_id_date( portfolio_id, date ):
         return r.json()
     return None
 
+def portfolio_returns_by_id( id ):
+    url = 'http://localhost:8081/blue-lion/read/portfolio-returns/%d' % (id)
+    r = get(url)
+    if r.status_code == 200:
+        return r.json()
+    return None
+
+def portfolios_history_max_index_by_portfolio_id( portfolio_id ):
+    url = 'http://localhost:8081/blue-lion/read/portfolios-history-max-index?portfolioId=%d' % (portfolio_id)
+    r = get(url)
+    if r.status_code == 200:
+        return r.json()
+    return None
+
 def post_portfolios_history( data ):
     url = 'http://localhost:8083/blue-lion/write/portfolios-history'
     r = post(url, json=data )
