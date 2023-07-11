@@ -11,15 +11,15 @@ def main():
     log.info("Started...")
     
     ret = {
-		'date': '2023-06-06',
-		'type': database2.CONST_BLB_TXN_TYPE_BUY,
+		'date': '2023-07-10',
+		'type': database2.CONST_BLB_TXN_TYPE_CI,
 		'subType': 0,
-		'positionId': 311,
-		'portfolioId': 5,
-		'value': 4204.8,
-		'quantity': 1000,
+		'positionId': 0,
+		'portfolioId': 4,
+		'value': -1510.80,
+		'quantity': 0,
 		'note': '',
-#		'note': 'AMED 15DEC23 100 C',
+#		'note': 'ABBV 28JUL23 120 P',
 	}
     _abl.execute_book_transaction(ret)
 
