@@ -46,7 +46,7 @@ def main():
     ofx = parser.convert()
     for pos in ofx.invstmtmsgsrsv1[0].invstmtrs.invposlist:
         if pos.mktval > 0 and pos.secid.uniqueid in symbols:
-            kpos = _abl.positions_by_symbol_portfolio_id(symbols[pos.secid.uniqueid], db.CONST_BLB_PORTFOLIO_MANAGED)
+            kpos = _abl.positions_by_symbol_portfolio_id(symbols[pos.secid.uniqueid], CONST.PORTFOLIO_MANAGED)
             kpos['value'] = float( pos.mktval )
             _abl.put_position(kpos)
             log.info("Kapparu Set: " + str(kpos['refDataId']) + " to " + str(kpos['value']))

@@ -7,6 +7,9 @@ from datetime import date
 from datetime import datetime
 from datetime import timedelta
 
+def convert_date( json ):
+    return datetime.strptime(json['date'][:10], '%Y-%m-%d')
+
 def get_ytd_base_date():
     day = datetime.today()
     if day.month == 1 and day.day == 1:

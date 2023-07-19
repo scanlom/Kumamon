@@ -44,8 +44,8 @@ def main():
     log.info("Started...")
 
     # Test
-    ticker = Ticker('AAPL')
-    print(ticker.all_financial_data())
+    foo  = market_data_yahooquery()
+    print( foo.last('HA') )
     
     log.info("Completed")
 

@@ -5,25 +5,19 @@ Created on Jul 14, 2013
 
 from datetime import datetime
 from decimal import Decimal
-from sqlalchemy.sql import func
-from api_database import database2
 from lib_log import log
 from lib_mail import send_mail_html_self
 from lib_reporting import report
-from api_blue_lion import cagr
+import lib_common as _common
+import api_blue_lion as _abl
 
-def populate_five_cagr( db, rpt ):
-    rows = db.session.query(db.Constituents, db.Stocks).\
-            filter(db.Constituents.stock_id == db.Stocks.id).\
-            filter(db.Constituents.portfolio_id == db.CONST_PORTFOLIO_PLAY).\
-            filter(db.Constituents.pricing_type == db.CONST_PRICING_TYPE_BY_PRICE).\
-            all()
+def populate_five_cagr( positions, rpt ):
     formats = [ rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_PCT_COLOR ]
     table = [ ]
-    for row in rows:
-        c = cagr(5, row.stocks.eps, row.stocks.payout, row.stocks.growth, row.stocks.pe_terminal, row.stocks.price)
+    for pos in positions:
+        c = pos['cagr5yr']
         if c < Decimal(0.05):
-            table.append( [ row.stocks.symbol, c ] )
+            table.append( [ pos['ticker'], c ] )
     if len(table) > 0:
         table.sort(key=lambda a : a[1])
         table.insert(0, [ "Symbol", "5yr CAGR" ])
@@ -32,21 +26,15 @@ def populate_five_cagr( db, rpt ):
     else:
         rpt.add_string( "5yr CAGR < 5% - OK" )
 
-def populate_reds( db, rpt ):
-    rows = db.session.query(db.Constituents).\
-            filter(db.Constituents.portfolio_id == db.CONST_PORTFOLIO_PLAY).\
-            filter(db.Constituents.pricing_type == db.CONST_PRICING_TYPE_BY_PRICE).\
-            all()
+def populate_reds( positions, rpt ):
     formats = [ rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_NONE ]
     table = [ ]
     today = datetime.now().date()
-    for row in rows:
-        date = db.session.query(func.max(db.Researches.date)).\
-            filter(db.Researches.stock_id == row.stock_id).\
-            scalar()
+    for pos in positions:
+        date = _common.convert_date(pos)
         months = (today.year - date.year) * 12 + today.month - date.month
         if months > 3 or (months == 3 and today.day > date.day):    
-            table.append( [ row.symbol, date ] )
+            table.append( [ pos['ticker'], date ] )
     if len(table) > 0:
         table.sort(key=lambda a : a[1])
         table.insert(0, [ "Symbol", "Date" ])
@@ -55,7 +43,7 @@ def populate_reds( db, rpt ):
     else:
         rpt.add_string( "Reds - OK" )
 
-def populate_cash( db, rpt ):
+"""def populate_cash( db, rpt ):
     cash = db.get_constituents_by_portfolio_symbol( db.CONST_PORTFOLIO_CASH, db.CONST_SYMBOL_CASH )
     debt = -1*db.get_constituents_by_portfolio_symbol( db.CONST_PORTFOLIO_CASH, db.CONST_SYMBOL_DEBT  )
     cash_managed = db.get_constituents_by_portfolio_symbol( db.CONST_PORTFOLIO_MANAGED, db.CONST_SYMBOL_CASH )
@@ -99,19 +87,14 @@ def populate_allocations( db, rpt ):
         [ "Cash", cash_off * total, cash_off, cash_target ],
         ]
     rpt.add_string( "Allocations - Aim for Zero" )
-    rpt.add_table( table, formats )
+    rpt.add_table( table, formats )"""
     
-def populate_thirty_pe( db, rpt ):
-    rows = db.session.query(db.Stocks, db.Constituents).\
-            filter(db.Constituents.stock_id == db.Stocks.id).\
-            filter(db.Constituents.pricing_type == db.CONST_PRICING_TYPE_BY_PRICE).\
-            filter(db.Constituents.portfolio_id == db.CONST_PORTFOLIO_PLAY).\
-            all()
+def populate_thirty_pe( positions, rpt ):
     formats = [ rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_CCY ]
     table = [ ]
-    for row in rows:
-        if row.stocks.price / row.stocks.eps > 30:
-            table.append( [ row.stocks.symbol, row.stocks.price / row.stocks.eps ] )
+    for pos in positions:
+        if pos['pe'] > 30:
+            table.append( [ pos['ticker'], pos['pe'] ] )
     if len(table) > 0:
         table.sort(key=lambda a : a[1],reverse=True)
         table.insert(0, [ "Symbol", "PE" ])
@@ -120,7 +103,7 @@ def populate_thirty_pe( db, rpt ):
     else:
         rpt.add_string( "Thirty PE - OK" )
 
-def populate_max_movers( db, rpt ):
+"""def populate_max_movers( db, rpt ):
     rpt.add_string( "Max Movers - Monitor" )
     max_mover_columns = { "day_change": "day", "week_change": "week", "month_change": "month", "three_month_change": "3month", 
                          "year_change": "year", "five_year_change": "5year", "ten_year_change": "10year" }
@@ -140,25 +123,26 @@ def populate_max_movers( db, rpt ):
             order_by(db.Stocks.__table__.columns[col].asc()).\
             first().stocks
         table.append( [ name + "_down", row.symbol, getattr(row, col), getattr(row, col + "_date" ) ] )
-    rpt.add_table( table, formats )
+    rpt.add_table( table, formats )"""
 
 def main():
     log.info("Started...")
-    db = database2()
+
     rpt = report()
+    positions = _abl.projections_positions()
 
     rpt.add_heading("Trade")
-    populate_cash(db, rpt)
+    #populate_cash(db, rpt)
     rpt.add_string("")        
-    populate_allocations(db, rpt)
+    #populate_allocations(db, rpt)
     rpt.add_heading("Upgrade")
-    populate_thirty_pe( db, rpt )
+    populate_thirty_pe( positions, rpt )
     rpt.add_string("")        
-    populate_five_cagr(db, rpt)
+    populate_five_cagr(positions, rpt)
     rpt.add_heading("Research")
-    populate_reds(db, rpt)
+    populate_reds(positions, rpt)
     rpt.add_string("")        
-    populate_max_movers( db, rpt )
+    #populate_max_movers( db, rpt )
     
     subject = 'Blue Lion - Health Check'
     send_mail_html_self(subject, rpt.get_html())
