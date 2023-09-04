@@ -20,12 +20,12 @@ class market_data_yahooquery:
             log.warning( "Yahoo Finance - Unable to retrieve last for %s" % (symbol) )
             raise err
         
-class fundamentals_yahooquery:
+class ref_data_yahooquery:
     
     def __init__(self):
         pass
 
-    def fundamentals_by_ticker(self, symbol):
+    def ref_data_by_ticker(self, symbol):
         try:
             log.info( "Yahoo Finance - Downloading quote for %s" % (symbol) )
             ticker = Ticker(symbol)

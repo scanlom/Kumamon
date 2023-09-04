@@ -52,12 +52,12 @@ def execute_book_transaction( data ):
 
 def post_ref_data( symbol, description, sector, industry ):
     url = 'http://localhost:8083/blue-lion/write/ref-data'
-    r = post(url, json={'symbol':symbol, 'symbolAlphaVantage':symbol, 'description':description, 'sector':sector, 'industry':industry, 'active':True, 'focus': False} )
+    r = post(url, json={'symbol':symbol, 'symbolAlphaVantage':symbol, 'description':description, 'sector':sector, 'industry':industry, 'active':True } )
     r.raise_for_status()
 
-def put_ref_data( id, symbol, symbolAlphaVantage, description, sector, industry, active, focus ):
+def put_ref_data( id, symbol, symbolAlphaVantage, description, sector, industry, active ):
     url = 'http://localhost:8083/blue-lion/write/ref-data/%d' % (id)
-    r = put(url, json={'id':id, 'symbol':symbol, 'symbolAlphaVantage':symbolAlphaVantage, 'description':description, 'sector':sector, 'industry':industry, 'active':active, 'focus':focus} )
+    r = put(url, json={'id':id, 'symbol':symbol, 'symbolAlphaVantage':symbolAlphaVantage, 'description':description, 'sector':sector, 'industry':industry, 'active':active } )
     r.raise_for_status()
     
 def market_data_by_symbol( symbol ):

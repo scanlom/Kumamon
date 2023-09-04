@@ -6,14 +6,14 @@ Interface files layer an abstraction between third party external data providers
 '''
 
 from lib_log import log
-from provider_yahooquery import fundamentals_yahooquery
+from provider_yahooquery import ref_data_yahooquery
 
-providers = [ fundamentals_yahooquery() ]
+providers = [ ref_data_yahooquery() ]
 
-def fundamentals_by_ticker(symbol):
+def ref_data_by_ticker(symbol):
     for provider in providers:
         try:
-            return provider.fundamentals_by_ticker(symbol)
+            return provider.ref_data_by_ticker(symbol)
         except Exception as err:
             pass
     raise err

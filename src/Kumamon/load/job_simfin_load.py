@@ -209,7 +209,7 @@ def simfin_load_ref_data(market):
             post_ref_data(c['ticker'], c['companyName'], sector, industry)
         else:
             num_updated += 1
-            put_ref_data(cur['id'], cur['symbol'], cur['symbolAlphaVantage'], c['companyName'], sector, industry, cur['active'], cur['focus'])
+            put_ref_data(cur['id'], cur['symbol'], cur['symbolAlphaVantage'], c['companyName'], sector, industry, cur['active'])
 
     ret = "%s ref_data: Inserted %d records, Updated %d records" % (market, num_inserted, num_updated)
     log.info(ret)
