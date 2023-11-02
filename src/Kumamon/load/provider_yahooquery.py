@@ -1,6 +1,9 @@
 '''
 Created on Mar 07, 2023
 @author: scanlom
+
+yahooquery scrapes the yahoo finance web site so there are often problems. When these arise first check
+https://github.com/dpguthrie/yahooquery for a new version, or if any issues reference the problem
 '''
 
 from yahooquery import Ticker
@@ -12,6 +15,7 @@ class market_data_yahooquery:
         pass
 
     def last(self, symbol):
+        raise Exception("Test")
         try:
             log.info( "Yahoo Finance - Downloading quote for %s" % (symbol) )
             ticker = Ticker(symbol)

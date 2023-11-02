@@ -13,12 +13,18 @@ class market_data_alphavantage:
     CONST_THROTTLE_SECONDS  = 16
     CONST_RETRIES           = 1
     CONST_RETRY_SECONDS     = 61
+    CONST_MAX_CALLS         = 25
+
+    num_calls = 0
 
     def __init__(self):
         pass
 
     def last(self, symbol):
-        # Second try is AlphaVantage
+        if self.num_calls >= self.CONST_MAX_CALLS:
+            log.warn( "AlphaVantage - Exceeded max calls of %d" % (self.CONST_MAX_CALLS) )
+            raise Exception("AlphaVantage - Exceeded max calls")
+        self.num_calls += 1
         sleep(self.CONST_THROTTLE_SECONDS) # Sleep to avoid throttling errors
         url = 'https://www.alphavantage.co/query?function=GLOBAL_QUOTE&symbol=%s&apikey=2YG6SAN57NRYNPJ8' % (symbol)
         retry = 1

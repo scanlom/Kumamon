@@ -12,18 +12,22 @@ from provider_yahooquery import market_data_yahooquery
 providers = [ market_data_yahooquery(), market_data_alphavantage() ]
 
 def last(symbol):
+    err_last = None
     for provider in providers:
         try:
             return provider.last(symbol)
         except Exception as err:
-            pass
-    raise err
+            err_last = err
+    raise err_last
 
 def main():
     log.info("Started...")
 
     # Test
-    print( last('HA') )
+    try:
+        print( last('HA') )
+    except Exception as err:
+        print( err )
     
     log.info("Completed")
 

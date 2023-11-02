@@ -41,23 +41,16 @@ def main():
     # instruments = [i for i in instruments if i['symbol'] == 'OAYLX']
 
     log.info("Loading positions names...")
-    curr_call = 0
     for i in instruments_positions:
-        curr_call += 2 # Historical run will also be loading positions names
         populate_market_data(i)
 
     log.info("Loading focus names...")
-    curr_call = 0
     for i in instruments_focus:
-        curr_call += 2 # Historical run will also be loading focus names
         populate_market_data(i)
 
     log.info("Loading blurry names...")
     for i in instruments:
-        curr_call += 1
         populate_market_data(i)
-        if curr_call >=  CONST.MAX_MARKET_DATA_CALLS:
-            break
 
     log.info("Completed")
     
