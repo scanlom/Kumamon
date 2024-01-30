@@ -36,22 +36,22 @@ def main():
         elif pos.mktval > 0:
             log.info("Unprocessed: " + pos.secid.uniqueid + " with value " + str(pos.mktval))
     
-    client = OFXClient("https://seven.was.alight.com/eftxweb/access.ofx", userid=config_ofx_user2,
-                    org="hewitt.com", fid="242", brokerid="hewitt.com", prettyprint=True,
-                    version=220)
+    # client = OFXClient("https://seven.was.alight.com/eftxweb/access.ofx", userid=config_ofx_user2,
+    #                 org="hewitt.com", fid="242", brokerid="hewitt.com", prettyprint=True,
+    #                 version=220)
 
-    response = client.request_statements(config_ofx_pass2, InvStmtRq(acctid=config_ofx_acct2))
-    parser = OFXTree()
-    parser.parse(response)
-    ofx = parser.convert()
-    for pos in ofx.invstmtmsgsrsv1[0].invstmtrs.invposlist:
-        if pos.mktval > 0 and pos.secid.uniqueid in symbols:
-            kpos = _abl.positions_by_symbol_portfolio_id(symbols[pos.secid.uniqueid], CONST.PORTFOLIO_MANAGED)
-            kpos['value'] = float( pos.mktval )
-            _abl.put_position(kpos)
-            log.info("Kapparu Set: " + str(kpos['refDataId']) + " to " + str(kpos['value']))
-        elif pos.mktval > 0:
-            log.info("Unprocessed: " + pos.secid.uniqueid + " with value " + str(pos.mktval))
+    # response = client.request_statements(config_ofx_pass2, InvStmtRq(acctid=config_ofx_acct2))
+    # parser = OFXTree()
+    # parser.parse(response)
+    # ofx = parser.convert()
+    # for pos in ofx.invstmtmsgsrsv1[0].invstmtrs.invposlist:
+    #     if pos.mktval > 0 and pos.secid.uniqueid in symbols:
+    #         kpos = _abl.positions_by_symbol_portfolio_id(symbols[pos.secid.uniqueid], CONST.PORTFOLIO_MANAGED)
+    #         kpos['value'] = float( pos.mktval )
+    #         _abl.put_position(kpos)
+    #         log.info("Kapparu Set: " + str(kpos['refDataId']) + " to " + str(kpos['value']))
+    #     elif pos.mktval > 0:
+    #         log.info("Unprocessed: " + pos.secid.uniqueid + " with value " + str(pos.mktval))
                        
     log.info("Completed")
             

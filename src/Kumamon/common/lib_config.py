@@ -26,7 +26,7 @@ config_ofx_acct2            = config.get('Ofx', 'Acct2')
 config_backup           = 'Backup'
 config_dropbox_dir      = path.expanduser('~/Dropbox/') + config_backup + '/'
 config_backup_days      = 5
-config_backup_tmp_dir   = path.expanduser('~/') + config_backup + '/'
+config_backup_tmp_dir   = '/mnt/data/' + config_backup + '/'
 config_backup_zip_dirs  = [ 
                 [ path.expanduser('~/Mike'), 'Mike' ], 
                 [ path.expanduser('~/bin'), 'bin' ],
