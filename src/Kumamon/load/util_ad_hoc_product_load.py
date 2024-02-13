@@ -180,7 +180,7 @@ def load_cashflow_statements( ticker, financials ):
 def main():
     log.info("Started...")
 
-    ticker = "DHL.DE"
+    ticker = "SNY"
     newRd = ref_data_by_ticker(ticker)
     oldRd = _abl.ref_data_by_symbol(ticker)
     if (oldRd is not None):
@@ -200,12 +200,12 @@ def main():
         log.info("Posting market_data for " + ticker)
         _abl.post_market_data(newRd['id'], newLast)
 
-    """quote = _af.get_quote(ticker)
-    load_ref_data(ticker, quote)
-    financials = _af.get_financials(ticker)
-    load_income_statements(ticker, financials)
-    load_balance_sheets(ticker, financials)
-    load_cashflow_statements(ticker, financials)"""
+    # quote = _af.get_quote(ticker)
+    # load_ref_data(ticker, quote)
+    # financials = _af.get_financials(ticker)
+    # load_income_statements(ticker, financials)
+    # load_balance_sheets(ticker, financials)
+    # load_cashflow_statements(ticker, financials)
 
     log.info("Completed")
 
