@@ -15,7 +15,6 @@ class market_data_yahooquery:
         pass
 
     def last(self, symbol):
-        raise Exception("Test")
         try:
             log.info( "Yahoo Finance - Downloading quote for %s" % (symbol) )
             ticker = Ticker(symbol)
