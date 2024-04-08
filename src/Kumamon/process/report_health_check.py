@@ -43,27 +43,20 @@ def populate_reds( positions, rpt ):
     else:
         rpt.add_string( "Reds - OK" )
 
-"""def populate_cash( db, rpt ):
-    cash = db.get_constituents_by_portfolio_symbol( db.CONST_PORTFOLIO_CASH, db.CONST_SYMBOL_CASH )
-    debt = -1*db.get_constituents_by_portfolio_symbol( db.CONST_PORTFOLIO_CASH, db.CONST_SYMBOL_DEBT  )
-    cash_managed = db.get_constituents_by_portfolio_symbol( db.CONST_PORTFOLIO_MANAGED, db.CONST_SYMBOL_CASH )
-    cash_play = db.get_constituents_by_portfolio_symbol( db.CONST_PORTFOLIO_PLAY, db.CONST_SYMBOL_CASH )
-    total_rotc = db.get_balance( db.CONST_BALANCES_TYPE_TOTAL_ROTC )
-    margin = debt + cash + cash_managed + cash_play
-
-    formats = [ rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_CCY_COLOR, rpt.CONST_FORMAT_PCT_COLOR, rpt.CONST_FORMAT_NONE ]
-    table = [ 
-        [ "Cash", "Value", "%" ],
-        [ "Margin", margin, margin / total_rotc ],
-        [ "Debt", debt, debt / total_rotc ],
-        [ "Cash", cash, cash / total_rotc ],
-        [ "Cash (Play)", cash_play, cash_play / total_rotc ],
-        [ "Cash (Managed)", cash_managed, cash_managed / total_rotc ],
-        ]
-    rpt.add_string( "Cash - Aim for Fumi Red, Zero, Zero, Zero" )
-    rpt.add_table( table, formats )
+def populate_cash( portfolios, rpt ):
+    formats = [ rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_CCY ]
+    table = [ ]
+    for port in portfolios:
+        if port['cash'] > 0:    
+            table.append( [ port['name'], port['cash'] ] )
+    if len(table) > 0:
+        table.insert(0, [ "Portfolio", "Cash" ])
+        rpt.add_string( "Cash - Action" )
+        rpt.add_table( table, formats )
+    else:
+        rpt.add_string( "Cash - OK" )
         
-def populate_allocations( db, rpt ):
+"""def populate_allocations( db, rpt ):
     total = db.get_balance( db.CONST_BALANCES_TYPE_TOTAL_ROTC )
     portfolio = db.get_balance( db.CONST_BALANCES_TYPE_TOTAL_SELF )
     play = db.get_balance( db.CONST_BALANCES_TYPE_TOTAL_PLAY )
@@ -130,9 +123,10 @@ def main():
 
     rpt = report()
     positions = _abl.projections_positions()
+    portfolios = _abl.portfolios()
 
     rpt.add_heading("Trade")
-    #populate_cash(db, rpt)
+    populate_cash(portfolios, rpt)
     rpt.add_string("")        
     #populate_allocations(db, rpt)
     rpt.add_heading("Upgrade")

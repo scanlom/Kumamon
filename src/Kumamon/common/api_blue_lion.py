@@ -101,6 +101,13 @@ def put_market_data_historical( id, date, ref_data_id, close, adj_close ):
     r = put(url, json={'id':id, 'date':date, 'refDataId':ref_data_id, 'close':float(close), 'adjClose':float(adj_close)} )
     r.raise_for_status()
 
+def portfolios():
+    url = 'http://localhost:8081/blue-lion/read/portfolios'
+    response = get(url)
+    if response.status_code == 200:
+        return response.json()
+    return None
+
 def portfolio_by_id( id ):
     url = 'http://localhost:8081/blue-lion/read/portfolios/%d' % (id)
     response = get(url)

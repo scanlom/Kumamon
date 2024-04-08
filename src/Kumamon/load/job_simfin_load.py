@@ -139,7 +139,13 @@ def simfin_load(msg, market, func_simfin, func_get_by_ticker, func_delete_by_id,
     
     # Load the annual Statements for all companies in market.
     # The data is automatically downloaded if you don't have it already.
-    df = func_simfin(variant='annual', market=market)
+    try:
+        df = func_simfin(variant='annual', market=market)
+    except Exception as err:
+        foo = "%s %s: Could not load data frame (likely empty)" % (market, msg)
+        log.info(foo)
+        return foo
+
     json = frame_to_json(df, True)     
  
     num_inserted = 0

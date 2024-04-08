@@ -180,7 +180,7 @@ def load_cashflow_statements( ticker, financials ):
 def main():
     log.info("Started...")
 
-    ticker = "SNY"
+    ticker = "ATMU"
     newRd = ref_data_by_ticker(ticker)
     oldRd = _abl.ref_data_by_symbol(ticker)
     if (oldRd is not None):
