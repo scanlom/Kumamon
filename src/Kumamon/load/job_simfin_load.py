@@ -202,7 +202,12 @@ def simfin_load_ref_data(market):
             
     num_inserted = 0
     num_updated = 0
+    num_errors = 0
     for c in json_companies:
+        if (c['ticker'] is None):
+            log.info("Skipping record, ticker is None")
+            num_errors += 1
+            continue
         log.info("Processing %s" % (c['ticker']))
         sector = ""
         industry = ""
@@ -217,7 +222,7 @@ def simfin_load_ref_data(market):
             num_updated += 1
             put_ref_data(cur['id'], cur['symbol'], cur['symbolAlphaVantage'], c['companyName'], sector, industry, cur['active'])
 
-    ret = "%s ref_data: Inserted %d records, Updated %d records" % (market, num_inserted, num_updated)
+    ret = "%s ref_data: Inserted %d records, Updated %d records, %d errors" % (market, num_inserted, num_updated, num_errors)
     log.info(ret)
     return ret
 
@@ -311,7 +316,7 @@ def main():
     df = load_markets()
     json = frame_to_json(df, False)
 
-    rpt = report()
+    """rpt = report()
     for j in json:
         rpt.add_string( simfin_load("income", j['marketId'], load_income, simfin_income_by_ticker, delete_simfin_income_by_id, post_simfin_income) )
         rpt.add_string( simfin_load("balance", j['marketId'], load_balance, simfin_balance_by_ticker, delete_simfin_balance_by_id, post_simfin_balance) )
@@ -323,7 +328,7 @@ def main():
         rpt.add_string( simfin_load("balance_insurance", j['marketId'], load_balance_insurance, simfin_balance_by_ticker, delete_simfin_balance_by_id, post_simfin_balance) )
         rpt.add_string( simfin_load("cashflow_insurance", j['marketId'], load_cashflow_insurance, simfin_cashflow_by_ticker, delete_simfin_cashflow_by_id, post_simfin_cashflow) )
     subject = 'Blue Lion - Simfin Load - Financials'
-    send_mail_html_self(subject, rpt.get_html())
+    send_mail_html_self(subject, rpt.get_html())"""
 
     rpt = report()
     for j in json:

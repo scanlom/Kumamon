@@ -198,6 +198,13 @@ def portfolio_returns_by_id( id ):
         return r.json()
     return None
 
+def position_returns_by_id( id ):
+    url = 'http://localhost:8081/blue-lion/read/position-returns/%d' % (id)
+    r = get(url)
+    if r.status_code == 200:
+        return r.json()
+    return None
+
 def portfolios_history_max_index_by_portfolio_id( portfolio_id ):
     url = 'http://localhost:8081/blue-lion/read/portfolios-history-max-index?portfolioId=%d' % (portfolio_id)
     r = get(url)

@@ -52,9 +52,15 @@ def populate_five_cagr( rpt ):
 
 def populate_magic( rpt ):
     log.info("Populate_magic called...")
-    rpt.add_heading( "Screen - Magic Top Ten" )
+    rpt.add_heading( "Screen - Magic Top Ten - Magic = CAGR5yr where NetMgn >= 10%%, LTDRatio <= 3.5, EPS > 0.0 last five years" )
     projections = []
+    rows = _abl.projections_positions()
+    rows += _abl.projections_watch()
+    rows += _abl.projections_research()
     instruments = _abl.ref_data()
+    # Remove duplicates
+    remove_symbols = [i['ticker'] for i in rows]
+    instruments = [i for i in instruments if i['symbol'] not in remove_symbols]
     for i in instruments:
         log.info("Requesting projections for " + i['symbol'])
         projections.append(_abl.projections_by_symbol( i['symbol'] ))

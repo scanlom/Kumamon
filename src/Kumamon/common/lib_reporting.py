@@ -58,6 +58,8 @@ class report:
             if self.CONST_FORMAT_CCY_COLOR == f or self.CONST_FORMAT_PCT_COLOR == f or self.CONST_FORMAT_CCY_INT_COLOR == f or self.CONST_FORMAT_YEARS == f:
                 if item > 0:
                     start += "<font color='green'>"
+                elif item == 0:
+                    start += "<font color='gray'>"
                 else:
                     start += "<font color='red'>"
                 end += "</font>"
