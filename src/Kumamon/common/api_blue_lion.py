@@ -7,11 +7,6 @@ from decimal import Decimal
 from requests import get, post, put, delete
 from lib_log import log
 
-def cagr( years, eps, payout, growth, pe_terminal, price ):
-    url = 'http://localhost:8080/blue-lion/utils/cagr?years=%f&eps=%f&payout=%f&growth=%f&peterminal=%f&price=%f' % (years, eps, payout, growth, pe_terminal, price)
-    response = get(url)
-    return response.json()['cagr']
-
 def last( symbol ):
     url = 'http://localhost:8081/blue-lion/read/market-data?symbol=%s' % (symbol)
     response = get(url)
@@ -322,7 +317,6 @@ def main():
     log.info("Started...")
     
     # Test
-    print(cagr(5, 5.10, 0.40, 0.10, 18, 183.43))
     # post_simfin_income({'date':'2019-12-13', 'ticker':'Mikey'})
     
     log.info("Completed")
