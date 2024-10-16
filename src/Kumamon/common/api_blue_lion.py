@@ -245,21 +245,21 @@ def projections_by_symbol( symbol ):
     return None
 
 def projections_positions():
-    url = 'http://localhost:8084/blue-lion/cache/enriched-projections-positions'
+    url = 'http://localhost:8086/blue-lion/gateway/enriched-projections-positions'
     response = get(url)
     if response.status_code == 200:
         return response.json()
     return None
 
 def projections_watch():
-    url = 'http://localhost:8084/blue-lion/cache/enriched-projections-watch'
+    url = 'http://localhost:8086/blue-lion/gateway/enriched-projections-watch'
     response = get(url)
     if response.status_code == 200:
         return response.json()
     return None
 
 def projections_research():
-    url = 'http://localhost:8084/blue-lion/cache/enriched-projections-research'
+    url = 'http://localhost:8086/blue-lion/gateway/enriched-projections-research'
     response = get(url)
     if response.status_code == 200:
         return response.json()
