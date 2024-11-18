@@ -56,33 +56,7 @@ def populate_cash( portfolios, rpt ):
         rpt.add_table( table, formats )
     else:
         rpt.add_string( "Cash - OK" )
-        
-"""def populate_allocations( db, rpt ):
-    total = db.get_balance( db.CONST_BALANCES_TYPE_TOTAL_ROTC )
-    portfolio = db.get_balance( db.CONST_BALANCES_TYPE_TOTAL_SELF )
-    play = db.get_balance( db.CONST_BALANCES_TYPE_TOTAL_PLAY )
-    managed = db.get_balance( db.CONST_BALANCES_TYPE_TOTAL_MANAGED )
-    cash = db.get_constituents_by_portfolio_symbol( db.CONST_PORTFOLIO_CASH, db.CONST_SYMBOL_CASH )
-    oak_target = Decimal(0.20)
-    play_target = Decimal(0.50)
-    managed_target = Decimal(0.30)
-    cash_target = Decimal(0.00)
-    oak_off = ( portfolio - play ) / total - oak_target
-    play_off = play / total - play_target
-    managed_off = managed / total - managed_target
-    cash_off = cash / total - cash_target
-    
-    formats = [ rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_CCY_COLOR, rpt.CONST_FORMAT_PCT_COLOR, rpt.CONST_FORMAT_PCT ]
-    table = [ 
-        [ "Allocation", "Value", "%", "Target" ],
-        [ "Oak", oak_off * total, oak_off, oak_target ],
-        [ "Play", play_off * total, play_off, play_target ],
-        [ "Managed", managed_off * total, managed_off, managed_target ],
-        [ "Cash", cash_off * total, cash_off, cash_target ],
-        ]
-    rpt.add_string( "Allocations - Aim for Zero" )
-    rpt.add_table( table, formats )"""
-    
+         
 def populate_thirty_pe( projections, rpt ):
     formats = [ rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_CCY ]
     table = [ ]

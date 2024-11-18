@@ -48,8 +48,11 @@ def main():
     log.info("Started...")
 
     # Test
-    foo  = market_data_yahooquery()
-    print( foo.last('HA') )
+    # foo  = market_data_yahooquery()
+    # print( foo.last('HA') )
+
+    aapl = Ticker('8074.T')
+    print( aapl.cash_flow(trailing=False) )
     
     log.info("Completed")
 
