@@ -1,20 +1,20 @@
 '''
-Created on Mar 07, 2023
+Created on Nov 19, 2024
 @author: scanlom
 
 Interface files layer an abstraction between third party external data providers and our application code
 '''
 
 from lib_log import log
-from provider_yahooquery import ref_data_yahooquery
+from provider_yahooquery import financials_yahooquery
 
-providers = [ ref_data_yahooquery() ]
+providers = [ financials_yahooquery() ]
 
-def ref_data_by_ticker(symbol):
+def financials_by_ticker(symbol):
     err_last = None
     for provider in providers:
         try:
-            return provider.ref_data_by_ticker(symbol)
+            return provider.financials_by_ticker(symbol)
         except Exception as err:
             err_last = err
     raise err_last
@@ -23,6 +23,7 @@ def main():
     log.info("Started...")
 
     # Test
+    print( financials_by_ticker('1373.HK') )
     
     log.info("Completed")
 
