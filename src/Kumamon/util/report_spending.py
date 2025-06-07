@@ -56,7 +56,7 @@ def main():
     append_budget_row( db, table, "Base", [0,2,3,4,5,8,12,96], CONST.BUDGET_BASE, CONST_PROJECT_TYPE_PROJECT )
     append_budget_row( db, table, "Rent", [1], CONST.BUDGET_RENT, CONST_PROJECT_TYPE_FIXED )
     append_budget_row( db, table, "Travel", [7], CONST.BUDGET_TRAVEL, CONST_PROJECT_TYPE_FIXED )
-    append_budget_row( db, table, "Helper", [9], CONST.BUDGET_HELPER, CONST_PROJECT_TYPE_PROJECT )
+    #append_budget_row( db, table, "Helper", [9], CONST.BUDGET_HELPER, CONST_PROJECT_TYPE_PROJECT )
     append_budget_row( db, table, "Monchichi", [94], CONST.BUDGET_MONCHICHI, CONST_PROJECT_TYPE_FIXED )
     append_budget_row( db, table, "Deux", [93], CONST.BUDGET_DEUX, CONST_PROJECT_TYPE_FIXED )
     append_budget_row( db, table, "Fumi", [11], CONST.BUDGET_FUMI, CONST_PROJECT_TYPE_FIXED )
@@ -64,20 +64,11 @@ def main():
     append_budget_row( db, table, "Medical", [13], CONST.BUDGET_MEDICAL, CONST_PROJECT_TYPE_PROJECT )
     append_budget_row( db, table, "Car", [14], CONST.BUDGET_CAR, CONST_PROJECT_TYPE_PROJECT )
     append_budget_row( db, table, "BLR", [15], CONST.BUDGET_BLR, CONST_PROJECT_TYPE_PROJECT )
-    append_budget_row( db, table, "Special", [92,95,97,98,99], CONST.BUDGET_SPECIAL, CONST_PROJECT_TYPE_PROJECT )
-    
-    # Append a sub total row. Use the totals from above so we can take advantage of the project types
-    table.append( [ "SubTotal", table_col_sum(table, 1, 1), table_col_sum(table, 1, 2), table_col_sum(table, 1, 3), table_col_sum(table, 1, 4) ] )
-    
-    # Append a row for Fumi's payout. 0.5 of base tracking if positive, plus what is left of her allocation if positive
-    fumi_projected = calculate_fumi_projected( table, 1, 7, 4 )
-    table.append( [ "Payout", 0, fumi_projected, 0, 0 ] )
-    
+    #append_budget_row( db, table, "Special", [92,95,97,98,99], CONST.BUDGET_SPECIAL, CONST_PROJECT_TYPE_PROJECT )
+        
     # Append a total row 
-    subtotal_row = len(table)-2
-    payout_row = len(table)-1
-    total_projected = table[subtotal_row][2] + table[payout_row][2]
-    table.append( [ "Total", table[subtotal_row][1], total_projected, CONST.BUDGET_SPENDING, CONST.BUDGET_SPENDING - total_projected ] )
+    table.append( [ "Total", table_col_sum(table, 1, 1), table_col_sum(table, 1, 2), table_col_sum(table, 1, 3), table_col_sum(table, 1, 4) ] )
+    total_projected = table[len(table)-1][2]
     
     rpt.add_heading("Summary")
     rpt.add_table(table, formats)

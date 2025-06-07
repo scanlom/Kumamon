@@ -8,6 +8,7 @@ https://github.com/dpguthrie/yahooquery to see if any issues reference the probl
 '''
 
 from json import loads
+from curl_cffi import requests
 from yahooquery import Ticker
 from lib_log import log
 
@@ -19,7 +20,8 @@ class market_data_yahooquery:
     def last(self, symbol):
         try:
             log.info( "Yahoo Finance - Downloading quote for %s" % (symbol) )
-            ticker = Ticker(symbol)
+            session = requests.Session(impersonate="chrome")
+            ticker = Ticker(symbol, session=session)
             return round(ticker.price[symbol]['regularMarketPrice'], 2)
         except Exception as err:
             log.warning( "Yahoo Finance - Unable to retrieve last for %s" % (symbol) )
@@ -454,10 +456,10 @@ def main():
 
     # Test
     # foo  = market_data_yahooquery()
-    # print( foo.last('HA') )
+    # print( foo.last('MSFT') )
 
-    test = Ticker('8074.T')
-    print( test.cash_flow(trailing=True) )
+    # test = Ticker('8074.T')
+    # print( test.cash_flow(trailing=True) )
     
     log.info("Completed")
 

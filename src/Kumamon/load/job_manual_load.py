@@ -10,6 +10,8 @@ import api_blue_lion as _abl
 
 MULTIPLIER = 1000000
 FILE_INCOME_STATEMENT = "~/python/Kumamon/src/Kumamon/template/income_statement.csv"
+FILE_BALANCE_SHEET = "~/python/Kumamon/src/Kumamon/template/balance_sheet.csv"
+FILE_CASH_FLOW = "~/python/Kumamon/src/Kumamon/template/cash_flow.csv"
 
 def load_statements( statements, get_statements, post_statement, delete_statement ):
     tickers_to_entries = {}
@@ -34,7 +36,7 @@ def main():
     log.info("Loading income statements from " + FILE_INCOME_STATEMENT)
 
     df = _p.read_csv(FILE_INCOME_STATEMENT, skiprows=1)
-    df = df.mul([1,1,1,1]+[MULTIPLIER]*(df.shape[1]-4))
+    df = df.mul([1,1,1,1]+[MULTIPLIER]*(df.shape[1]-4)) # Multiply all but the first four columns (which are text and date) by the multiplier
     json_income_statements = loads(df.reset_index().to_json(orient='records',double_precision=0,date_format='iso'))
     for j in json_income_statements:
         j['publishDate'] = j['restatedDate'] = j['reportDate']
