@@ -3,10 +3,10 @@ Created on Dec 26, 2013
 @author: scanlom
 '''
 
-from configparser import SafeConfigParser
+from configparser import ConfigParser
 from os import path
 
-config = SafeConfigParser()
+config = ConfigParser()
 config.optionxform=str  # Read Case Sensitive
 config.read(path.expanduser('~/.Kumamon'))
 config_email_server         = config.get('Email','Server')
