@@ -16,11 +16,17 @@ def get_index_history_minus_years( id, years ):
     date = datetime.now().date() - timedelta(days=years*CONST.DAYS_IN_YEAR)
     return _abl.portfolios_history_by_portfolio_id_date(id, date)
 
+def get_safe_portfolio_history_by_portfolio_id_date(cur, id, date, field):
+    ret = _abl.portfolios_history_by_portfolio_id_date(id, date)
+    if (ret is None):
+        ret = cur
+    return ret[field]
+
 def append_ytd_qtd_day( row, id, field ):
-    cur = _abl.portfolios_history_by_portfolio_id_date(id, datetime.today().date())[field]
-    row.append(cur / _abl.portfolios_history_by_portfolio_id_date(id, _common.get_ytd_base_date())[field] - 1)
-    row.append(cur / _abl.portfolios_history_by_portfolio_id_date(id, _common.get_qtd_base_date())[field] - 1)
-    row.append(cur / _abl.portfolios_history_by_portfolio_id_date(id, _common.get_day_base_date())[field] - 1)
+    cur = _abl.portfolios_history_by_portfolio_id_date(id, datetime.today().date())
+    row.append(cur[field] / get_safe_portfolio_history_by_portfolio_id_date(cur, id, _common.get_ytd_base_date(), field) - 1)
+    row.append(cur[field] / get_safe_portfolio_history_by_portfolio_id_date(cur, id, _common.get_qtd_base_date(), field) - 1)
+    row.append(cur[field] / get_safe_portfolio_history_by_portfolio_id_date(cur, id, _common.get_day_base_date(), field) - 1)
 
 def calculate_years_for_value(finish, start, cagr, spending):
     years = 0
@@ -59,7 +65,6 @@ def populate_summary(rpt, index_roe, total_roe, total_finish, spending):
         [ "Managed" ],
         [ "Risk Arb" ],
         [ "Trade Fin" ],
-        [ "Quick" ],
         ]
     append_ytd_qtd_day( table[1], CONST.PORTFOLIO_TOTAL, 'index' )
     append_ytd_qtd_day( table[2], CONST.PORTFOLIO_TOTAL, 'indexTotalCapital')
@@ -68,7 +73,6 @@ def populate_summary(rpt, index_roe, total_roe, total_finish, spending):
     append_ytd_qtd_day( table[5], CONST.PORTFOLIO_MANAGED, 'index' )
     append_ytd_qtd_day( table[6], CONST.PORTFOLIO_RISK_ARB, 'index' )
     append_ytd_qtd_day( table[7], CONST.PORTFOLIO_TRADE_FIN, 'index' )
-    append_ytd_qtd_day( table[8], CONST.PORTFOLIO_QUICK, 'index' )
     rpt.add_table(table, formats)
 
     formats = [ rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_PCT, rpt.CONST_FORMAT_CCY_INT_COLOR, rpt.CONST_FORMAT_YEARS, rpt.CONST_FORMAT_YEARS, rpt.CONST_FORMAT_DATE_SHORT]
@@ -91,6 +95,21 @@ def populate_summary(rpt, index_roe, total_roe, total_finish, spending):
     rpt.add_string("Four Percent - " + rpt.format_ccy( total_finish ))
     rpt.add_string("Since Inception (Beat %11.11) - " + rpt.format_pct( ( ( index_roe / CONST.INCEPT_INDEX ) ** ( 1 / ((datetime.today().date()-CONST.INCEPT_DATE).days / 365.25) ) ) - 1 )
         + " (" + rpt.format_ccy(index_roe) + " / " + rpt.format_ccy(CONST.INCEPT_INDEX) + ", " + rpt.format_ccy(((datetime.today().date()-CONST.INCEPT_DATE).days / 365.25)) + " years)")
+
+def populate_summary_annuity(rpt):
+    rpt.add_heading("Summary")
+    
+    formats = [ rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_PCT_COLOR, rpt.CONST_FORMAT_PCT_COLOR, rpt.CONST_FORMAT_PCT_COLOR ]
+    table = [
+        [ "", "YTD", "QTD", "Day" ],
+        [ "Total (ROE)" ],
+        [ "Total (ROTC)" ],
+        [ "HQLA" ],
+        ]
+    append_ytd_qtd_day( table[1], CONST.PORTFOLIO_TOTAL_ANNUITY, 'index' )
+    append_ytd_qtd_day( table[2], CONST.PORTFOLIO_TOTAL_ANNUITY, 'indexTotalCapital')
+    append_ytd_qtd_day( table[3], CONST.PORTFOLIO_HQLA, 'index' )
+    rpt.add_table(table, formats)
 
 def populate_stress_test_twenty_percent_drop(rpt, index_roe, total_roe, total_finish, spending):
     rpt.add_heading("Stress Test - 20% Drop")
@@ -152,6 +171,20 @@ def main():
     # Send a summary mail
     subject = "Blue Lion - " + rpt.format_ccy(profit) + " / " + rpt.format_pct(index_roe/ytd_base_index_roe - 1)
     send_mail_html_self(subject, rpt.get_html())
+
+    # Same process for Annuity
+    rpt = report()
+    json_total = _abl.portfolios_history_by_portfolio_id_date(CONST.PORTFOLIO_TOTAL_ANNUITY, datetime.today().date())
+    json_total_ytd_base = _abl.portfolios_history_by_portfolio_id_date(CONST.PORTFOLIO_TOTAL_ANNUITY, _common.get_ytd_base_date())
+    if json_total_ytd_base is None:
+        json_total_ytd_base = json_total
+    index_roe = json_total['index']
+    ytd_base_index_roe = json_total_ytd_base['index']
+    profit = _abl.portfolio_returns_by_id(CONST.PORTFOLIO_TOTAL_ANNUITY)['profitYearToDate']
+    populate_summary_annuity(rpt)
+    subject = "Blue Lion Annuity - " + rpt.format_ccy(profit) + " / " + rpt.format_pct(index_roe/ytd_base_index_roe - 1)
+    send_mail_html_self(subject, rpt.get_html())
+
     log.info("Completed")
     
 if __name__ == '__main__':

@@ -1,5 +1,5 @@
 '''
-Created on February 2, 2023
+Created on July 7, 2025
 @author: scanlom
 '''
 
@@ -11,8 +11,7 @@ def main():
     log.info("Started...")
     
     token = 'ultumus-login'
-    url = 'http://yahoo.com'
-    # url = 'https://ironhide.ultumus.com/'
+    url = 'https://ironhide.ultumus.com/'
     headers = {'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36'}
     response = requests.get(url=url, headers=headers)
     if token not in response.text:
