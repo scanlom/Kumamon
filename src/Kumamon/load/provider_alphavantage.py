@@ -33,7 +33,7 @@ class market_data_alphavantage:
             try:
                 raw_bytes = urlopen(url).read()
                 data = loads(raw_bytes.decode())
-                last = round( float(data['Global Quote']['05. price']), 2 )
+                last = round( float(data['Global Quote']['05. price']), 4 )
                 return last
             except Exception as err:
                 if retry >= self.CONST_RETRIES:

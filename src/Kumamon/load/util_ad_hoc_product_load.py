@@ -11,7 +11,7 @@ from lib_log import log
 def main():
     log.info("Started...")
 
-    ticker = "VIV.PA"
+    ticker = "8001.T"
     newRd = ref_data_by_ticker(ticker)
     oldRd = _abl.ref_data_by_symbol(ticker)
     if (oldRd is not None):

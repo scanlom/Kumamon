@@ -31,21 +31,24 @@ def load_statements( statements, get_statements, post_statement, delete_statemen
         log.info("Inserting")
         post_statement(j)
 
-def main():
-    log.info("Started...")
-    log.info("Loading income statements from " + FILE_INCOME_STATEMENT)
+def load_file( path ):
+    log.info("Loading file from " + path)
 
-    df = _p.read_csv(FILE_INCOME_STATEMENT, skiprows=1)
+    df = _p.read_csv(path, skiprows=1)
     df = df.mul([1,1,1,1]+[MULTIPLIER]*(df.shape[1]-4)) # Multiply all but the first four columns (which are text and date) by the multiplier
-    json_income_statements = loads(df.reset_index().to_json(orient='records',double_precision=0,date_format='iso'))
-    for j in json_income_statements:
+    json_statements = loads(df.reset_index().to_json(orient='records',double_precision=0,date_format='iso'))
+    for j in json_statements:
         j['publishDate'] = j['restatedDate'] = j['reportDate']
         j['fiscalYear'] = int( j['reportDate'][:4] )
+    return json_statements
+
+def main():
+    log.info("Started...")
 
     try:
-        load_statements( json_income_statements, _abl.simfin_income_by_ticker, _abl.post_simfin_income, _abl.delete_simfin_income_by_id)
-        # load_statements( ticker, json_balance_sheets, _abl.simfin_balance_by_ticker, _abl.post_simfin_balance, _abl.delete_simfin_balance_by_id)
-        # load_statements( ticker, json_cash_flow, _abl.simfin_cashflow_by_ticker, _abl.post_simfin_cashflow, _abl.delete_simfin_cashflow_by_id)
+        load_statements( load_file( FILE_INCOME_STATEMENT ), _abl.simfin_income_by_ticker, _abl.post_simfin_income, _abl.delete_simfin_income_by_id)
+        load_statements( load_file( FILE_BALANCE_SHEET ), _abl.simfin_balance_by_ticker, _abl.post_simfin_balance, _abl.delete_simfin_balance_by_id)
+        load_statements( load_file( FILE_CASH_FLOW ), _abl.simfin_cashflow_by_ticker, _abl.post_simfin_cashflow, _abl.delete_simfin_cashflow_by_id)
     except Exception as err:
         log.exception(err)
         

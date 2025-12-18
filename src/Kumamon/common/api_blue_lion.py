@@ -165,6 +165,13 @@ def portfolios_history_by_portfolio_id_date( portfolio_id, date ):
         return r.json()
     return None
 
+def portfolios_history_first( portfolio_id ):
+    url = 'http://localhost:8081/blue-lion/read/portfolios-history-first?portfolioId=%d' % (portfolio_id)
+    r = get(url)
+    if r.status_code == 200:
+        return r.json()
+    return None
+
 def portfolios_history_by_date( date ):
     url = 'http://localhost:8081/blue-lion/read/portfolios-history?date=%s' % (date)
     r = get(url)

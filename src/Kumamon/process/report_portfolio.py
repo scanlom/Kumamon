@@ -19,7 +19,7 @@ def get_index_history_minus_years( id, years ):
 def get_safe_portfolio_history_by_portfolio_id_date(cur, id, date, field):
     ret = _abl.portfolios_history_by_portfolio_id_date(id, date)
     if (ret is None):
-        ret = cur
+        ret = _abl.portfolios_history_first(id)
     return ret[field]
 
 def append_ytd_qtd_day( row, id, field ):
@@ -60,19 +60,15 @@ def populate_summary(rpt, index_roe, total_roe, total_finish, spending):
         [ "", "YTD", "QTD", "Day" ],
         [ "Total (ROE)" ],
         [ "Total (ROTC)" ],
-        [ "Play" ],
+        [ "Selfie" ],
         [ "Oak" ],
         [ "Managed" ],
-        [ "Risk Arb" ],
-        [ "Trade Fin" ],
         ]
     append_ytd_qtd_day( table[1], CONST.PORTFOLIO_TOTAL, 'index' )
     append_ytd_qtd_day( table[2], CONST.PORTFOLIO_TOTAL, 'indexTotalCapital')
     append_ytd_qtd_day( table[3], CONST.PORTFOLIO_SELFIE, 'index' )
     append_ytd_qtd_day( table[4], CONST.PORTFOLIO_OAK, 'index' )
     append_ytd_qtd_day( table[5], CONST.PORTFOLIO_MANAGED, 'index' )
-    append_ytd_qtd_day( table[6], CONST.PORTFOLIO_RISK_ARB, 'index' )
-    append_ytd_qtd_day( table[7], CONST.PORTFOLIO_TRADE_FIN, 'index' )
     rpt.add_table(table, formats)
 
     formats = [ rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_PCT, rpt.CONST_FORMAT_CCY_INT_COLOR, rpt.CONST_FORMAT_YEARS, rpt.CONST_FORMAT_YEARS, rpt.CONST_FORMAT_DATE_SHORT]
@@ -102,13 +98,17 @@ def populate_summary_annuity(rpt):
     formats = [ rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_PCT_COLOR, rpt.CONST_FORMAT_PCT_COLOR, rpt.CONST_FORMAT_PCT_COLOR ]
     table = [
         [ "", "YTD", "QTD", "Day" ],
-        [ "Total (ROE)" ],
-        [ "Total (ROTC)" ],
+        [ "Annuity (ROE)" ],
+        [ "Annuity (ROTC)" ],
         [ "HQLA" ],
+        [ "Trade Fin" ],
+        [ "Risk Arb" ],
         ]
     append_ytd_qtd_day( table[1], CONST.PORTFOLIO_TOTAL_ANNUITY, 'index' )
     append_ytd_qtd_day( table[2], CONST.PORTFOLIO_TOTAL_ANNUITY, 'indexTotalCapital')
     append_ytd_qtd_day( table[3], CONST.PORTFOLIO_HQLA, 'index' )
+    append_ytd_qtd_day( table[4], CONST.PORTFOLIO_TRADE_FIN, 'index' )
+    append_ytd_qtd_day( table[5], CONST.PORTFOLIO_RISK_ARB, 'index' )
     rpt.add_table(table, formats)
 
 def populate_stress_test_twenty_percent_drop(rpt, index_roe, total_roe, total_finish, spending):
@@ -177,7 +177,7 @@ def main():
     json_total = _abl.portfolios_history_by_portfolio_id_date(CONST.PORTFOLIO_TOTAL_ANNUITY, datetime.today().date())
     json_total_ytd_base = _abl.portfolios_history_by_portfolio_id_date(CONST.PORTFOLIO_TOTAL_ANNUITY, _common.get_ytd_base_date())
     if json_total_ytd_base is None:
-        json_total_ytd_base = json_total
+        json_total_ytd_base = _abl.portfolios_history_first(CONST.PORTFOLIO_TOTAL_ANNUITY)
     index_roe = json_total['index']
     ytd_base_index_roe = json_total_ytd_base['index']
     profit = _abl.portfolio_returns_by_id(CONST.PORTFOLIO_TOTAL_ANNUITY)['profitYearToDate']

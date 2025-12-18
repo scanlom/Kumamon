@@ -22,7 +22,7 @@ class market_data_yahooquery:
             log.info( "Yahoo Finance - Downloading quote for %s" % (symbol) )
             session = requests.Session(impersonate="chrome")
             ticker = Ticker(symbol, session=session)
-            return round(ticker.price[symbol]['regularMarketPrice'], 2)
+            return round(ticker.price[symbol]['regularMarketPrice'], 4)
         except Exception as err:
             log.warning( "Yahoo Finance - Unable to retrieve last for %s" % (symbol) )
             raise err
