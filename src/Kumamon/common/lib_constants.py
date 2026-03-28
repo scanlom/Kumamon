@@ -11,20 +11,20 @@ class CONST:
     DAYS_IN_YEAR      = 365
 
     BUDGET_BASE       = Decimal(70000)
-    BUDGET_RENT       = Decimal(15000)
+    BUDGET_RENT       = Decimal(20000)
     BUDGET_CAR        = Decimal(3000)
     BUDGET_BLR        = Decimal(3000)
     BUDGET_TRAVEL     = Decimal(20000)
     BUDGET_HELPER     = Decimal(0)
-    BUDGET_MONCHICHI  = Decimal(7000)
+    BUDGET_MONCHICHI  = Decimal(12000)
     BUDGET_DEUX       = Decimal(10000)
-    BUDGET_FUMI       = Decimal(45000)
-    BUDGET_MIKE       = Decimal(0)
+    BUDGET_FUMI       = Decimal(20000)
+    BUDGET_MIKE       = Decimal(5000)
     BUDGET_MEDICAL    = Decimal(6000)
     BUDGET_SPECIAL    = Decimal(0)
 
     BUDGET_SPENDING   = BUDGET_BASE + BUDGET_RENT + BUDGET_CAR + BUDGET_TRAVEL + BUDGET_HELPER + BUDGET_MONCHICHI + BUDGET_DEUX + BUDGET_FUMI + BUDGET_MIKE + BUDGET_MEDICAL + BUDGET_BLR + BUDGET_SPECIAL
-    BUDGET_TAX_RATE   = Decimal(0.15)     # 2025/01/06 - USA Cap Gains Max
+    BUDGET_TAX_RATE   = Decimal(0.10)     # 2026/01/08 - 10% this year, 15% next year, then full 20%
     BUDGET_GROSS      = float(round((BUDGET_SPENDING)/(1-BUDGET_TAX_RATE),0))
     
     PLAN_FINISH_PCT   = 0.04
@@ -43,4 +43,5 @@ class CONST:
     PORTFOLIO_HQLA = 7
     PORTFOLIO_PORTFOLIO = 8
     PORTFOLIO_TOTAL_ANNUITY = 9
+    PORTFOLIO_MJ = 15
     PORTFOLIO_NONE = 99

@@ -92,7 +92,7 @@ def populate_summary(rpt, index_roe, total_roe, total_finish, spending):
     rpt.add_string("Since Inception (Beat %11.11) - " + rpt.format_pct( ( ( index_roe / CONST.INCEPT_INDEX ) ** ( 1 / ((datetime.today().date()-CONST.INCEPT_DATE).days / 365.25) ) ) - 1 )
         + " (" + rpt.format_ccy(index_roe) + " / " + rpt.format_ccy(CONST.INCEPT_INDEX) + ", " + rpt.format_ccy(((datetime.today().date()-CONST.INCEPT_DATE).days / 365.25)) + " years)")
 
-def populate_summary_annuity(rpt):
+def populate_summary_annuity(rpt, total_roe):
     rpt.add_heading("Summary")
     
     formats = [ rpt.CONST_FORMAT_NONE, rpt.CONST_FORMAT_PCT_COLOR, rpt.CONST_FORMAT_PCT_COLOR, rpt.CONST_FORMAT_PCT_COLOR ]
@@ -103,13 +103,16 @@ def populate_summary_annuity(rpt):
         [ "HQLA" ],
         [ "Trade Fin" ],
         [ "Risk Arb" ],
+        [ "MJ" ],
         ]
     append_ytd_qtd_day( table[1], CONST.PORTFOLIO_TOTAL_ANNUITY, 'index' )
     append_ytd_qtd_day( table[2], CONST.PORTFOLIO_TOTAL_ANNUITY, 'indexTotalCapital')
     append_ytd_qtd_day( table[3], CONST.PORTFOLIO_HQLA, 'index' )
     append_ytd_qtd_day( table[4], CONST.PORTFOLIO_TRADE_FIN, 'index' )
     append_ytd_qtd_day( table[5], CONST.PORTFOLIO_RISK_ARB, 'index' )
+    append_ytd_qtd_day( table[6], CONST.PORTFOLIO_MJ, 'index' )
     rpt.add_table(table, formats)
+    rpt.add_string("Net Worth - " + rpt.format_ccy( total_roe ))
 
 def populate_stress_test_twenty_percent_drop(rpt, index_roe, total_roe, total_finish, spending):
     rpt.add_heading("Stress Test - 20% Drop")
@@ -181,7 +184,8 @@ def main():
     index_roe = json_total['index']
     ytd_base_index_roe = json_total_ytd_base['index']
     profit = _abl.portfolio_returns_by_id(CONST.PORTFOLIO_TOTAL_ANNUITY)['profitYearToDate']
-    populate_summary_annuity(rpt)
+    total_roe = json_total['value']
+    populate_summary_annuity(rpt, total_roe)
     subject = "Blue Lion Annuity - " + rpt.format_ccy(profit) + " / " + rpt.format_pct(index_roe/ytd_base_index_roe - 1)
     send_mail_html_self(subject, rpt.get_html())
 
