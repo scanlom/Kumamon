@@ -155,6 +155,10 @@ def simfin_load(msg, market, func_simfin, func_get_by_ticker, func_delete_by_id,
     tickers_to_entries = {}
     for j in json:
         log.info("Processing %s, %d" % (j['ticker'],j['fiscalYear']))
+        if j['ticker'] is None:
+            log.warning("Skipping, ticker is None")
+            continue
+
         if j['ticker'] not in tickers_to_entries:
             log.info("Getting existing entries...")
             tickers_to_entries[j['ticker']] = func_get_by_ticker(j['ticker'])

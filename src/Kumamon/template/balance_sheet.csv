@@ -1,4 +1,5 @@
 key,key,,,,,,,,,,,,,,,,,,,,,,,,,
 ticker,reportDate,entryType,ccy,sharesBasic,sharesDiluted,cashEquivStInvest,accNotesRecv,inventories,totalCurAssets,propPlantEquipNet,ltInvestRecv,otherLtAssets,totalNoncurAssets,totalAssets,payablesAccruals,stDebt,totalCurLiab,ltDebt,totalNoncurLiab,totalLiabilities,preferredEquity,shareCapitalAdd,treasuryStock,retainedEarnings,totalEquity,totalLiabEquity
+HEIO.AS,2025-12-31,O,EUR,556.774934,557.024742,4773,4488,3263,12893,14537,224,1161,40860,53753,9548,3088,13932,16191,19207,33139,,,,,20614,53753
 HEIO.AS,2024-12-31,O,EUR,560.188961,560.63903,2350,4588,3572,10899,14677,258,1009,42874,53773,9912,3266,14238,13783,17133,31371,,,,,22402,53773
 HEIO.AS,2023-12-31,O,EUR,563.448845,563.97962,2377,5019,3721,11399,14772,239,978,43754,55153,9432,4192,14825,14046,17539,32364,,,,,22789,55153

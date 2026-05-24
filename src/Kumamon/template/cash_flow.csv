@@ -1,4 +1,5 @@
 key,key,,,,,,,,,,,,,,,,,,,,,,,
 ticker,reportDate,entryType,ccy,sharesBasic,sharesDiluted,netIncomeStart,deprAmor,nonCashItems,chgWorkingCapital,chgAccountsRecv,chgInventories,chgAccPayable,chgOther,netCashOps,chgFixAssetsInt,netChgLtInvest,netCashAcqDivest,netCashInv,dividendsPaid,cashRepayDebt,cashRepurchaseEquity,netCashFin,effectFxRates,netChgCash
+HEIO.AS,2025-12-31,O,EUR,556.774934,557.024742,2138,2609,131,327,54,2,271,,5012,-2133,-2410,-45,-2455,-1276,2531,-701,153,,2710
 HEIO.AS,2024-12-31,O,CHF,560.188961,560.63903,1161,2605,226,851,347,-39,543,,5503,-2184,-2445,10,-2435,-1199,-1015,-5,-2574,,494
 HEIO.AS,2023-12-31,O,CHF,563.448845,563.97962,2401,3096,537,-146,-42,-4,-100,,4430,-2434,-2671,-905,-3576,-1335,2137,-942,-816,,38

@@ -1,4 +1,6 @@
 key,key,,,,,,,,,,,,,,,,,,,,,,,
 ticker,reportDate,entryType,ccy,sharesBasic,sharesDiluted,revenue,costRevenue,grossProfit,operatingExpenses,sellingGenAdmin,researchDev,deprAmor,operatingIncome,nonOperatingIncome,interestExpNet,pretaxIncomeLossAdj,abnormGainLoss,pretaxIncomeLoss,incomeTax,incomeAffilNetTax,incomeContOp,netExtrGainLoss,netIncome,netIncomeCommon
+HEIO.AS,2025-12-31,O,EUR,556.774934,557.024742,34257,-23969,10288,-7087,-4478,,-2609,3406,,-512,,,2995,-857,,,,2138,1885
 HEIO.AS,2024-12-31,O,EUR,560.188961,560.63903,35955,-25447,10508,-7071,-4466,,-2605,3517,,-570,,,2007,-846,,,,1161,978
 HEIO.AS,2023-12-31,O,EUR,563.448845,563.97962,36375,-26090,10285,-7449,-4353,,-3096,3229,,-530,,,2522,-121,,,,2401,2304
+HEIO.AS,2022-12-31,O,EUR,575.563606,576.02612,34676,-24575,10101,-5965,-4079,,-1886,4283,,-384,,,4170,-1131,,,,3039,2682
