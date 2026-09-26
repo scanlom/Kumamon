@@ -103,6 +103,7 @@ def populate_summary_annuity(rpt, total_roe):
         [ "HQLA" ],
         [ "Trade Fin" ],
         [ "Risk Arb" ],
+        [ "FI" ],
         [ "MJ" ],
         ]
     append_ytd_qtd_day( table[1], CONST.PORTFOLIO_TOTAL_ANNUITY, 'index' )
@@ -110,7 +111,8 @@ def populate_summary_annuity(rpt, total_roe):
     append_ytd_qtd_day( table[3], CONST.PORTFOLIO_HQLA, 'index' )
     append_ytd_qtd_day( table[4], CONST.PORTFOLIO_TRADE_FIN, 'index' )
     append_ytd_qtd_day( table[5], CONST.PORTFOLIO_RISK_ARB, 'index' )
-    append_ytd_qtd_day( table[6], CONST.PORTFOLIO_MJ, 'index' )
+    append_ytd_qtd_day( table[6], CONST.PORTFOLIO_FI, 'index' )
+    append_ytd_qtd_day( table[7], CONST.PORTFOLIO_MJ, 'index' )
     rpt.add_table(table, formats)
     rpt.add_string("Net Worth - " + rpt.format_ccy( total_roe ))
 

@@ -168,9 +168,9 @@ def simfin_load(msg, market, func_simfin, func_get_by_ticker, func_delete_by_id,
             if e['fiscalYear'] == j['fiscalYear']:
                 log.info("Collision found, type %s" % (e['entryType']))
                 if 'S' == e['entryType']:
-                    log.info("Skipping")
+                    log.info("Overwriting")
                     num_collisions_simfin += 1
-                    skip = True
+                    func_delete_by_id(e['id'])
                 elif 'O' == e['entryType']:
                     log.info("Skipping")
                     num_collisions_override += 1

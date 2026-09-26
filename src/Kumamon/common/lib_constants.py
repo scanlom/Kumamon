@@ -12,15 +12,15 @@ class CONST:
 
     BUDGET_BASE       = Decimal(70000)
     BUDGET_RENT       = Decimal(20000)
-    BUDGET_CAR        = Decimal(3000)
+    BUDGET_CAR        = Decimal(2000)
     BUDGET_BLR        = Decimal(3000)
-    BUDGET_TRAVEL     = Decimal(40000)
+    BUDGET_TRAVEL     = Decimal(50000)
     BUDGET_HELPER     = Decimal(0)
-    BUDGET_MONCHICHI  = Decimal(12000)
-    BUDGET_DEUX       = Decimal(10000)
+    BUDGET_MONCHICHI  = Decimal(9400)
+    BUDGET_DEUX       = Decimal(8000)
     BUDGET_FUMI       = Decimal(5000)
-    BUDGET_MIKE       = Decimal(0)
-    BUDGET_MEDICAL    = Decimal(6000)
+    BUDGET_MIKE       = Decimal(2100)
+    BUDGET_MEDICAL    = Decimal(5100)
     BUDGET_SPECIAL    = Decimal(0)
 
     BUDGET_SPENDING   = BUDGET_BASE + BUDGET_RENT + BUDGET_CAR + BUDGET_TRAVEL + BUDGET_HELPER + BUDGET_MONCHICHI + BUDGET_DEUX + BUDGET_FUMI + BUDGET_MIKE + BUDGET_MEDICAL + BUDGET_BLR + BUDGET_SPECIAL
@@ -44,4 +44,5 @@ class CONST:
     PORTFOLIO_PORTFOLIO = 8
     PORTFOLIO_TOTAL_ANNUITY = 9
     PORTFOLIO_MJ = 15
+    PORTFOLIO_FI = 16
     PORTFOLIO_NONE = 99
